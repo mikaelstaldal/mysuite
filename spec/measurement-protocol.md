@@ -177,6 +177,21 @@ failures, and the run reported a clean pass having stressed nothing. Make the gu
 assertion instead: if the thing you meant to measure is absent, that is a failed run, not an
 empty one.
 
+**The general form: a negative assertion must distinguish "absent" from "could not look."**
+Both look like success and only one is. Three instances of this one shape, all from this
+work:
+
+    if (lists.length) { … }                 no lists found → body never ran → clean pass
+    kill -0 "$pid"                          succeeds on a zombie → "server alive" → 48/48
+                                            against the wrong server
+    ! cmd | grep -q "still-running"          cmd fails → grep matches nothing → "finished"
+
+The third was a watcher polling for a background job to end; a transient failure of the
+listing command was indistinguishable from the job having finished, and it reported
+completion while the job ran on. Whenever you write "if X is not there, we are fine", ask
+what happens when you simply could not see X — and make that a third outcome, not a silent
+merge into the reassuring one.
+
 ### Know what your coverage expires against
 
 Some properties cannot hide behind a dataset but can hide behind a case nobody visited. A

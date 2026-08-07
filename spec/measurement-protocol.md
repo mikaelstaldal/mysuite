@@ -305,6 +305,15 @@ State, every time:
 - **Which state of the repository was measured** — a commit, or a working tree. See below;
   they are not the same claim, and only one of them is reproducible.
 
+**The test for whether you have written enough:** *could somebody who does not already know
+this figure find it by searching for what it is measured against?* MyMail's
+`app.css:431` — *"`--primary` measures 5.169:1 on white and 3.991:1 on `#1f2937`"* — passes.
+A bare `5.169:1` does not, and it fails for its own author too, six weeks later.
+
+That test is what makes the operand rule below usable. Stating operands is not only about a
+comment staying true; it is what makes the next change's blast radius **findable**. *(Owed to
+mymail-dev.)*
+
 ---
 
 ## What has to be re-measured is set by the operands, not by the topic

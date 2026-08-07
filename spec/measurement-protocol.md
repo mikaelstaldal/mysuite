@@ -97,6 +97,31 @@ scroll container:
 If a measurement is invariant across content volume, say that explicitly — it is a stronger
 claim than the number itself, and it is the claim the reader actually needs.
 
+### Assert that the overflow case actually overflowed
+
+**A run that measures nothing and a run that measures a pass look identical**, unless you
+assert on the intermediate state. Loading more content is a setup step, not evidence — prove
+the setup worked before believing the result.
+
+This nearly went wrong in practice: a first overflow run reported **zero scrolling regions**
+and was almost recorded as a pass. The probe was silently returning "missing" because the
+build under test was a demo build with no Settings control, so it had found nothing to
+measure and said so in a way that read like success.
+
+So assert the precondition, with numbers:
+
+- **content height vs container height**, both stated — e.g. 5749px of content in a 367px
+  box, and 8549px in a 210px box at a 24px root;
+- **that each scroll container reports itself scrollable** (`scrollHeight > clientHeight`),
+  rather than inferring it from having loaded a lot of items;
+- **that you scrolled to each extreme** and measured at both, since a sticky element behaves
+  differently at the top and bottom of its range;
+- **that the element you are probing exists at all.** A selector that matches nothing returns
+  a falsy value, and a falsy value compared against an expectation frequently reads as a pass.
+
+This is the same shape as the stale-server trap and the soft-assertion trap: in all three the
+apparatus reports success while measuring something other than what you intended.
+
 ## Reporting measurements
 
 State, every time:

@@ -545,31 +545,74 @@ because their sidebar panel is already flush against the window edge. **That hol
 their sidebars do not scroll**, and the caveat is load-bearing: it is exactly the condition
 that failed.
 
-### 8.3 Taking the footer out of the scroll flow
+### 8.3 The requirement, and the two sanctioned mechanisms
 
-**There are two independent scroll threats, and an app may face either, both, or neither:**
+**The requirement:**
 
-1. **The sidebar's own scrollport** — the list beside/above the footer overflows its panel.
+> **The footer must not be in the scroll flow of anything that can scroll.**
+
+That is the invariant. **Two mechanisms satisfy it, both sanctioned. Neither is mandated.**
+
+There are also two independent scroll threats, and an app may face either, both or neither:
+
+1. **The sidebar's own scrollport** — the content above the footer overflows its panel.
 2. **The page scrolling** — the whole document is taller than the window.
 
-They have different answers, which is why the three implementations look different.
+#### Mechanism A — contained scrollport (structural). Preferred where achievable.
 
-**For (1), the structural fix is preferred: put the footer *outside* the scroll container.**
-Make the scrolling region a sibling of the footer rather than its parent, so the footer
-cannot scroll by construction. MyNotes has always been built this way (`.sidebar-content`
-scrolls inside an `overflow: hidden` `.sidebar`, with `.sidebar-footer` as a sibling), and
-MyCal was restructured to match it. A footer pinned inside a scrolling list *is* the defect;
-positioning it is treating a symptom. Where this restructure is achievable, take it.
+The footer is a **sibling** of the scrolling region, not a child of it. Content growth is
+absorbed by the content area shrinking its own inner scrollport; it cannot push the footer,
+because the footer is outside the box that scrolls.
 
-MyMail's footer is a child of its `overflow-y: auto` `.sidebar`, which is why it hit §8.2 —
-and it fixed the position rather than the structure.
+- **MyNotes** is built this way: `.sidebar` is `overflow: hidden` with `.sidebar-content`
+  scrolling inside it and `.sidebar-footer` beside it. Measured `sidebarOverflowsY` **false
+  in all 108 readings, including at 41× overflow.**
+- **MyCal** was restructured to this shape during the gutter work — verified in its shipped
+  markup, `.sidebar-content` and `.sidebar-footer` as siblings inside `.left-sidebar`.
 
-**The structural fix is not free everywhere, and the difference is measured, not assumed.**
-MyCal's and MyNotes' footers are siblings of their scrollports — verified in their shipped
-markup, `.sidebar-content` and `.sidebar-footer` side by side inside the column — so for them
-the structure was either already right or a contained change. MyMail's sidebar children are
-flat, with `overflow-y: auto` on `.sidebar` itself, and introducing a wrapper forces a choice
-it cannot avoid:
+Preferred because it adds **no declarations, no stacking context, no opaque background, and
+no scroll-position dependence.** There is nothing to get wrong.
+
+#### Mechanism B — `position: sticky` + `bottom` + an opaque background
+
+For footers that cannot be lifted out of the scrolling box, and for threat 2 regardless of
+structure.
+
+- **MyMail** requires it: its footer is an ordinary last child of an `overflow-y: auto`
+  `.sidebar`.
+- **MyCal** requires it too, for its month and year page-scrolling path — *in addition to*
+  mechanism A for its sidebar.
+
+B carries the sum rule below and **three failure modes A does not have**:
+
+1. the **opaque background is mandatory**, or content shows through as it scrolls under;
+2. it **creates a stacking context**, which must be checked against the 4px focus-outline
+   clearance of §8.4;
+3. it **behaves differently at each scroll extreme**, so both extremes must be measured.
+
+|  | A — contained scrollport | B — sticky |
+|---|---|---|
+| Declarations added | none | `position`, `bottom`, `background` |
+| Stacking context | no | yes — check §8.4 clearance |
+| Opaque background | not needed | mandatory |
+| Scroll-position dependence | none | must measure both extremes |
+| Handles threat 1 | yes | yes |
+| Handles threat 2 | no | yes |
+
+**Why neither is mandated: MyCal uses both.** Structural for its sidebar scrollport, sticky
+for its page scroll. That alone shows the mechanism is not the contract. Forcing sticky onto
+MyNotes would add a stacking context, an opaque background and a `bottom`/`padding-bottom`
+interaction to a footer that already satisfies §8.2 structurally — three new ways to be wrong
+in exchange for nothing measurable.
+
+**The contract is (8, 8) at every reachable content volume. How an app gets there is its own
+business, provided it is stated and measured.**
+
+#### Why MyMail uses B rather than A — the cost of A, measured
+
+**A is preferred, not free, and the difference was measured rather than assumed.** MyMail's
+sidebar children are flat, with `overflow-y: auto` on `.sidebar` itself, so introducing a
+wrapper forces a choice it cannot avoid:
 
 - the wrapper **excludes** the header → the app title and reload button become permanently
   pinned, a visible behaviour change to elements this contract says nothing about;
@@ -580,11 +623,11 @@ MyMail's header scrolls today: measured at `top: 0`, and at `scrollTop = 300` it
 **−300**, fully off-screen. So there is no wrapper placement that is behaviour-neutral there,
 where sticky was one declaration plus a background and touched nothing else.
 
-**Prefer the structural fix; do not assume it is a pure refactor.** Where it would change
-behaviour outside this contract, that is a cost to weigh, not an obstacle to route around
-silently — say what it would cost and let the decision be made with the number.
+**So prefer A, but do not assume it is a pure refactor.** Where it would change behaviour
+outside this contract, that is a cost to weigh and state — not an obstacle to route around
+silently, and not a reason to pretend B is equivalent.
 
-**For (2), and for (1) where the restructure is not achievable, use sticky positioning:**
+#### Mechanism B in detail
 
 ```css
 position: sticky;

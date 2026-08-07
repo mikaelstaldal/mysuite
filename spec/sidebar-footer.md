@@ -247,8 +247,11 @@ its sidebar token layer. It is approved and **MyMail-local**. Do not add an equi
 to another repo unless that repo already has that kind of indirection layer.
 
 MyNotes' `--hover-bg`, `--faint` and `--primary` live in `web/static/render/note.css`
-alongside its other variables, which means a small amount of dead weight in its Android
-render kit. That is a deliberate trade against splitting its palette across two files.
+alongside its other variables — that file owns the theme selectors, and `app.css` has no
+`:root` block of its own. Of the three, **only `--hover-bg` and `--faint` are dead weight**
+in the Android render kit: each is used exactly once, by app chrome, and never by
+`note.css` itself. `--primary` is used by the render kit and is not dead weight. Carrying
+those two is a deliberate trade against splitting MyNotes' palette across two files.
 
 ### 5.3 What the controls sit on is *not* specified — and it shows
 

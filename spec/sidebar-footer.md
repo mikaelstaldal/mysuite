@@ -191,6 +191,29 @@ either way.
 **Do not pin `appearance`.** Every property it could affect is already set explicitly, so
 the declaration would have no effect.
 
+### 3.1 These pins cannot be defended by rendering — assert the declaration
+
+There is a structural consequence of "the three apps reach this by different routes", and it
+is why these are the easiest declarations in the contract to delete by accident:
+
+> **The app where a value is already correct is the app whose rendering cannot detect the pin
+> going missing.** Any pin justified by *"the three reach this by different routes"* is, by
+> construction, unenforceable by rendering in at least one of them.
+
+Delete `flex-shrink: 0`, `text-align: center` or `font-weight: 400` from MyCal and **nothing
+observable changes there** — its `<button>` inherits all three from the UA anyway. What breaks
+is the match with MyNotes, which routes them through `button { font: inherit }` to `body`.
+Every computed value in the repo you edited stays correct; the divergence is in a repo you did
+not touch.
+
+So a test measuring the *rendered result* cannot protect these. **Assert that the declaration
+is present** — read it off the CSSOM rather than off the box. MyCal's suite does this, and it
+is what catches three of its seven silent-breakage items (§9.2).
+
+Same shape as the `prefers-reduced-motion` ruling (§6.1) and the surface coincidence (§5.4):
+wherever two things agree today for different reasons, agreement is not evidence that the
+mechanism holding them together still exists.
+
 ---
 
 ## 4. `font-family: inherit` — a verified shared value, not a pinned one
@@ -824,12 +847,42 @@ apps embed `web/static/` into the binary and a running server keeps serving what
 with.
 
 MyCal's `e2e/tests/sidebar-footer.spec.ts` is the only machine-checkable statement of this
-contract anywhere — but **it is not automated: it does not run in CI.** MyCal's workflow runs
-`./build.sh`, and `build.sh` does not invoke Playwright, so nothing checks this contract
-unless a person runs the suite deliberately (§10.7). Read it before changing anything here —
-it encodes the acceptance height,
-both viewport coordinates in all five views, theme-toggle width stability, overflow
-headroom at 20px and 24px roots, and composited focus contrast in both themes.
+contract anywhere. Read it before changing anything here — it encodes the acceptance height,
+both viewport coordinates in all five views, theme-toggle width stability, overflow headroom
+at 20px and 24px roots, and composited focus contrast in both themes.
+
+### 9.1 MyCal's suite runs in CI, and **gates publication**
+
+As of MyCal `7e65102`, the suite runs in `.github/workflows/main.yml` — after `./build.sh`,
+before Pages and the release. All 48 tests run; **nothing is skipped, loosened or
+conditional.** `build.sh` is byte-unchanged; Playwright installs in the workflow.
+
+**"Gates publication" is the accurate claim, not "prevents breakage."** The workflow triggers
+on push to `main`, so a commit that breaks the contract is *already on `main`* when the suite
+goes red. What the gate stops is a broken contract reaching Pages or the rolling release.
+
+It was accepted the way `measurement-protocol.md` requires — **shown red for the right
+reason**, not merely shown green. Restoring `outline: none` on `:focus-visible` (chosen
+because `./build.sh` stays green, so the suite genuinely runs) failed exactly the three focus
+assertions with `Expected: "solid"  Received: "none"`, 3 failed / 45 passed, exit 1; reverting
+gave 48 passed, exit 0.
+
+Operational notes worth keeping: retries stay at **0** deliberately; traces and screenshots
+upload on failure. (The config previously paired `trace: 'on-first-retry'` with `retries: 0`,
+so it had been capturing nothing at all.)
+
+### 9.2 What CI does **not** catch
+
+MyCal applied all seven items on its silent-breakage list and recorded which assertion fired.
+**Six are caught. One cannot be:**
+
+> **Normalising `font-size: 0.80rem` to `0.8rem` is not catchable by any test.** The computed
+> *and* serialised values are identical, so nothing in the CSSOM or the rendering can
+> distinguish them.
+
+That pin is held by **review, not CI** (§2.1). Do not read "MyCal's assertions run in CI" as
+covering the whole list — this one item is exactly as exposed as it was before, in all three
+repos.
 
 ---
 
@@ -895,15 +948,14 @@ be surprised.
    reported is hand-measured. Two thirds of this contract rests on measurements that were
    correct once, on one machine. **This is the largest gap.**
 
-   **And the remaining third is weaker than it looks: MyCal's suite does not run in CI.**
-   Its workflow runs `./build.sh`, which does not invoke Playwright. So the contract has no
-   *automated* guard anywhere — it has one suite that a person must choose to run. "The tests
-   pass" is a claim someone has to make deliberately here, not one CI makes on their behalf,
-   and a green pipeline says nothing about this contract at all.
+   **MyCal's third is now genuinely guarded** — its suite runs in CI as of `7e65102` and
+   gates publication, verified by a demonstrated red run (§9.1). That is a real change in the
+   contract's protection, and it is confined to MyCal.
 
-   Recording this because the alternative is overstating the protection in a document whose
-   subject is overstated protection. Found by mycal-dev, who removed the same overstatement
-   from its own `AGENTS.md` in the same commit.
+   **It does not shrink this gap as much as it looks.** The guard is one-sided: it proves
+   MyCal still satisfies the contract, and it cannot see the other two. **Cross-repo drift
+   remains undetectable by anything** — if MyMail or MyNotes moves, MyCal's pipeline stays
+   green, correctly. And `0.80rem` is uncatchable even within MyCal (§9.2).
 
    **A proposal, needing a human decision because it breaks this repo's own rules.** A
    cross-repo guard does not need a browser and does not need CI in the app repos: one

@@ -56,6 +56,18 @@ red for the right reason**:
 Until that cycle has been run, the honest description of a new guard is "added", not
 "covering". **Do not upgrade a claim of protection on the strength of a first green run.**
 
+**This applies to the freshness checks themselves.** A reviewer pointed out that another
+process squatting on the test port would defeat the served-vs-disk check, so a process-liveness
+check was added using `kill -0` — and then an actual squatter was started to test it. **It
+passed: 48/48 against the wrong server.** An exited background process is a zombie until
+reaped, and `kill -0` succeeds on a zombie, so the check returned "alive" in precisely the case
+it was written for. Replaced with a pre-flight port probe, re-tested against the same squatter,
+now fails loudly.
+
+A guard shipped that did not guard, and it was caught by *testing* the guard rather than
+reading it. That is the third time in one week the apparatus produced the reassuring answer for
+the wrong reason — and the reason to require "demonstrate red" rather than "demonstrate wired".
+
 State the scope precisely, too. If part of a suite cannot run in the harness, the accurate
 claim is narrower than "this app is covered" — say which assertions run and which do not.
 Writing the narrow version once beats writing "covered" and correcting it later.

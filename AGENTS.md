@@ -104,9 +104,15 @@ than no comment: it is confidently wrong, and nothing checks it.
 So:
 
 - If a number matters, **put it in a test.** MyCal's `e2e/tests/sidebar-footer.spec.ts` is
-  the model — the only machine-checkable statement of any of this. Note that it is not wired
-  into CI, so it guards the contract only when a person runs it; getting it into a pipeline
-  would do more for these contracts than any amount of further prose.
+  the model — the only machine-checkable statement of any of this, and it now runs in CI and
+  gates publication. MyMail and MyNotes still have no harness, so cross-repo drift remains
+  undetectable by anything.
+- **Some pins cannot be defended by rendering at all.** Where a value is already correct in
+  one app for its own reasons, that app's rendering cannot detect the pin going missing — so
+  assert the *declaration* off the CSSOM, not the computed box. See
+  `spec/sidebar-footer.md` §3.1. And a few pins are uncatchable by any test
+  (`0.80rem` vs `0.8rem` is identical computed *and* serialised); those are held by review,
+  and saying which are which is part of describing coverage honestly.
 - If it cannot be tested, **say in the comment that it is a reading rather than a contract**,
   and say what it was read on. Text measurements are per-platform and per-font.
 - When you write a number down, write its conditions with it. "29.2px" is a claim that stops

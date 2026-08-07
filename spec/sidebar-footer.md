@@ -553,10 +553,39 @@ that failed.
 
 That is the invariant. **Two mechanisms satisfy it, both sanctioned. Neither is mandated.**
 
-There are also two independent scroll threats, and an app may face either, both or neither:
+There are two ways the invariant can be broken, and an app may be exposed to either, both or
+neither:
 
 1. **The sidebar's own scrollport** — the content above the footer overflows its panel.
 2. **The page scrolling** — the whole document is taller than the window.
+
+#### The property that makes both threats impossible at once
+
+Before reaching for a mechanism, check whether the app already has this:
+
+> **Every scroll happens inside a bounded region, and the footer is outside all of them.**
+
+**That is one architectural property, not two lucky ones**, and an app that has it is immune
+to both threats simultaneously. It is worth stating positively rather than as two passing
+checklists, because it is a thing an app either has or loses — not two independent facts that
+happen to be true today.
+
+MyNotes has it, and is exposed to neither threat. Its two load-bearing declarations:
+
+```css
+html, body { height: 100%; }                                    /* app.css:10-12  */
+.app-body  { flex: 1; min-height: 0; overflow: hidden; }         /* app.css:54-59 */
+```
+
+The first caps the document at viewport height; the second absorbs anything long into an inner
+scrollport (`.overview-scroll`, `.note-view-scroll`, `.cm-scroller`, `.preview-pane`).
+Measured across 60 readings — 5 routes × 3 viewports × 2 root sizes × 2 themes with a
+400-paragraph note — `documentElement.scrollHeight === clientHeight`, `body` likewise, and a
+**forced** `window.scrollTo(0, 999999)` left `scrollY` at 0 every time, with L and B both
+8.00.
+
+An app with this property needs neither mechanism below. An app without it needs whichever
+mechanism matches the threat it is actually exposed to.
 
 #### Mechanism A — contained scrollport (structural). Preferred where achievable.
 
@@ -630,27 +659,41 @@ where sticky was one declaration plus a background and touched nothing else.
 outside this contract, that is a cost to weigh and state — not an obstacle to route around
 silently, and not a reason to pretend B is equivalent.
 
-#### Immunity to threat 2 is structural, and one word from being lost
+#### Structural immunity is always one word from being lost
 
-An app can be immune to page scrolling by construction rather than by positioning. MyMail is:
+Where an app is immune to threat 2 by construction, the immunity rests on a single
+declaration, and in every case that declaration looks ordinary:
 
-```css
-.app { display: grid; grid-template-rows: auto 1fr auto; height: 100vh; }
-```
+| | Declaration | Immunity ends if |
+|---|---|---|
+| MyMail | `.app { height: 100vh }` over `grid-template-rows: auto 1fr auto` | `height` becomes `min-height` |
+| MyNotes | `html, body { height: 100% }` | that cap is relaxed |
 
-The shell is **exactly** the viewport, so every overflowing region carries its own scrollport
-inside it and the document itself never scrolls. Verified across 24 combinations:
-`documentElement.scrollHeight === clientHeight` in all of them, `window.scrollTo(0, 99999)`
-leaves `scrollY` at `0.0`, and B stays 8 before and after.
+MyMail's shell is **exactly** the viewport, so every overflowing region carries its own
+scrollport. Verified across 24 combinations, with the intermediate state asserted:
+`documentElement.scrollHeight === clientHeight` throughout, `window.scrollTo(0, 99999)` leaves
+`scrollY` at `0.0`, B stays 8.
 
-**That immunity ends if `height` becomes `min-height`, or if any descendant escapes its
-scrollport.** `min-height` is normally the more forgiving choice and is exactly the edit
-someone makes for a good reason. Nothing in the repo tests it, and the consequence — threat 2
-returning, the footer scrolling away — would not appear until a window happened to be short
-enough.
+**Both are one-word edits, neither is tested anywhere, and both are changes someone makes for
+a good reason** — `min-height` is normally the more forgiving choice. Nothing would fail at
+the time. The consequence would not appear until a window happened to be short enough, and by
+then the edit is long past.
 
-So: **if an app relies on structural immunity to threat 2, say so at the declaration that
-provides it.** A `height: 100vh` that is load-bearing looks identical to one that is not.
+So: **if an app relies on structural immunity, say so at the declaration that provides it.** A
+load-bearing `height: 100vh` looks identical to an incidental one.
+
+#### Threat-2 coverage expires when a route is added
+
+Threat 2 is a property of the **layout**, not of content volume, so unlike threat 1 it cannot
+hide behind a small dataset. But it can hide behind **a route nobody visited.**
+
+A measurement covering every route in the router's table is complete *as of that table*. A new
+route that renders outside the bounded region — outside `.app-body`, or outside whatever the
+app's equivalent is — reintroduces threat 2 in that route alone, and is covered by nothing. No
+build step catches it, and the other routes keep passing.
+
+**Adding a route is the event that invalidates threat-2 coverage.** Re-measure the new one;
+the old numbers stay valid for the old routes.
 
 #### Mechanism B in detail
 

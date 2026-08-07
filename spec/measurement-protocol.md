@@ -122,6 +122,23 @@ So assert the precondition, with numbers:
 This is the same shape as the stale-server trap and the soft-assertion trap: in all three the
 apparatus reports success while measuring something other than what you intended.
 
+**A guard clause is the commonest form of it.** One overflow probe was written as
+`if (lists.length) { … }` — with no lists found, the body never ran, the probe returned no
+failures, and the run reported a clean pass having stressed nothing. Make the guard an
+assertion instead: if the thing you meant to measure is absent, that is a failed run, not an
+empty one.
+
+### Know what your coverage expires against
+
+Some properties cannot hide behind a dataset but can hide behind a case nobody visited. A
+layout property measured across every route in the router's table is complete *as of that
+table* — and a route added later is covered by nothing, while every existing route keeps
+passing.
+
+State what your coverage is complete *relative to*, and what event invalidates it. "All five
+routes, as of the current route table" is a useful claim; "all routes" is one that quietly
+stops being true.
+
 ## Reporting measurements
 
 State, every time:

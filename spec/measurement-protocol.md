@@ -28,6 +28,14 @@ anything other than the binary built in that same job has the identical trap, an
 there: nobody is watching, and a green pipeline is trusted more than a green local run. If you
 wire one of these suites into CI, build and serve in the same job, from the same artefact.
 
+**And wire it in suspiciously.** Every failure this protocol exists to catch — the stale
+server, the stale database, the probe asserting against an element that does not exist —
+produced a *reassuring* result, not a red one. A pipeline does not remove that risk; it
+removes the person who might have noticed. So make the pipeline prove its own freshness
+rather than assume it: run the md5 served-vs-disk comparison and the sentinel check (steps 3
+and 5) as pipeline steps, and fail the job on them. A suite that cannot demonstrate it is
+measuring the build under test is not evidence, however green it is.
+
 ---
 
 ## The protocol

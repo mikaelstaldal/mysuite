@@ -154,7 +154,7 @@ DEVIATIONS = {
     #   local  #4b5563 label  -> 6.867:1
     ("mycal", "button", "color", "light"): "#4b5563",
     #   shared #f3f4f6 fill IS the backdrop -> 1.000:1, an absent fill
-    #   local  #e5e7eb fill   -> 1.125:1, clearing §5.1's 1.101 floor
+    #   local  #e5e7eb fill   -> 1.125:1, clearing §5.1's 1.053 floor
     ("mycal", "hover", "background", "light"): "#e5e7eb",
 }
 

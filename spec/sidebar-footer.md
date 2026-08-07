@@ -256,13 +256,32 @@ as blocking.
 and the resting border are both `#374151`, so keeping the resting border would erase the
 button's outline at exactly the moment it lights up.
 
-**The hover fill has a floor: it must not equal the backdrop, and must reach 1.101:1 against
-it.** That number is the weakest fill the suite already ships in light, so the floor is
-reverse-engineered from the status quo rather than derived — and **it is a product floor, not
-a WCAG one.** No criterion was found that binds a hover-only fill, and none is cited here for
-one; the label's own contrast *on* the fill keeps its 1.4.3 obligation regardless (§5.4). The
-floor exists because a fill at 1.000:1 is not a weak fill, it is an absent one, and §10.1
-records that the fill is faint in all three apps as an open item.
+**The hover fill has a floor: it must not equal the backdrop, and must reach 1.053:1 against
+it.** The floor exists because a fill at 1.000:1 is not a weak fill, it is an absent one.
+
+Three things about that number, because it is weaker than it looks:
+
+- **It is a product floor, not a WCAG one.** No criterion was found that binds a hover-only
+  fill and none is cited here for one. The label's own contrast *on* the fill keeps its 1.4.3
+  obligation regardless (§5.4), and that one is real.
+- **It is the weakest the suite already ships** — MyNotes' light fill, `#f3f4f6` on `#f9fafb`.
+  So it is reverse-engineered from the status quo rather than derived, and it forbids only
+  getting worse than the worst.
+- **It is therefore not a quality bar.** §10.1 records the fill doing almost no visual work in
+  all three apps as an open item with the owner. Clearing this floor is not evidence of a
+  visible hover.
+
+> **This floor was first written as 1.101:1, which MyNotes fails.** 1.101 is MyCal's and
+> MyMail's figure; MyNotes has always been at 1.053. Committed in `f02c455` — the same
+> changeset that extended `AGENTS.md` §3.2, the rule about a rationale that holds for two apps
+> written as though it held for three. Corrected in the commit that follows it, and left in
+> the history rather than amended away.
+>
+> The mechanism is worth naming, because "check all three" did not prevent it: **the number
+> came from a table I had just read** (§10.1), and I took the value that appeared twice as the
+> value that appeared. A figure shared by two of three apps looks like the shared figure. When
+> deriving a bound from a per-app table, take the **extreme**, and say which app it came from —
+> naming the app is what makes the error visible.
 
 #### Recorded per-app deviations
 

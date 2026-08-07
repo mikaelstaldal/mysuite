@@ -210,11 +210,19 @@ caught by the repo it was false of:
 | "the footer paints `--surface`" | MyNotes | its footer is transparent; the panel behind it paints |
 | "the panel is the footer's parent" | nobody *yet* | true of all three today, required by none |
 | "that app's own `AGENTS.md` or `spec/REQUIREMENTS.md`" | MyCal | it has no `spec/` directory at all |
+| "the hover fill's floor is 1.101:1, the weakest the suite ships" | MyNotes | it ships 1.053:1 — 1.101 is the other two |
 
-The last row was committed **in the changeset that added this section**, by its author, while
-writing it down. That is not irony worth enjoying — it is the measure of how easily the
-pattern slips past someone actively looking for it. Check the claim against all three by
-name; do not assume you are immune because you just wrote the warning.
+**Two of those rows were committed in the changeset that added or extended this section**, by
+its author, while writing it down. That is not irony worth enjoying — it is the measure of how
+easily the pattern slips past someone actively looking for it. Check the claim against all
+three by name; do not assume you are immune because you just wrote the warning.
+
+The last row adds a mechanism, because "check all three" did not catch it. The figure was
+taken from a per-app table that had just been read, and **the value appearing in two of three
+rows read as the value.** So: when deriving a bound from a per-app table, take the extreme
+rather than the common value, and **name the app it came from in the same sentence** — a
+bound with an app's name attached is falsifiable by anyone who knows that app, and one without
+is not.
 
 ### 3.3 A dormant defect is harmless *conditionally*, and the condition is not written down
 

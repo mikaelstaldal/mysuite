@@ -537,6 +537,12 @@ near 3:1 against what it sits on:
 > measured *against*, every table measured against it is in scope — including the ones the
 > change is not about. This section is about the border; the change was about the backdrop;
 > that is exactly why it was missed.
+>
+> Stated more usefully: **the scope of a re-measurement is set by the operands, not by the
+> topic.** This section was in scope because it *names a backdrop*, not because it is about
+> backdrops. See `measurement-protocol.md`, which carries the general form — and note that it
+> only works if figures state what they were measured against, which is the same discipline
+> arriving one step earlier.
 
 **This is deliberate and is not treated as a 1.4.11 failure.** 1.4.11 requires 3:1 for
 visual information needed to *identify* a control — and these controls are identified by

@@ -307,6 +307,25 @@ State, every time:
 
 ---
 
+## What has to be re-measured is set by the operands, not by the topic
+
+When a change moves a value, every figure that value is an **operand of** is in scope — not
+every figure on the same subject. Those are different sets, and the second one is the one
+people naturally check.
+
+`sidebar-footer.md` §5.5 is the witness. It gives contrast figures for the control border. A
+change to the *backdrop* left it stale for weeks, through a review that checked every other
+table in the file, because it reads as a section about borders. It was in scope because it
+**names a backdrop as an operand**, not because it is about backdrops.
+
+This is the same discipline as stating operands in a comment (see *Reporting measurements*
+above), applied one step earlier — to deciding what to re-check. If a comment or a table says
+what its number was measured *against*, then finding everything affected by a change is a
+search rather than a recollection. If it does not, nothing can find it, including its author.
+
+*(Formulation owed to mymail-dev, generalising from two retractions where the topic-shaped
+search missed the operand-shaped one.)*
+
 ## A static check reads a working tree, and a working tree has no snapshot
 
 Every freshness rule above is about a *running server* serving stale assets. A source-reading

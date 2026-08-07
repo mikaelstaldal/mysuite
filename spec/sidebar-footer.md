@@ -306,6 +306,29 @@ the label to `#4b5563` was rejected once, because it applied a whole ramp step t
 to fix one. Per-app backdrops remove that premise: it now applies to one app, which is the
 number of apps that have the problem.
 
+> **"Light only" is a claim about token *names*, and half of it is defensible by nothing.**
+> Confining a deviation to one theme means the other theme must *name* the shared token. That
+> is a claim about the declaration, not about the colour — so wherever the two tokens happen to
+> resolve alike, neither rendered output nor a resolved-value comparison can see it. §3.1's
+> class, arriving somewhere new.
+>
+> Both halves of MyCal's dark pair were mutation-tested against `tools/check-contract.py` on
+> scratch copies. **They do not behave the same:**
+>
+> | Collapsing the dark alias for | Resolves to | Caught? |
+> |---|---|---|
+> | the **label** | `#d1d5db` (dark `--text-muted`) ≠ `#9ca3af` | **yes** — fails §5.1 resting text [dark] |
+> | the **hover fill** | `#374151` (dark `--border`) = dark `--hover-bg` | **no** — passes clean |
+>
+> Only the fill is exposed, and only because two of MyCal's dark tokens are the same hex today.
+> The day `--border` moves in dark, the fill follows it away from the mandated `--hover-bg` —
+> silently, in the theme that is not supposed to be diverging at all.
+>
+> **Do not collapse the two theme-scoped pairs into one unscoped pair**, however redundant the
+> fill makes it look. MyCal holds this with a CSSOM assertion on the declaration. MyMail and
+> MyNotes need no equivalent because they have no deviations — and would need one the day they
+> did, which is a cost of deviating that is easy to miss when granting one.
+
 ### 5.2 Token names are per-project by design
 
 What is mandated is the **resolved colour**, never the token name or the number of hops to

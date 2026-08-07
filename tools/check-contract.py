@@ -532,6 +532,14 @@ failing one covers less ground than the count suggests.
     waived — but this script cannot tell you whether a deviation SHOULD exist.
     An app that quietly stops deviating fails here; an app that deviates for a
     bad reason passes, provided the spec records the same value.
+  · A deviation confined to ONE THEME is only half-defended here, and the half
+    that is missing was measured rather than assumed. Confining it means the
+    other theme must NAME the shared token, which is a claim about the
+    declaration — invisible to a resolved-value comparison wherever the two
+    tokens agree. Mutation-tested on scratch copies: collapsing MyCal's dark
+    label alias IS caught (#d1d5db != #9ca3af); collapsing its dark hover-fill
+    alias is NOT (dark --border and --hover-bg are both #374151). Only a CSSOM
+    read of the declaration catches that one. See §5.1.
   · The §5.3 backdrop check is a STATIC APPROXIMATION, labelled as such above. It
     resolves the footer's background, falling back to the panel named in APPS —
     which assumes the painting element is one of those two. That is true of all

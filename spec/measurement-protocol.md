@@ -346,17 +346,37 @@ a half-written file are indistinguishable to it. Across three repositories and s
 there is no atomic snapshot at all: the check can read one file before an edit and the next
 file after it, and report on a combination that existed in no state anyone authored.
 
-**This has already produced a false result.** While MyCal was mid-edit, a run reported that
-its dark resting label resolved to `#d1d5db` instead of the shared `#9ca3af` — a real-looking
-divergence, in the exact place MyCal's own comment warns one could appear, naming the right
-file and the right rule. Three runs seconds later were green. Nothing was wrong; the file was
-being written while it was being read, and a bug report to the repo's owner was one command
-away from being sent.
+**This has already produced a result nobody could interpret.** While MyCal was mid-edit, a run
+reported its dark resting label resolving to `#d1d5db` instead of the shared `#9ca3af` — the
+right file, the right rule, and the exact place MyCal's own comment warns such a divergence
+could appear. Three runs seconds later were green.
+
+> **The first version of this section said that was a torn read, and it was not.** MyCal was
+> mutation-testing its own guards and had deliberately collapsed a theme-scoped alias; the
+> check had read a state that genuinely existed on disk and had reported it **correctly**.
+> Reproduced afterwards on a scratch copy — deleting that one declaration produces that exact
+> failure, that exact hex.
+>
+> So the check was right and the diagnosis was invented. **A mechanism nobody verified was
+> written into the protocol as the finding's explanation**, when the ninety seconds of mutation
+> testing that would have settled it were available the whole time — and were, in the end, what
+> settled it. Corrected rather than amended away, because the failure being recorded here is
+> mine and not the tool's.
+
+The lesson survives the correction and is sharper for it. A red-once against a live tree can be
+a torn read, **a real state somebody is deliberately creating**, or a genuine defect, and the
+run itself cannot tell you which. What was wrong was not re-running — it was concluding
+*"nothing was wrong"* from a green re-run, when the truthful conclusion was *"the state that
+produced the red is gone."*
 
 So, when a source-reading check goes red against a tree someone else is working in:
 
 - **Re-run it before reporting.** Red-and-stable is a finding; red-once is a read. This costs
-  seconds and is the whole mitigation.
+  seconds and is most of the mitigation.
+- **Report what you saw, not what you think caused it.** *"Red at 18:04, green three runs
+  later"* is a fact and is worth sending. *"That was a torn read"* is a hypothesis, and the
+  above is what happens when one gets recorded as the other. If the cause matters, it is
+  usually reproducible on a scratch copy in about a minute — do that instead of guessing.
 - **A green run has the same exposure**, and is less likely to be questioned. That asymmetry
   is the reason to state which repository state was checked rather than only the result.
 

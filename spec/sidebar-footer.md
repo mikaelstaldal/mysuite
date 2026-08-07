@@ -963,6 +963,13 @@ That pin is held by **review, not CI** (§2.1). Do not read "MyCal's assertions 
 covering the whole list — this one item is exactly as exposed as it was before, in all three
 repos.
 
+**And a green suite bounds what was checked, not what is correct.** MyCal's narrow-layout test
+asserts only the footer's left edge — its comment says so plainly, and it was a deliberate,
+documented limit. Then a change broke that layout badly enough to be obvious on sight, and
+**the suite stayed green**, because the breakage was in the axis the test had declared out of
+scope. A documented blind spot is still a blind spot; writing it down makes it honest, not
+covered.
+
 ---
 
 ## 10. Known gaps and open items

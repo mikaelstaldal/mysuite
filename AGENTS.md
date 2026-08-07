@@ -216,6 +216,31 @@ writing it down. That is not irony worth enjoying — it is the measure of how e
 pattern slips past someone actively looking for it. Check the claim against all three by
 name; do not assume you are immune because you just wrote the warning.
 
+### 3.3 A dormant defect is harmless *conditionally*, and the condition is not written down
+
+A neighbour of §3.2 rather than the same thing. §3.2 is a rationale that was never true of
+every app; this is one that is true today and stops being true because of a change somewhere
+else.
+
+MyCal carried a known-dead `@media (max-width: 600px)` block for weeks — equal specificity,
+later source order, so nothing in it applied. Correctly reported, correctly deferred, genuinely
+harmless. Then the footer started painting a colour, and on a phone it rendered as a 208px
+white stub two-thirds across the screen with a border hanging in mid-air. **Nothing about the
+dead rule changed. What changed was the thing that made it survivable.**
+
+In its own words: *"leaving it dead stopped being neutral the moment the footer started
+painting a colour."*
+
+So:
+
+- When deferring a defect, **record what makes it harmless**, not just that it is. "Dead rule,
+  no effect" ages badly; "dead rule, no effect *because nothing in it paints or positions*" is
+  a condition a future reader can check.
+- When a change alters something a deferred item's harmlessness rested on, **that item is back
+  in scope** — even though it is untouched and its own ticket says out-of-scope.
+- Expect the discovery to arrive as an unrelated-looking bug. The phone breakage looked like a
+  regression in the backdrop change; it was a dormant defect waking up.
+
 The value was right every time. The *justification* was written from whichever
 implementations the author had in mind, and it fails the moment a reader checks it against
 the app it does not describe — who then reasonably concludes that app has drifted.

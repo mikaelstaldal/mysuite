@@ -69,6 +69,34 @@ back to step 1.
 
 ---
 
+## Vary content volume — the dimension that was missing
+
+**A layout measured only at rest has not been measured.** Vary how much content the app is
+holding, not just the window size, theme, route and root font size. At minimum: empty, a
+typical amount, and **more than the container can display**, so that every scrollable region
+is actually scrolling.
+
+This is not hypothetical. Three apps reported a combined 100 passing measurements of a
+footer's on-screen position across window sizes, themes, routes and root sizes. Every one of
+those runs used a dataset small enough that the sidebar never scrolled. With a realistic
+number of items the footer scrolled away with the content and its distance from the window's
+bottom edge went from 8px to **−1052px** — the controls were pushed off-screen entirely.
+
+Nothing in the protocol as it stood would have caught that. All 100 numbers were correct and
+the build was broken.
+
+So when a contract specifies a position, a size, or anything that could be affected by a
+scroll container:
+
+- Load enough content that **every** scrollable ancestor actually scrolls, and re-measure.
+- Check the empty case too — it is the one seed data usually gives you, and the one least
+  like real use.
+- Say in the report **what content volume each number was taken at.** A position measured at
+  zero items and a position measured at forty are different measurements.
+
+If a measurement is invariant across content volume, say that explicitly — it is a stronger
+claim than the number itself, and it is the claim the reader actually needs.
+
 ## Reporting measurements
 
 State, every time:
@@ -76,6 +104,8 @@ State, every time:
 - **The root font size** the measurement was taken at. Any number mixing `rem` and `px`
   means nothing without it.
 - **The theme.** Light and dark are different measurements, not one measurement.
+- **The content volume**, per the section above — including whether any scroll container was
+  actually scrolling.
 - **What the value was measured against** — for contrast, name the actual backdrop. Apps
   paint different colours behind the same control, so a ratio copied from a sibling repo is
   a wrong number that looks like a checked one.
@@ -103,3 +133,8 @@ rather than a contract.
 
 **`scrollWidth` on an `overflow: visible` box is not a reliable overflow check.** Sum the
 children's widths plus the gaps and compare against `clientWidth`.
+
+**Seed data is not a test case.** Whatever the app ships for demos or development is one
+arbitrary point in the input space, usually near-empty, and measuring only there means the
+overflow behaviour of every container is untested. If you did not choose the content volume
+deliberately, you did not choose it.

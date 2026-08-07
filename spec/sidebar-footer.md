@@ -488,34 +488,70 @@ column sits inside `.app { padding: 8px 16px }`.
 The user's requirement is about the *screen*, so the specification has to be about the
 screen. If you find a container-relative offset written down anywhere, it is stale.
 
-### 8.2 B must be constant within an app, too
+### 8.2 (8, 8) must hold under **content overflow**, not just at rest
 
-An app that moves its own buttons when the user switches view fails the tab-switching test
-before any cross-app comparison happens. MyCal is the only one of the three with more than
-one layout behind a single sidebar, and it asserts (8, 8) in all five views.
+This is the requirement the contract was missing, and it is the one that has actually been
+violated in production code.
+
+**A footer that is a plain last child of a scrolling sidebar scrolls away with the content.**
+Once the list above it is taller than the panel, B stops being 8 and becomes negative — the
+buttons are pushed below the window entirely. MyMail measured **B = −43.61 at 13 folders and
+−1052.16 at 40**, against a `.sidebar` that is `overflow-y: auto` with the footer as an
+ordinary last child.
+
+Nothing about this is visible at rest. MyMail's 48 passing measurements all used a demo
+dataset with **zero user folders**, so the overflow case was never exercised. MyCal's 20 and
+MyNotes' 32 have the same blind spot: none of the three varied content volume.
+
+So, normatively:
+
+> **(8, 8) is required for every content volume the app can reach, including more content
+> than the sidebar can display.** An implementation that satisfies (8, 8) only while its
+> sidebar does not scroll does not satisfy this contract.
 
 MyMail and MyNotes reach (8, 8) from a single declaration — their footer's own `padding` —
-because their sidebar panel is already flush against the window edge. Both measured it
-invariant across every route, theme and window size tried (48 and 32 combinations
-respectively).
+because their sidebar panel is already flush against the window edge. **That holds only while
+their sidebars do not scroll**, and the caveat is load-bearing: it is exactly the condition
+that failed.
 
-### 8.3 The mechanism is local; the coordinates are not
+### 8.3 Taking the footer out of the scroll flow
 
-MyCal cannot use a plain uniform padding, because `e2e/tests/calendar-views.spec.ts` pins
-the footer *box*'s bottom edge to the bottom of the view beside it — the box may not move
-down even though the buttons must. Its footer therefore:
+A footer inside a scrollable panel has to be removed from the scroll flow, or it moves. The
+general mechanism is:
 
-- cancels `.app`'s horizontal padding with `margin-left: calc(-1 * var(--app-padding-x))`
-  so the footer reaches the window's left edge and its own 8px is the only thing between
-  the window and the buttons;
-- uses `padding: 8px 8px 0`, letting `.app`'s own 8px bottom padding supply B rather than
-  doubling it to 16px;
-- keeps `position: sticky; bottom: 8px` so the footer stays on screen in the page-scrolling
-  views.
+```css
+position: sticky;
+bottom: <the B offset this app needs>;
+background: <an opaque colour>;   /* content must not show through as it scrolls under */
+```
 
-**This is a correct implementation of this contract, not a deviation from it**, even though
-it does not look like MyMail's and MyNotes' uniform `padding: 8px`. The coordinates are the
-contract. Read §8.5 before concluding otherwise.
+**Treat this as the normative approach for any app whose sidebar can overflow**, rather than
+as a local quirk. It was first written down as a MyCal detail — MyCal needed it because its
+month and year views page-scroll — but MyMail needs the identical mechanism for an unrelated
+reason, which is what shows it to be general rather than specific. An app whose sidebar
+genuinely cannot scroll does not need it; an app that is not sure does.
+
+The explicit **opaque background** is part of the mechanism, not decoration. A sticky footer
+with a transparent background has content sliding visibly underneath it.
+
+Around that, per-app detail is local:
+
+- **MyCal** cannot use a uniform padding, because `e2e/tests/calendar-views.spec.ts` pins the
+  footer *box*'s bottom edge to the bottom of the view beside it — the box may not move down
+  even though the buttons must. It therefore cancels `.app`'s horizontal padding with
+  `margin-left: calc(-1 * var(--app-padding-x))`, uses `padding: 8px 8px 0` so `.app`'s own
+  8px supplies B rather than doubling it, and sets `bottom: 8px`.
+- **MyMail** and **MyNotes** sit flush against the window edge, so their footer padding alone
+  supplies both coordinates when nothing scrolls.
+
+**Differing here is not a deviation** — the coordinates are the contract, not the
+declarations that produce them. Read §8.5 before concluding otherwise.
+
+> **Open at the time of writing.** MyMail has landed sticky + an explicit background. MyCal
+> and MyNotes are measuring their own overflow cases before changing anything, so that one
+> mechanism is chosen for all three rather than two agents inventing two. When those numbers
+> arrive this section should say which mechanism all three use. Until then, the *requirement*
+> in §8.2 is settled and binding; the uniform mechanism is not yet chosen.
 
 ### 8.4 The 4px floor — L ≥ 4 and B ≥ 4
 

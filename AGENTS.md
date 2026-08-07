@@ -161,3 +161,17 @@ So:
 - Do not restate a contract's values in an app repo's own documentation. Reference the
   contract. Restating it recreates exactly the duplication this repository was created to
   remove.
+- **Put the warning where an agent actually reads.** A requirements or product document is
+  not what someone opens before editing a stylesheet — so a pointer that lives only there
+  will be missed by exactly the person who needed it. Each app repo should carry a short
+  section in its own `AGENTS.md` saying that these declarations are governed from outside
+  the repo, and naming the *routine tidying* that breaks them silently: normalising
+  `0.80rem` to `0.8rem`, folding the rule back into a shared button class, dropping a
+  "redundant" `flex-shrink: 0` or `text-align: center`, adding a `font-weight` to the base
+  `button` rule, restoring `outline: none`. Every one of those is a reasonable edit
+  everywhere else in the same file.
+
+  MyNotes' `AGENTS.md` §"The sidebar footer is governed from outside this repo" is the
+  model. This is the highest-value thing an app repo can add, because it is the only
+  guard that fires before the change rather than after — and in two of the three repos
+  there is no test that fires at all.

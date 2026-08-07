@@ -287,9 +287,21 @@ Resting text, against each app's own backdrop:
 | MyMail | 4.834:1 | 5.782:1 |
 | MyNotes | 4.626:1 | 5.782:1 |
 
-Hover text passes everywhere with room to spare (13.3:1 to 14.7:1 light, and dark is the
-same inversion). **The failure is the resting state, in one app, in one theme** — and it is
-a defect, not a difference. Recorded as an open item in §10.2; do not fix it in MyCal alone.
+**Hover text is measured against the hover fill, not the panel** — during hover that fill is
+the surface the label sits on. Because the fill is mandated (§5.1), the numbers are the same
+in all three apps rather than a per-app range:
+
+| | Text on fill | Ratio |
+|---|---|---|
+| Light | `#1f2937` on `#f3f4f6` | 13.338:1 |
+| Dark | `#f3f4f6` on `#374151` | 9.366:1 |
+
+Both clear 4.5:1 with large margins, so hover is never the problem. (MyCal is the one app
+where the two surfaces coincide — its panel *is* `#f3f4f6` — which is §10.1, not a contrast
+issue.)
+
+**The failure is the resting state, in one app, in one theme** — and it is a defect, not a
+difference. Recorded as an open item in §10.2; do not fix it in MyCal alone.
 
 ### 5.5 The control boundary — why no contrast figure is given for the border
 

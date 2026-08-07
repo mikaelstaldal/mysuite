@@ -350,6 +350,12 @@ So, when a source-reading check goes red against a tree someone else is working 
   seconds and is the whole mitigation.
 - **A green run has the same exposure**, and is less likely to be questioned. That asymmetry
   is the reason to state which repository state was checked rather than only the result.
+
+  **And the asymmetry is in the attention, not in the mechanism.** Re-running would correct a
+  mid-write green exactly as well as a mid-write red — but nobody re-runs a green. So this
+  mitigation covers the direction that gets scrutinised, and leaves the other one uncovered
+  for a reason that has nothing to do with the tool. Reading a tree another agent is writing
+  is unsound in both directions. *(Point owed to mymail-dev.)*
 - **Say "green against an uncommitted tree" when that is what happened.** It is a weaker claim
   than green against a commit, and the check's own output cannot tell the two apart — so if
   the person reporting does not make the distinction, nobody downstream can.

@@ -36,6 +36,30 @@ rather than assume it: run the md5 served-vs-disk comparison and the sentinel ch
 and 5) as pipeline steps, and fail the job on them. A suite that cannot demonstrate it is
 measuring the build under test is not evidence, however green it is.
 
+### Prove a new guard fails before trusting it
+
+Freshness and sensitivity are separate properties. A pipeline can measure exactly the right
+build and still hold assertions too weak to notice a real violation — and that combination is
+the worst possible outcome, because **a guard that would stay green through a breakage is
+worse than no guard: it looks like coverage.** Everything downstream then rests on protection
+that does not exist, and nobody re-checks a thing that is passing.
+
+So a guard is not accepted when it goes green. It is accepted when it has been **shown to go
+red for the right reason**:
+
+1. deliberately break a value the guard is supposed to pin;
+2. confirm the run fails, **and that it fails on that assertion** rather than incidentally —
+   a job that errors for an unrelated reason has told you nothing;
+3. revert;
+4. confirm it is green again.
+
+Until that cycle has been run, the honest description of a new guard is "added", not
+"covering". **Do not upgrade a claim of protection on the strength of a first green run.**
+
+State the scope precisely, too. If part of a suite cannot run in the harness, the accurate
+claim is narrower than "this app is covered" — say which assertions run and which do not.
+Writing the narrow version once beats writing "covered" and correcting it later.
+
 ---
 
 ## The protocol

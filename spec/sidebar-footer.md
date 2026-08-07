@@ -564,6 +564,26 @@ positioning it is treating a symptom. Where this restructure is achievable, take
 MyMail's footer is a child of its `overflow-y: auto` `.sidebar`, which is why it hit §8.2 —
 and it fixed the position rather than the structure.
 
+**The structural fix is not free everywhere, and the difference is measured, not assumed.**
+MyCal's and MyNotes' footers are siblings of their scrollports — verified in their shipped
+markup, `.sidebar-content` and `.sidebar-footer` side by side inside the column — so for them
+the structure was either already right or a contained change. MyMail's sidebar children are
+flat, with `overflow-y: auto` on `.sidebar` itself, and introducing a wrapper forces a choice
+it cannot avoid:
+
+- the wrapper **excludes** the header → the app title and reload button become permanently
+  pinned, a visible behaviour change to elements this contract says nothing about;
+- the wrapper **includes** the header → the change stays footer-only, but the scrollport no
+  longer corresponds to "the sidebar" in any natural way.
+
+MyMail's header scrolls today: measured at `top: 0`, and at `scrollTop = 300` it sits at
+**−300**, fully off-screen. So there is no wrapper placement that is behaviour-neutral there,
+where sticky was one declaration plus a background and touched nothing else.
+
+**Prefer the structural fix; do not assume it is a pure refactor.** Where it would change
+behaviour outside this contract, that is a cost to weigh, not an obstacle to route around
+silently — say what it would cost and let the decision be made with the number.
+
 **For (2), and for (1) where the restructure is not achievable, use sticky positioning:**
 
 ```css

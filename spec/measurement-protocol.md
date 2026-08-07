@@ -302,8 +302,42 @@ State, every time:
   a wrong number that looks like a checked one.
 - **Whether the number is a constant or a reading.** Anything derived from rendered text is
   a reading on one platform in one font (see `sidebar-footer.md` §2.4, §4).
+- **Which state of the repository was measured** — a commit, or a working tree. See below;
+  they are not the same claim, and only one of them is reproducible.
 
 ---
+
+## A static check reads a working tree, and a working tree has no snapshot
+
+Every freshness rule above is about a *running server* serving stale assets. A source-reading
+check like `tools/check-contract.py` is immune to all of it — and has its own version of the
+problem, which is worse in one specific way.
+
+**It reads whatever is on disk at the instant it reads it.** A commit, an uncommitted edit and
+a half-written file are indistinguishable to it. Across three repositories and several files
+there is no atomic snapshot at all: the check can read one file before an edit and the next
+file after it, and report on a combination that existed in no state anyone authored.
+
+**This has already produced a false result.** While MyCal was mid-edit, a run reported that
+its dark resting label resolved to `#d1d5db` instead of the shared `#9ca3af` — a real-looking
+divergence, in the exact place MyCal's own comment warns one could appear, naming the right
+file and the right rule. Three runs seconds later were green. Nothing was wrong; the file was
+being written while it was being read, and a bug report to the repo's owner was one command
+away from being sent.
+
+So, when a source-reading check goes red against a tree someone else is working in:
+
+- **Re-run it before reporting.** Red-and-stable is a finding; red-once is a read. This costs
+  seconds and is the whole mitigation.
+- **A green run has the same exposure**, and is less likely to be questioned. That asymmetry
+  is the reason to state which repository state was checked rather than only the result.
+- **Say "green against an uncommitted tree" when that is what happened.** It is a weaker claim
+  than green against a commit, and the check's own output cannot tell the two apart — so if
+  the person reporting does not make the distinction, nobody downstream can.
+
+The general form, and it is not confined to this script: **a checker that reads the filesystem
+tells you about the filesystem, not about the repository.** Anything that has to hold about
+*the repository* needs the state named alongside the result.
 
 ## Traps that have already cost time
 

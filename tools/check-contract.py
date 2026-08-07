@@ -538,6 +538,13 @@ failing one covers less ground than the count suggests.
     three apps today and required by nothing. A failure there may be this check's
     limitation rather than a real violation; confirm in a browser, by walking up
     from the button to the first ancestor with a non-transparent background.
+  · WHICH REPOSITORY STATE this read is not reported, because it cannot be: it
+    reads files on disk, so a commit, an uncommitted edit and a half-written file
+    all look the same, and across three repos there is no atomic snapshot. A run
+    against a tree somebody is editing has already produced a red result that
+    three runs seconds later did not reproduce. Re-run before reporting a
+    failure, and say "green against an uncommitted tree" when that is what it
+    was — see measurement-protocol.md.
   · Values inside @media blocks are deliberately skipped: a conditional override
     is a different value under different conditions, not a disagreement.
   · It reads ONE NAMED RULE per app (see APPS). A reordered selector list or a

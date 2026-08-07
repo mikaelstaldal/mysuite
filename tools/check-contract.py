@@ -43,6 +43,7 @@ APPS = {
         "focus": ".sidebar-footer-btn:focus-visible",
         "row": ".sidebar-footer-actions",
         "footer": ".sidebar-footer",
+        "panel": ".left-sidebar",
     },
     "mymail": {
         "css": ["web/static/app.css"],
@@ -52,6 +53,7 @@ APPS = {
         "focus": ".sidebar-theme-toggle:focus-visible, .sidebar-settings-link:focus-visible",
         "row": ".sidebar-footer",  # in MyMail the footer *is* the flex row
         "footer": ".sidebar-footer",
+        "panel": ".sidebar",
     },
     "mynotes": {
         "css": ["web/static/app.css"],
@@ -64,6 +66,7 @@ APPS = {
                  ".sidebar-footer-actions .settings-open:focus-visible",
         "row": ".sidebar-footer-actions",
         "footer": ".sidebar-footer",
+        "panel": ".sidebar",
     },
 }
 
@@ -248,6 +251,20 @@ class App:
     def where(self, rule: str) -> str:
         return f"{self.cfg[rule]}  in  {self.cfg['css'][0]}"
 
+    def backdrop(self):
+        """(raw background value, selector it came from) — footer first, else panel.
+
+        §5.3 pins the colour behind the controls, not the element declaring it.
+        """
+        for rule in ("footer", "panel"):
+            selector = self.cfg[rule]
+            block = self.rules.get(selector) or {}
+            if "background" in block:
+                return block["background"], selector
+            if "background-color" in block:
+                return block["background-color"], selector
+        return None, None
+
     def declared(self, rule: str, prop: str):
         selector = self.cfg[rule]
         block = self.rules.get(selector)
@@ -332,6 +349,40 @@ def check(apps: dict[str, App], report: Report) -> None:
         else:
             report.ok(why, "absent in all 3")
 
+    # §5.3 — the RESOLVED backdrop, not which element declares it. An app whose
+    # panel already paints --surface needs nothing on the footer (MyNotes); an
+    # app with a sticky footer needs it there regardless (§8.3). Checking the
+    # footer alone would fail a correct repo, which is worse than admitting a gap.
+    #
+    # This is the WEAK form and is labelled as such in the output. It assumes the
+    # painting element is either the footer or the one panel named in APPS — true
+    # of all three today, required by nothing. An app painting --surface three
+    # levels up would satisfy the contract and fail here. The robust form is a
+    # browser walking up from the button to the first ancestor whose computed
+    # backgroundColor is not transparent; that is out of reach for a static
+    # reader, so this says which form it ran rather than implying more.
+    for theme in ("light", "dark"):
+        label = f"§5.3 backdrop is --surface   [{theme}]  (STATIC approximation)"
+        bad = []
+        for name, app in apps.items():
+            props = app.light if theme == "light" else app.dark
+            want = resolve("var(--surface)", props).lower()
+            raw, source = app.backdrop()
+            if raw is None:
+                bad.append(f"{app.name:<8} {app.cfg['css'][0]}\n"
+                           f"           no background on `{app.cfg['footer']}` or "
+                           f"`{app.cfg['panel']}` — cannot determine the backdrop statically")
+                continue
+            actual = resolve(raw, props).lower()
+            if actual != want:
+                bad.append(f"{app.name:<8} {app.cfg['css'][0]}   in rule `{source}`\n"
+                           f"           `background: {raw}` resolves to `{actual}` in {theme}, "
+                           f"expected --surface `{want}`")
+        if bad:
+            report.fail(label, bad)
+        else:
+            report.ok(label, f"--surface behind the controls in all {len(apps)}")
+
     # The focus outline is one declaration in every app, but its colour comes
     # from a token, so shape and resolved colour are checked together per theme.
     for theme, expected in (("light", "#2563eb"), ("dark", "#3b82f6")):
@@ -365,7 +416,12 @@ What a green run does NOT mean. This reads CSS source; it never renders anything
   · Markup is unverified — icon size, aria-label wording, the element type, and
     the width-stable label structure all live in TSX, not CSS (§7).
   · Contrast ratios are not computed; only that the colours are the pinned ones.
-  · Per-app backdrops are out of scope, which is why §10.1 and §10.2 exist.
+  · The §5.3 backdrop check is a STATIC APPROXIMATION, labelled as such above. It
+    resolves the footer's background, falling back to the panel named in APPS —
+    which assumes the painting element is one of those two. That is true of all
+    three apps today and required by nothing. A failure there may be this check's
+    limitation rather than a real violation; confirm in a browser, by walking up
+    from the button to the first ancestor with a non-transparent background.
   · Values inside @media blocks are deliberately skipped: a conditional override
     is a different value under different conditions, not a disagreement.
 

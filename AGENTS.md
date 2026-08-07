@@ -190,6 +190,34 @@ visible to no one.
 
 An incomplete source set does not produce obviously-wrong contracts. It produces contracts
 that are silently missing the rules nothing can check.
+
+### 3.2 Beware a rationale that is true of the apps you were thinking about
+
+The most common defect in this contract has not been a wrong value. It is **a reason that
+holds for two apps, written as though it held for three.** Three instances so far, each
+caught by the repo it was false of:
+
+| Written | False of | Because |
+|---|---|---|
+| "the sidebar column is sized in `rem`" | MyNotes | its column is `420px`, a sanctioned exemption |
+| "the footer paints `--surface`" | MyNotes | its footer is transparent; the panel behind it paints |
+| "the panel is the footer's parent" | nobody *yet* | true of all three today, required by none |
+
+The value was right every time. The *justification* was written from whichever
+implementations the author had in mind, and it fails the moment a reader checks it against
+the app it does not describe — who then reasonably concludes that app has drifted.
+
+So, when writing a rationale:
+
+- **Check it against all three, by name**, not against the two that prompted it.
+- If it is true of a subset, **say which subset and why the others are exempt.** An exemption
+  stated is documentation; an exemption omitted looks like drift.
+- Prefer stating the **required result** over the mechanism that achieves it. "The colour
+  behind the controls is `--surface`" survives all three implementations; "the footer paints
+  `--surface`" does not.
+- Watch for a rationale that is true today by coincidence. The third row above is that case:
+  nothing requires the painting element to be the footer's parent, so any check assuming it
+  must say it is assuming it (§2.4).
 - **State resolved values, not token names** (§2.3), and give the local names for each repo
   in a table.
 - **Specify observable results, not mechanisms** — unless the mechanism genuinely is the

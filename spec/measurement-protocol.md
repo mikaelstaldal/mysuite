@@ -23,6 +23,11 @@ Tests being green tells you the code compiles and the assertions hold against *s
 It says nothing about whether that something is your change. Geometry in particular is only
 ever established by measuring a rendered page.
 
+**This applies to CI exactly as it does locally.** A pipeline that starts a server from
+anything other than the binary built in that same job has the identical trap, and it is worse
+there: nobody is watching, and a green pipeline is trusted more than a green local run. If you
+wire one of these suites into CI, build and serve in the same job, from the same artefact.
+
 ---
 
 ## The protocol

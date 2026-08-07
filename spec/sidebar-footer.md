@@ -304,9 +304,18 @@ in all three apps rather than a per-app range:
 | Light | `#1f2937` on `#f3f4f6` | 13.338:1 |
 | Dark | `#f3f4f6` on `#374151` | 9.366:1 |
 
-Both clear 4.5:1 with large margins, so hover is never the problem. (MyCal is the one app
-where the two surfaces coincide — its panel *is* `#f3f4f6` — which is §10.1, not a contrast
-issue.)
+Both clear 4.5:1 with large margins, so hover is never the problem.
+
+**MyCal is the one app where the two surfaces coincide** — its panel *is* `#f3f4f6`, so the
+label sits on `#f3f4f6` whether or not the fill is painted. That is §10.1 seen from the other
+end, and it is probably why measuring against the panel survived as long as it did: in the app
+most likely to be checked first, the wrong method and the right one give the same answer.
+
+Worth generalising, because it will happen again: **a coincidence between two surfaces hides a
+methodology error rather than a value error.** Every number stays right while the reasoning
+behind them is wrong, so nothing looks anomalous until an app where the two differ is checked.
+When two things that could differ happen to be equal, that is where to test the method, not
+where to relax.
 
 **The failure is the resting state, in one app, in one theme** — and it is a defect, not a
 difference. Recorded as an open item in §10.2; do not fix it in MyCal alone.

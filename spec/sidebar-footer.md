@@ -392,12 +392,34 @@ Getting these wrong sent this work down a blind alley once. For the record:
 | **1.4.11 Non-text Contrast** | 3:1 for UI components and focus indicators, against **adjacent** colours. **Level AA.** | **Yes — this is the binding one.** |
 | 2.4.13 Focus Appearance | Focus indicator contrast *and* minimum area. **Level AAA.** | Informative. The 2px perimeter meets its area minimum. |
 | 2.4.11 Focus Not Obscured | Focused controls must not be hidden behind sticky headers. Nothing to do with contrast. | **No.** Do not cite it for contrast. |
-| 1.4.4 Resize Text | Content usable at 200% text size. | Yes — why the sidebar column is sized in `rem`. |
+| 1.4.4 Resize Text | Content usable at 200% text size. | Yes, but the response is per-app — see below. |
 | 1.4.3 Contrast (Minimum) | 4.5:1 for normal text. **Level AA.** | Yes — see §5.4. Currently failed by MyCal's resting label in light (§10.2). |
 | 2.5.8 Target Size (Minimum) | 24×24px minimum. **Level AA.** | Yes: the 29.2px height clears 24px by 5.2px. Height is the binding dimension; width (~84px per control) is not close. |
 | 2.5.3 Label in Name | The accessible name must contain the visible label. | Yes — see §7. |
 
 Use **1.4.11** in code comments and requirements docs.
+
+### 6.4 Resize Text — the containing column is *not* part of this contract
+
+The controls are sized in `rem`, so they grow with the reader's browser font. Whether the
+column *around* them also grows is each app's own problem, and the three answer it
+differently — correctly:
+
+| | Column width | |
+|---|---|---|
+| MyCal | `--sidebar-width: 12.5rem` | converted to `rem`; ~26px of slack, so a `px` column would push Settings out |
+| MyMail | `grid-template-columns: 13.75rem 1fr` | converted to `rem`; ~29px of slack, same reason |
+| MyNotes | `.sidebar { width: 420px }` | **deliberately left in `px`** |
+
+**MyNotes' `px` column is a sanctioned exemption, not drift.** With 403px available against a
+174px row it has ~229px of slack — at a 24px root the row reaches only 217px, still leaving
+~186px spare. The resize case never binds there, so converting would have been churn. MyCal
+and MyMail had no such margin and had to convert.
+
+So: do not "fix" MyNotes' `420px`, and do not infer from MyCal and MyMail that a `rem` column
+is part of this contract. **It is not.** The contract covers the two controls; how a column
+accommodates them is local, and the right answer depends on a budget that differs by an order
+of magnitude across the three.
 
 ---
 

@@ -799,8 +799,11 @@ The one-line version: **a green build proves nothing about geometry**, because a
 apps embed `web/static/` into the binary and a running server keeps serving what it started
 with.
 
-MyCal's `e2e/tests/sidebar-footer.spec.ts` is the only automated guard this contract has
-anywhere (§10). Read it before changing anything here — it encodes the acceptance height,
+MyCal's `e2e/tests/sidebar-footer.spec.ts` is the only machine-checkable statement of this
+contract anywhere — but **it is not automated: it does not run in CI.** MyCal's workflow runs
+`./build.sh`, and `build.sh` does not invoke Playwright, so nothing checks this contract
+unless a person runs the suite deliberately (§10.7). Read it before changing anything here —
+it encodes the acceptance height,
 both viewport coordinates in all five views, theme-toggle width stability, overflow
 headroom at 20px and 24px roots, and composited focus contrast in both themes.
 
@@ -865,8 +868,18 @@ be surprised.
 7. **There is no cross-repo test.** Nothing anywhere can detect that one app has drifted
    from the other two. MyCal's `sidebar-footer.spec.ts` is one app's half of the contract —
    and **MyMail and MyNotes have no e2e suite at all**, so every number either of them has
-   reported is hand-measured and guarded by nothing in CI. Two thirds of this contract rests
-   on measurements that were correct once, on one machine. **This is the largest gap.**
+   reported is hand-measured. Two thirds of this contract rests on measurements that were
+   correct once, on one machine. **This is the largest gap.**
+
+   **And the remaining third is weaker than it looks: MyCal's suite does not run in CI.**
+   Its workflow runs `./build.sh`, which does not invoke Playwright. So the contract has no
+   *automated* guard anywhere — it has one suite that a person must choose to run. "The tests
+   pass" is a claim someone has to make deliberately here, not one CI makes on their behalf,
+   and a green pipeline says nothing about this contract at all.
+
+   Recording this because the alternative is overstating the protection in a document whose
+   subject is overstated protection. Found by mycal-dev, who removed the same overstatement
+   from its own `AGENTS.md` in the same commit.
 
    **A proposal, needing a human decision because it breaks this repo's own rules.** A
    cross-repo guard does not need a browser and does not need CI in the app repos: one

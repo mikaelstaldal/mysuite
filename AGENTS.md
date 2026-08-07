@@ -104,7 +104,9 @@ than no comment: it is confidently wrong, and nothing checks it.
 So:
 
 - If a number matters, **put it in a test.** MyCal's `e2e/tests/sidebar-footer.spec.ts` is
-  the model, and is currently the only automated guard any of this has.
+  the model — the only machine-checkable statement of any of this. Note that it is not wired
+  into CI, so it guards the contract only when a person runs it; getting it into a pipeline
+  would do more for these contracts than any amount of further prose.
 - If it cannot be tested, **say in the comment that it is a reading rather than a contract**,
   and say what it was read on. Text measurements are per-platform and per-font.
 - When you write a number down, write its conditions with it. "29.2px" is a claim that stops

@@ -29,8 +29,10 @@ rule looks redundant.
 
 **Does not belong:**
 
-- Anything true of only one app. That belongs in that app's own `AGENTS.md` or
-  `spec/REQUIREMENTS.md`.
+- Anything true of only one app. That belongs in that app's own `AGENTS.md`, or in its own
+  requirements document where it has one — MyMail and MyNotes carry `spec/REQUIREMENTS.md`;
+  **MyCal has no `spec/` directory at all.** (Those paths are inside the *app* repos, not
+  this one.)
 - CSS class names, token names, or file layout. Those are deliberately per-project. What is
   shared is the *value*, never the name it is reached by.
 - Application code. There is no shared stylesheet and no shared component library — the

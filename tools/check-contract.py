@@ -15,7 +15,7 @@ Python 3, standard library only: no package manager, no network, no build step.
 The app repos have a standing rule against npm/npx and this must not become a
 dependency they would have to adopt.
 
-Usage:  tools/check-contract.py [--repos DIR] [--quiet]
+Usage:  tools/check-contract.py [--repos DIR] [--quiet] [--self-test]
 Exit:   0 all pinned values agree · 1 a pinned value disagrees · 2 cannot check
 """
 
@@ -80,8 +80,11 @@ DARK_SCOPES = ('[data-theme="dark"]', ':root[data-theme="dark"]')
 #   mode "text"   compare the declaration's source text exactly. This is what
 #                 catches `0.80rem` -> `0.8rem`: identical computed AND serialised,
 #                 so no rendering test can ever see it (§9.2).
-#   mode "colour" resolve var() through the app's own tokens, compare the hex.
-#                 Token *names* are per-project and are not compared (§5.2).
+#   mode "resolve" follow var() chains through the app's own tokens and compare
+#                 the RESOLVED value — a colour or a length. Token *names* are
+#                 per-project and are never compared (§5.2); the number of hops
+#                 to reach a literal is local too, which is why this resolves
+#                 rather than matching names.
 
 PINS = [
     # rule      property          expected                    mode      section
@@ -95,7 +98,7 @@ PINS = [
     ("button", "white-space",     "nowrap",                   "text",   "§2"),
     ("button", "cursor",          "pointer",                  "text",   "§2"),
     ("button", "background",      "none",                     "text",   "§2"),
-    ("button", "border-radius",   "6px",                      "colour", "§2"),
+    ("button", "border-radius",   "6px",                      "resolve", "§2"),
     ("button", "transition",
      "background 0.12s, color 0.12s, border-color 0.12s",     "text",   "§6.1"),
     # The §3.1 class: deleting any of these changes nothing observable in the app
@@ -121,9 +124,12 @@ COLOURS = [
     ("hover",  "border-color",  "#9ca3af", "#6b7280", "§5.1 hover border"),
 ]
 
-# Declarations that must NOT be present — §6.2 names both explicitly.
+# Declarations that must NOT be present. `0` and `none` compute identically, and
+# the base button rule is at least as natural a place to add one as :focus-visible,
+# so both rules and both spellings are checked.
 FORBIDDEN = [
-    ("focus", "outline", "none", "§6.2 — never restore `outline: none`"),
+    (("focus", "button"), "outline", {"none", "0"},
+     "§6.2 — never restore `outline: none`"),
 ]
 
 
@@ -143,6 +149,15 @@ def top_level_rules(css: str):
     i, n, sel = 0, len(css), []
     while i < n:
         c = css[i]
+        if c == ";" and not sel_is_open(sel):
+            # A statement at-rule — `@import url(...);`, `@charset`, `@layer a, b;`
+            # — ends here and declares no block. Without this reset the accumulator
+            # runs on into the NEXT selector, the combined string starts with `@`,
+            # and the guard below silently drops a rule that is not an at-rule.
+            # MyNotes' app.css opens with `@import url("render/note.css");`, so
+            # this fired on a real repo: the following `*` rule vanished.
+            i, sel = i + 1, []
+            continue
         if c == "{":
             selector = "".join(sel).strip()
             depth, j = 1, i + 1
@@ -162,19 +177,39 @@ def top_level_rules(css: str):
             i += 1
 
 
+def sel_is_open(sel) -> bool:
+    """True if the accumulated selector has an unclosed `(`, so a `;` inside it
+    (e.g. `:is(a;b)` malformed, or a url with a semicolon) is not a statement end."""
+    return "".join(sel).count("(") > "".join(sel).count(")")
+
+
 def normalise(selector: str) -> str:
     return re.sub(r"\s*,\s*", ", ", " ".join(selector.split()))
 
 
 def declarations(body: str) -> dict[str, str]:
     """property -> source text of its value, last wins (as the cascade does)."""
-    out, depth, buf = {}, 0, []
+    out, parens, braces, buf = {}, 0, 0, []
     for ch in body:
         if ch == "(":
-            depth += 1
+            parens += 1
         elif ch == ")":
-            depth -= 1
-        if ch == ";" and depth == 0:
+            parens -= 1
+        elif ch == "{":
+            # Native CSS nesting. Everything inside belongs to the nested rule,
+            # not this one — `&:hover { color: red }` would otherwise attribute a
+            # hover colour to the resting rule and fail against the wrong pin.
+            braces += 1
+            take(out, "".join(buf))   # flush the declaration before the nested block
+            buf = []
+            continue
+        elif ch == "}":
+            braces -= 1
+            buf = []
+            continue
+        if braces > 0:
+            continue
+        if ch == ";" and parens == 0:
             take(out, "".join(buf))
             buf = []
         else:
@@ -183,12 +218,17 @@ def declarations(body: str) -> dict[str, str]:
     return out
 
 
+PROP_RE = re.compile(r"^[a-z-]+$")
+
+
 def take(out: dict[str, str], chunk: str) -> None:
     if ":" not in chunk:
         return
     prop, _, value = chunk.partition(":")
     prop = prop.strip().lower()
-    if prop and not prop.startswith("--"):
+    # A real property name only. Guards against a nested selector fragment
+    # (`&`, `.btn { gap`) being recorded as if it were a declaration.
+    if PROP_RE.match(prop) and not prop.startswith("--"):
         out[prop] = " ".join(value.split())
 
 
@@ -292,20 +332,21 @@ class Report:
 
 
 def site(app: App, rule: str) -> str:
-    """Where a reader should go to fix it: repo, file, selector."""
-    return f"{app.name:<8} {app.cfg['css'][0]}   in rule `{app.cfg[rule]}`"
+    """Where a reader should go to fix it: repo, file(s), selector."""
+    files = " / ".join(app.cfg["css"])   # all of them: one entry would be a guess
+    return f"{app.name:<8} {files}   in rule `{app.cfg[rule]}`"
 
 
 def check(apps: dict[str, App], report: Report) -> None:
     for rule, prop, expected, mode, section in PINS:
-        label = f"{section:<7} {rule}.{prop}"
+        label = f"{section:<8} {rule}.{prop}"
         bad = []
-        for name, app in apps.items():
+        for app in apps.values():
             raw, err = app.declared(rule, prop)
             if err:
                 bad.append(f"{site(app, rule)}\n           {err}")
                 continue
-            actual = resolve(raw, app.light) if mode == "colour" else raw
+            actual = resolve(raw, app.light).lower() if mode == "resolve" else raw
             if actual != expected:
                 got = f"`{prop}: {raw}`"
                 if actual != raw:
@@ -319,9 +360,9 @@ def check(apps: dict[str, App], report: Report) -> None:
 
     for rule, prop, light, dark, section in COLOURS:
         for theme, expected in (("light", light), ("dark", dark)):
-            label = f"{section:<26} [{theme}]"
+            label = f"{section:<28} [{theme}]"
             bad = []
-            for name, app in apps.items():
+            for app in apps.values():
                 raw, err = app.declared(rule, prop)
                 if err:
                     bad.append(f"{site(app, rule)}\n           {err}")
@@ -337,17 +378,18 @@ def check(apps: dict[str, App], report: Report) -> None:
             else:
                 report.ok(label, f"`{expected}` in all {len(apps)}")
 
-    for rule, prop, banned, why in FORBIDDEN:
+    for rules, prop, banned, why in FORBIDDEN:
         bad = []
-        for name, app in apps.items():
-            raw, err = app.declared(rule, prop)
-            if not err and raw.strip().lower() == banned:
-                bad.append(f"{site(app, rule)}\n"
-                           f"           `{prop}: {raw}` is present and must not be")
+        for app in apps.values():
+            for rule in rules:
+                raw, err = app.declared(rule, prop)
+                if not err and raw.strip().lower() in banned:
+                    bad.append(f"{site(app, rule)}\n"
+                               f"           `{prop}: {raw}` is present and must not be")
         if bad:
             report.fail(why, bad)
         else:
-            report.ok(why, "absent in all 3")
+            report.ok(why, f"absent in all {len(apps)}")
 
     # §5.3 — the RESOLVED backdrop, not which element declares it. An app whose
     # panel already paints --surface needs nothing on the footer (MyNotes); an
@@ -362,9 +404,9 @@ def check(apps: dict[str, App], report: Report) -> None:
     # backgroundColor is not transparent; that is out of reach for a static
     # reader, so this says which form it ran rather than implying more.
     for theme in ("light", "dark"):
-        label = f"§5.3 backdrop is --surface   [{theme}]  (STATIC approximation)"
+        label = f"{'§5.3 backdrop is --surface':<28} [{theme}]  (STATIC approximation)"
         bad = []
-        for name, app in apps.items():
+        for app in apps.values():
             props = app.light if theme == "light" else app.dark
             want = resolve("var(--surface)", props).lower()
             raw, source = app.backdrop()
@@ -386,9 +428,9 @@ def check(apps: dict[str, App], report: Report) -> None:
     # The focus outline is one declaration in every app, but its colour comes
     # from a token, so shape and resolved colour are checked together per theme.
     for theme, expected in (("light", "#2563eb"), ("dark", "#3b82f6")):
-        label = f"§6.2 focus outline           [{theme}]"
+        label = f"{'§6.2 focus outline':<28} [{theme}]"
         want, bad = f"2px solid {expected}", []
-        for name, app in apps.items():
+        for app in apps.values():
             raw, err = app.declared("focus", "outline")
             if err:
                 bad.append(f"{site(app, 'focus')}\n           {err}")
@@ -406,7 +448,9 @@ def check(apps: dict[str, App], report: Report) -> None:
 
 
 CANNOT_CHECK = """\
-What a green run does NOT mean. This reads CSS source; it never renders anything.
+What this run does NOT tell you — on a pass OR a failure. It reads CSS source
+and never renders anything, so a clean result is narrower than it looks and a
+failing one covers less ground than the count suggests.
 
   · Geometry is unverified — the 29.2px height, the (8,8) viewport position, the
     4px outline clearance, overflow and clipping. All need a browser (§2.2, §8).
@@ -424,9 +468,69 @@ What a green run does NOT mean. This reads CSS source; it never renders anything
     from the button to the first ancestor with a non-transparent background.
   · Values inside @media blocks are deliberately skipped: a conditional override
     is a different value under different conditions, not a disagreement.
+  · It reads ONE NAMED RULE per app (see APPS). A reordered selector list or a
+    renamed class reports "rule not found", not drift — loud, but it is a static
+    reader coupled to selector text in a suite whose §5.2 says names are local.
+  · Known parser gaps, none firing on the three apps today: `!important` is kept
+    in the value text and would read as a disagreement; a `var()` nested inside a
+    fallback (`var(--a, var(--b))`) is returned verbatim; comment-stripping is
+    string-unaware, so a `"/*"` inside a string would corrupt the rest of the
+    file; a custom property whose value contains `;` inside `url()` mis-parses.
 
 Rendering and this check are complements, not substitutes. Neither sees what the
 other does — and only MyCal has a rendering suite at all."""
+
+
+# ─── Self-test: prove the guard can still fail ──────────────────────────────
+#
+# measurement-protocol.md: "a guard is not accepted when it goes green. It is
+# accepted when it has been shown to go red for the right reason." That has to
+# stay true as this file changes, so the sensitivity checks live with it. Each
+# case names the parser behaviour it defends and the finding that motivated it.
+
+SELF_TEST = [
+    ("@import does not swallow the next rule",
+     lambda: "*" in [s for s, _ in top_level_rules('@import url("x.css");\n* { box-sizing: border-box; }')]),
+    ("a top-level ; does not merge selectors",
+     lambda: [s for s, _ in top_level_rules('@charset "utf-8";\n.a { color: red }')] == [".a"]),
+    ("native nesting does not leak into the parent rule",
+     lambda: declarations("gap: 6px; &:hover { color: red; }") == {"gap": "6px"}),
+    ("a declaration after a nested block is still read",
+     lambda: declarations("&:hover { color: red; } gap: 6px") == {"gap": "6px"}),
+    ("paren depth still protects multi-part values",
+     lambda: declarations("transition: a 1s, b 2s") == {"transition": "a 1s, b 2s"}),
+    ("var() chains resolve to a literal, not a name",
+     lambda: resolve("var(--a)", {"--a": "var(--b)", "--b": "#ffffff"}) == "#ffffff"),
+    ("a var() cycle terminates instead of hanging",
+     lambda: resolve("var(--a)", {"--a": "var(--b)", "--b": "var(--a)"}) is not None),
+    ("an unknown token is returned verbatim, not treated as a match",
+     lambda: resolve("var(--nope)", {}) == "var(--nope)"),
+    ("@media blocks are not read as top-level rules",
+     lambda: [s for s, _ in top_level_rules("@media (x) { .a { color: red } }")] == []),
+    ("a nested selector fragment is not recorded as a property",
+     lambda: "&" not in declarations("gap: 6px; &:hover { color: red; }")),
+]
+
+
+def self_test() -> int:
+    print("Self-test — can this guard still fail?\n")
+    bad = 0
+    for label, fn in SELF_TEST:
+        try:
+            passed = bool(fn())
+        except Exception as exc:                      # a crash is a failure, not a skip
+            passed, label = False, f"{label}  [raised {type(exc).__name__}: {exc}]"
+        print(f"{'  ok  ' if passed else ' FAIL '} {label}")
+        bad += not passed
+    print()
+    if bad:
+        print(f"SELF-TEST FAILED — {bad} case(s). The parser is not behaving as the")
+        print("contract checks assume, so a green contract run would prove nothing.")
+        return 1
+    print(f"Self-test passed — {len(SELF_TEST)} cases. This proves the PARSER still")
+    print("behaves as assumed. It does not prove the contract holds; run without")
+    print("--self-test for that.")
+    return 0
 
 
 def main() -> int:
@@ -434,7 +538,12 @@ def main() -> int:
     ap.add_argument("--repos", default=None,
                     help="directory holding mycal/ mymail/ mynotes/ (default: this repo's parent)")
     ap.add_argument("--quiet", action="store_true", help="print only failures and the verdict")
+    ap.add_argument("--self-test", action="store_true",
+                    help="check the parser against inline fixtures; prove this guard can still fail")
     args = ap.parse_args()
+
+    if args.self_test:
+        return self_test()
 
     here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     repos = args.repos or os.path.dirname(here)
@@ -447,6 +556,8 @@ def main() -> int:
     if missing:
         print(f"CANNOT CHECK: repo(s) not found at {repos}: {', '.join(sorted(missing))}")
         print("This contract is a three-repo agreement; checking a subset would be misleading.")
+        print()
+        print(CANNOT_CHECK)
         return 2
 
     apps = {}
@@ -454,6 +565,8 @@ def main() -> int:
         app = App(name, os.path.join(repos, name))
         if app.problems:
             print(f"CANNOT CHECK: {name}: " + "; ".join(app.problems))
+            print()
+            print(CANNOT_CHECK)
             return 2
         apps[name] = app
 
@@ -476,12 +589,11 @@ def main() -> int:
         print(f"FAILED — {len(report.failures)} pinned value(s) disagree across the three repos.")
         print(f"Every value above is fixed by {SPEC}. Changing one is a change in all three")
         print("repos, or in none — a local 'fix' is the defect this check exists to find.")
-        return 1
-
-    print(f"PASSED — every pinned value agrees across {', '.join(sorted(apps))}.")
+    else:
+        print(f"PASSED — every pinned value agrees across {', '.join(sorted(apps))}.")
     print()
     print(CANNOT_CHECK)
-    return 0
+    return 1 if report.failures else 0
 
 
 if __name__ == "__main__":

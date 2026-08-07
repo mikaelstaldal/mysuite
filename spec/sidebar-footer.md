@@ -1059,10 +1059,33 @@ be surprised.
    to prevent — passes it cleanly. Rendering and this check are complements; neither sees
    what the other does.
 
+   **Shown red for the right reason**, per `measurement-protocol.md`, rather than merely
+   shown green — for one pin of each kind it checks:
+
+   | Break | Result |
+   |---|---|
+   | `0.80rem` → `0.8rem` in MyMail | fails §2.1, naming repo, file and rule |
+   | `--text-subtle` `#6b7280` → `#6b7281` in MyCal | fails §5.1 resting text, resolved through the token |
+   | `padding: 4px 8px` → `4px 10px` in MyNotes | fails §2 button.padding |
+   | delete `flex-shrink: 0` from MyCal | fails §2.3 — the §3.1 class, invisible to MyCal's own rendering |
+   | MyCal's backdrop, in the live repos | went red, then **green** when MyCal landed `9aa9cae` |
+
+   The last row is the only one that was not staged: the contract was written ahead of the
+   code, the check reported the difference, and it cleared when the change landed. **That is
+   the first acceptance signal in this work that did not come from the agent making the
+   change.**
+
+   `--self-test` proves the *parser* still behaves as the checks assume, with ten inline
+   cases. It exists because a parser defect is how thirty assertions go green-and-blind at
+   once — two such defects were found in review, one of them live: `@import` was swallowing
+   the rule that followed it, dropping a real rule from MyNotes' stylesheet.
+
    **Nobody's CI runs it.** It is a script someone has to run — precisely the state §9.1
    describes MyCal's suite as having been in before `7e65102`. Wiring it in would mean
    choosing whose pipeline runs it, and would need all three repos checked out there, which
-   no app repo's CI currently does. Until then it guards nothing on its own.
+   no app repo's CI currently does. **Until then it guards nothing on its own**, and what
+   fixes the self-measurement problem is not the script existing but its being run by someone
+   other than the author.
 8. **MyCal's narrow layout sits exactly on the 4px floor.** Below 600px `.app`'s padding
    drops to 4px and the sidebar stacks under the main content, so **B = 4, not 8**. That is
    within §8.4's floor but with *nothing* spare — the focus outline's outer edge lands

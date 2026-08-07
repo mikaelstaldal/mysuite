@@ -212,7 +212,10 @@ ancestor that actually paints:
 ```js
 // The colour painted immediately behind an element. Walks up from the parent to
 // the first ancestor with a non-transparent background-color.
-// Returns null when nothing paints — a distinguishable result, not a default.
+//
+// Always returns an object. When nothing paints, `backgroundColor` is null —
+// check that field, not the object. `if (!resolveBackdrop(el))` is always false
+// and would skip the very branch limitation 4 exists to make you handle.
 function resolveBackdrop(el) {
   for (let p = el.parentElement; p; p = p.parentElement) {
     const bg = getComputedStyle(p).backgroundColor;

@@ -256,6 +256,37 @@ as blocking.
 and the resting border are both `#374151`, so keeping the resting border would erase the
 button's outline at exactly the moment it lights up.
 
+**The hover fill has a floor: it must not equal the backdrop, and must reach 1.101:1 against
+it.** That number is the weakest fill the suite already ships in light, so the floor is
+reverse-engineered from the status quo rather than derived — and **it is a product floor, not
+a WCAG one.** No criterion was found that binds a hover-only fill, and none is cited here for
+one; the label's own contrast *on* the fill keeps its 1.4.3 obligation regardless (§5.4). The
+floor exists because a fill at 1.000:1 is not a weak fill, it is an absent one, and §10.1
+records that the fill is faint in all three apps as an open item.
+
+#### Recorded per-app deviations
+
+The values above are shared. Where an app's own backdrop (§5.3) makes a shared value fail a
+stated threshold, that app deviates on that one value — **recorded here with its measurement,
+and only then implemented.** §2.2 is unchanged: a deviation is never decided in an app repo.
+Anything not in this table is still shared, and finding a difference that is not listed here
+means one of the three has drifted.
+
+| App | Role | Shared | Local | Measured against its backdrop | Why |
+|---|---|---|---|---|---|
+| MyCal | Resting text, **light only** | `#6b7280` | `#4b5563` | 6.867:1 (shared value gives **4.393:1**, fails 1.4.3) | its light backdrop is `#f3f4f6`, not `#ffffff` |
+| MyCal | Hover fill, **light only** | `#f3f4f6` | `#e5e7eb` | 1.125:1 (shared value gives **1.000:1** — the fill *is* the backdrop) | same |
+
+Both are confined to light by a theme-scoped alias, because MyCal's dark theme needs neither:
+on `#111827` the shared label measures 6.987:1 and the shared fill 1.721:1, both better than
+they were. Scoping matters concretely here — MyCal's dark `--text-muted` is `#d1d5db`, so an
+unscoped alias would have moved a dark value that was already correct.
+
+**The local label value is rejected option B, and the objection to it has expired.** Darkening
+the label to `#4b5563` was rejected once, because it applied a whole ramp step to three apps
+to fix one. Per-app backdrops remove that premise: it now applies to one app, which is the
+number of apps that have the problem.
+
 ### 5.2 Token names are per-project by design
 
 What is mandated is the **resolved colour**, never the token name or the number of hops to
@@ -284,137 +315,185 @@ in the Android render kit: each is used exactly once, by app chrome, and never b
 `note.css` itself. `--primary` is used by the render kit and is not dead weight. Carrying
 those two is a deliberate trade against splitting MyNotes' palette across two files.
 
-### 5.3 The backdrop is part of the contract
+### 5.3 The backdrop is per-app, and it is recorded
 
-> **The colour painted immediately behind the two controls must be the app's `--surface`.**
+> **The colour painted immediately behind the two controls must be opaque, must be recorded
+> here as a resolved value for each app and theme, and every colour drawn on it must be
+> verified against *that app's* backdrop.**
+>
+> **It is not required to be the same colour in the three apps, and it is not.**
 
-**This is about the resolved backdrop, not about which element declares it.** An earlier
-wording said "the footer paints `--surface`", which is false of MyNotes — its footer is
-transparent and the `.sidebar` panel behind it paints `--surface`, which shows through. A
-guard implementing the literal wording would have failed a correct implementation.
+This replaces a rule requiring the backdrop to be the app's `--surface`. That rule is
+withdrawn (§11) **on the owner's instruction, not because it was wrong**:
 
-Two notes belong with the requirement:
+> *"Now the buttons look the same and have the same placement, good. However, MyCal does not
+> look good with that box around the buttons, remove the surrounding box and place the buttons
+> directly on the left panel background. Accept that the three apps have different background
+> color around the buttons."*
 
-- An app whose **panel already paints `--surface`** needs no declaration on the footer. The
-  footer may be transparent and inherit it.
-- An app with a **sticky footer needs an explicit opaque background regardless** — content
-  scrolls underneath otherwise. That is §8.3's opaque-background rule, and the two
-  requirements meet here: a sticky footer's background is doing two jobs at once, and the
-  colour that satisfies §8.3 is the one this section pins.
+Read precisely, that sanctions a difference in **the colour behind the controls**. It does not
+sanction differences in geometry — the first sentence is confirming those — and it does not
+by itself sanction anything else in this document. Two further divergences were proposed on
+the strength of it and one was refused; see §8.5.
 
-So all three satisfy it by three different mechanisms:
+#### What did not fall
 
-| | How `--surface` gets behind the controls |
-|---|---|
-| MyCal | footer paints it (and its sticky footer requires an opaque background anyway) |
-| MyMail | footer paints it explicitly (sticky requires it) |
-| MyNotes | footer transparent; `.sidebar` paints it and the footer inherits |
+The reason the old rule existed survives it intact. Every colour in §5.1 is **half of a
+contrast ratio**. Pinning the halves without pinning what they sit on specifies nothing about
+how they read, and that is exactly how a WCAG 1.4.3 failure (4.393:1) and an invisible hover
+fill got in — two defects, one cause.
 
-**MyMail's and MyCal's footer backgrounds are load-bearing, not decoration.** A sticky footer
-with a transparent background has content scrolling visibly underneath it (§8.3). Those two
-cannot satisfy this section by inheritance the way MyNotes does, even in principle — the
-declaration has to be there. This is §8.3's opaque-background rule and §5.3's backdrop rule
-meeting on one line of CSS. **Do not "simplify away" either footer's `background` as
-redundant with its panel.**
+So the obligation **moves rather than lapses**: from *which colour* to *the relationship
+between the colour and what is drawn on it*. Per app, both themes:
 
-**Checking this is harder than it looks, and the guard script says which form it ran.** The
-requirement is about the resolved colour, so a check must resolve `var()` chains to literals
-rather than match token names — MyMail reaches `--surface` through `var(--sidebar-bg)`, so a
-name match would fail the app that satisfies the requirement most explicitly. And a static
-reader must *assume* which element paints, where a browser can simply walk up from the button
-to the first ancestor with a non-transparent background.
+1. **Opaque.** A sticky footer over transparency has content scrolling visibly under it
+   (§8.3), and a transparent backdrop makes the resolved value undefined for every check
+   below.
+2. **Recorded here**, as a resolved value, in the table that follows.
+3. **Everything drawn on it re-measured against it** — the resting label to 4.5:1 (§5.4,
+   WCAG 1.4.3), the focus indicator to 3:1 (§6.2, WCAG 1.4.11), the hover fill to the product
+   floor in §5.1. A shared value that fails one of those against an app's own backdrop
+   becomes a recorded per-app deviation (§5.1), never a locally-taken decision (§2.2).
 
-**The walk is the authoritative method** — see `measurement-protocol.md`, which carries the
-primitive and its limitations. `tools/check-contract.py` runs the static form and labels it an
-approximation. **Never obtain this backdrop by reading one element's own `backgroundColor`**:
-that returns the right answer only in an app whose footer happens to declare one, and computes
-contrast against transparency everywhere else — §3.1's trap in executable form.
-
-Leaving this unpinned was the root cause of two defects at once — an invisible hover fill and
-a WCAG 1.4.3 failure — because every colour above is only half of a contrast ratio. Pinning
-the colours without pinning what they sit on specifies nothing about how they read.
-
-**It is pinned as the app's `--surface`, not as a literal.** Unifying it to one hex would
-mean either repainting `--surface` across a whole app or giving the footer its own background
-in a repo where it is currently transparent and inherits its sidebar panel — which introduces
-a visible seam *inside* the sidebar. That cost is real and was measured; per-app `--surface`
-avoids it and still fixes both defects.
+#### The recorded backdrops
 
 | | Light | Dark |
 |---|---|---|
-| MyCal | `#ffffff` | `#1f2937` |
-| MyMail | `#ffffff` | `#1f2937` |
-| MyNotes | `#f9fafb` | `#1f2937` |
+| MyCal | `#f3f4f6` (`--bg`) | `#111827` (`--bg`) |
+| MyMail | `#ffffff` (`--surface`) | `#1f2937` (`--surface`) |
+| MyNotes | `#f9fafb` (`--surface`) | `#1f2937` (`--surface`) |
 
-**Dark converges completely; light does not** — MyNotes' `--surface` is `#f9fafb`, so its
-light figures stay slightly apart from the other two. This is worth stating precisely because
-the tempting stronger claim ("every contrast figure is now one suite-wide number") is false.
+**Why recorded, rather than "any opaque colour".** Because a rule saying "any opaque colour"
+is checkable by nothing, and being checkable was the one durable gain of the old rule — the
+thing it had that *"whatever each app happens to paint behind the footer"* never did. Writing
+the values down keeps that: `tools/check-contract.py` compares each app's resolved backdrop
+against **the value recorded above**, not against a shared literal.
 
-What the requirement buys is not identical numbers. It is that **"the footer paints
-`--surface`" is machine-checkable**, where "whatever each app happens to paint behind the
-footer" never was. That is the durable gain.
+So the process has not loosened even though the colour has. **Changing an app's backdrop is
+still a change to this document first.** What changed is that the answer may now differ per
+app — not that an app may pick one on its own.
 
-**Focus and text contrast remain per-app numbers** (§5.4, §6.2). Do not copy another app's
-figure — the light column above is why.
+#### It is the resolved backdrop, not the element that declares it
 
-> **Implementation status.** MyMail and MyNotes already satisfy this. **MyCal does not yet** —
-> its footer paints `--bg`. Moving it is a pending one-declaration change, together with a
-> `border-right: 1px solid <resting border>` so the band terminates against the content
-> beside it the way the other two do (their sidebars carry that border already). That costs
-> MyCal 1px of content box, 26px of slack to 25px, and moves neither L nor B.
+An earlier wording said "the footer paints `--surface`", which was false of MyNotes — its
+footer is transparent and the `.sidebar` panel behind it paints, which shows through. A guard
+implementing the literal wording would have failed a correct implementation. The three reach
+their recorded value three different ways:
+
+| | How the recorded colour gets behind the controls |
+|---|---|
+| MyCal | footer paints `--bg` explicitly — the same colour the chain already resolves to |
+| MyMail | footer paints `--surface` explicitly |
+| MyNotes | footer transparent; `.sidebar` paints `--surface` and the footer inherits |
+
+**MyCal's and MyMail's footer backgrounds are load-bearing, not decoration.** Both footers are
+sticky, so both need an opaque background whatever colour it is. Neither can satisfy this
+section by inheritance the way MyNotes does, even in principle.
+
+**And in MyCal the trap is now sharper than that, because the two colours coincide.** Its
+`background: var(--bg)` is **redundant for colour and load-bearing for opacity** — it paints
+exactly what is already behind it. A reader who deletes it as a no-op sees **no visual change
+at the moment of the edit**; the defect appears later, in the month and year views, to
+somebody else, as content sliding under the footer. Every other pin in this contract fails
+where you can see it fail. This one does not.
+
+*(Phrasing owed to mycal-dev, who raised it while implementing the change.)*
+
+#### Checking it
+
+The requirement is about the resolved colour, so a check must resolve `var()` chains to
+literals rather than match token names — MyMail reaches `--surface` through
+`var(--sidebar-bg)`, so a name match would fail the app that satisfies the requirement most
+explicitly.
+
+**The browser walk is the authoritative method** — see `measurement-protocol.md`, which
+carries the primitive and its limitations. A static reader must *assume* which element paints;
+a browser can simply walk up from the button to the first ancestor with a non-transparent
+background. `tools/check-contract.py` runs the static form and labels it an approximation.
+
+**Never obtain this backdrop by reading one element's own `backgroundColor`**: that returns
+the right answer only in an app whose footer happens to declare one, and computes contrast
+against transparency everywhere else — §3.1's trap in executable form. **A backdrop that
+cannot be resolved is a failure, not a pass** — the null case is "could not look", never
+"agrees".
+
+**Do not copy a contrast figure from one app to another.** With three different backdrops
+this is now more dangerous than it was, not less: the light column already differed, and dark
+has stopped converging too (§6.2).
+
+> **Implementation status.** MyMail and MyNotes are unchanged by this amendment and already
+> match their recorded rows. **MyCal's change exists but is not committed** — it is in that
+> repo's working tree at the time of writing, on top of `282f00f`.
 >
-> The `border-right` is pre-verified, not proposed: applied with the backdrop change and
-> measured at **L = 8.00, B = 8.00 unmoved, footer spanning [0..216], the column's right edge
-> at 216, row 174 of 199 available.** The border lands *on* the column's right edge, so the
-> band terminates exactly where the column does. Slack 26 → 25, which is the whole cost.
+> `tools/check-contract.py` therefore currently reports green **against an uncommitted tree**,
+> which is a weaker statement than the green run that accepted `9aa9cae` (§10.7) and must not
+> be quoted as the same thing. The script reads working files, not `HEAD`; nothing in its
+> output says which it read. Re-run it after MyCal commits, and treat *that* result as the
+> acceptance signal.
 >
-> Until it lands, `tools/check-contract.py` reports this as a disagreement. **That is the
-> check working, not a broken check** — the contract and the code genuinely differ right now,
-> and the script going green is the acceptance signal for MyCal's change.
+> The general form, since it will recur: **a checker that reads the filesystem tells you about
+> the filesystem.** Uncommitted work, a stashed change and a landed commit are indistinguishable
+> to it, so "the check is green" and "the contract holds in the repositories" are different
+> claims whenever anyone is mid-edit.
 
 ### 5.4 Text contrast — WCAG 1.4.3 Contrast (Minimum), Level AA
 
 The label is 12.8px at `font-weight: 400`. That is normal text, so the threshold is
 **4.5:1**, not the 3:1 large-text allowance.
 
-Resting text, against each app's `--surface` (§5.3):
+Resting text, each app against **its own** backdrop (§5.3), using its own label value (§5.1):
 
-| | Light (`#6b7280`) | Dark (`#9ca3af`) |
+| | Light | Dark |
 |---|---|---|
-| MyCal | 4.834:1 | 5.782:1 |
-| MyMail | 4.834:1 | 5.782:1 |
-| MyNotes | 4.626:1 | 5.782:1 |
+| MyCal | 6.867:1 — `#4b5563` on `#f3f4f6` | 6.987:1 — `#9ca3af` on `#111827` |
+| MyMail | 4.834:1 — `#6b7280` on `#ffffff` | 5.782:1 — `#9ca3af` on `#1f2937` |
+| MyNotes | 4.626:1 — `#6b7280` on `#f9fafb` | 5.782:1 — `#9ca3af` on `#1f2937` |
 
-All six pass. MyCal's light figure was **4.393:1 — a real failure** while its footer painted
-`--bg`; pinning the backdrop to `--surface` is what fixed it, and it is the whole reason §5.3
-exists. The margin is not large in light: `#6b7280` on `#f9fafb` clears 4.5:1 by 0.126, so
-**this row is sensitive to any future change to `--surface` or to the resting text colour.**
-Re-measure if either moves.
+All six pass. **Six different numbers now, where the previous rule gave three** — read the row
+that belongs to the app you are working in, and see §6.2's standing warning about transcribing
+a neighbour's figure.
+
+**Two of these rows are close to the line.** MyNotes clears 4.5:1 by 0.126 and MyMail by
+0.334, so **both are sensitive to any change in their backdrop or in the shared label
+colour.** MyCal is the app with room, which is the opposite of the position it was in.
+
+> **This row failed once, and it would have failed again.** While MyCal's footer painted
+> `--bg` and used the shared label colour, its light figure was **4.393:1** — a real 1.4.3
+> failure. Pinning the backdrop to `--surface` fixed it. Withdrawing that pin (§5.3) put the
+> same 4.393:1 back, in the same app, in the same theme — the identical defect, arriving the
+> second time as a side effect of an instruction about appearance that said nothing about
+> contrast.
+>
+> It was caught before it shipped because both mysuite-spec and mycal-dev computed the table
+> rather than assuming the geometry-only ruling was colour-neutral. **A withdrawal is a change
+> to everything the withdrawn rule was holding up**, and what it was holding up is not
+> necessarily what it was written about.
 
 **Hover text is measured against the hover fill, not the panel** — during hover that fill is
-the surface the label sits on. Because the fill is mandated (§5.1), the numbers are the same
-in all three apps rather than a per-app range:
+the surface the label sits on:
 
 | | Text on fill | Ratio |
 |---|---|---|
-| Light | `#1f2937` on `#f3f4f6` | 13.338:1 |
-| Dark | `#f3f4f6` on `#374151` | 9.366:1 |
+| MyMail, MyNotes — light | `#1f2937` on `#f3f4f6` | 13.338:1 |
+| MyCal — light | `#1f2937` on `#e5e7eb` | 11.856:1 |
+| All three — dark | `#f3f4f6` on `#374151` | 9.366:1 |
 
-Both clear 4.5:1 with large margins, so hover is never the problem.
+All clear 4.5:1 with large margins, so hover is never the problem here.
 
-**MyCal is the one app where the two surfaces coincide** — its panel *is* `#f3f4f6`, so the
-label sits on `#f3f4f6` whether or not the fill is painted. That is §10.1 seen from the other
-end, and it is probably why measuring against the panel survived as long as it did: in the app
-most likely to be checked first, the wrong method and the right one give the same answer.
+**MyCal used to be the app where the two surfaces coincided** — its panel is `#f3f4f6` and so
+was the mandated fill, so the label sat on `#f3f4f6` whether or not the fill painted. That
+coincidence is what made the fill invisible, and it is why MyCal now deviates on that value
+(§5.1). It is also why an error in *method* survived so long here:
 
-Worth generalising, because it will happen again: **a coincidence between two surfaces hides a
-methodology error rather than a value error.** Every number stays right while the reasoning
-behind them is wrong, so nothing looks anomalous until an app where the two differ is checked.
-When two things that could differ happen to be equal, that is where to test the method, not
-where to relax.
+> **A coincidence between two surfaces hides a methodology error rather than a value error.**
+> Every number stays right while the reasoning behind them is wrong, so nothing looks anomalous
+> until an app where the two differ gets checked. When two things that could differ happen to
+> be equal, that is where to test the method — not where to relax.
 
-**The failure is the resting state, in one app, in one theme** — and it is a defect, not a
-difference. Recorded as an open item in §10.2; do not fix it in MyCal alone.
+That generalisation is the durable part, and it outlived the coincidence that produced it:
+hover contrast was once measured against the panel instead of the fill in this document, and
+in the app most likely to be checked first the wrong method and the right one gave the same
+answer.
 
 ### 5.5 The control boundary — why no contrast figure is given for the border
 
@@ -426,6 +505,19 @@ near 3:1 against what it sits on:
 | MyCal | 1.125:1 | 1.721:1 |
 | MyMail | 1.238:1 | 1.424:1 |
 | MyNotes | 1.185:1 | 1.424:1 |
+
+> **These two MyCal figures were wrong for the whole life of the previous rule, and this
+> amendment makes them right again by accident.** They are the `--bg` figures. When `64d1aab`
+> pinned the backdrop to `--surface` they should have become 1.238 / 1.424 and they were not
+> updated — through a review in which every other table in this file was checked, by the
+> author of both.
+>
+> Recorded rather than quietly corrected, because *"the amendment fixed it"* would be a false
+> account of how it got fixed, and **a table that is right for the wrong reason is the next
+> reader's trap.** The lesson is narrow and repeatable: when a rule changes what a figure is
+> measured *against*, every table measured against it is in scope — including the ones the
+> change is not about. This section is about the border; the change was about the backdrop;
+> that is exactly why it was missed.
 
 **This is deliberate and is not treated as a 1.4.11 failure.** 1.4.11 requires 3:1 for
 visual information needed to *identify* a control — and these controls are identified by
@@ -491,7 +583,7 @@ the panel background instead. Measured against each app's own backdrop:
 
 | | Light | Dark |
 |---|---|---|
-| MyCal | 5.169:1 | 3.991:1 |
+| MyCal | 4.696:1 | 4.823:1 |
 | MyMail | 5.169:1 | 3.991:1 |
 | MyNotes | 4.946:1 | 3.991:1 |
 
@@ -510,17 +602,31 @@ All six pass, under both the strict-adjacency and the same-pixels readings.
 >
 > Two things hold regardless of how the number was obtained, and they are the reason this is
 > here. It happened to a **reviewer** — the role relied on to catch exactly this. And **it was
-> catchable only because the light column is per-app**: dark is `3.991` in all three, so a
-> sibling's dark figure would have been indistinguishable from a correct one.
+> catchable only because the light column was per-app**: dark was `3.991` in all three at the
+> time, so a sibling's dark figure would have been indistinguishable from a correct one.
 >
-> That second point is a cost of the convergence noted below: it removes a class of error in
-> dark by making it invisible rather than impossible. **Recompute; do not transcribe.**
+> That second point was recorded as a cost of convergence — it removed a class of error in
+> dark by making it invisible rather than impossible. **The convergence has since gone
+> (below), so the blind spot has gone with it.** That is not a reason to relax: it is a reason
+> to notice that the exposure moved because a *different* rule changed. **Recompute; do not
+> transcribe.**
 
-**Dark has the least headroom, and it shrank.** Against a required 3:1, every app now sits at
-**3.991:1** — MyCal's figure moved from 4.823 when its footer painted `--bg` (§5.3), which is
-convergence with the other two rather than a regression, but it halves the margin MyCal used
-to have. All three dark backdrops are now `#1f2937`, so **any change to `--surface` in dark,
-or to `--primary`, moves all three apps at once and starts from ~1 point of headroom.**
+**Dark no longer converges, and MyCal is the app that left.** Against a required 3:1:
+
+- MyMail and MyNotes sit at **3.991:1** — about one point of headroom, and it is *their*
+  shared margin. Both dark backdrops are `#1f2937`, so any change to `--surface` in dark, or
+  to `--primary`, moves both at once from a margin neither can spend.
+- MyCal sits at **4.823:1**, because its backdrop moved to `--bg` `#111827` (§5.3). It has
+  roughly double the headroom of the other two.
+
+This is worth stating rather than leaving as a table entry, because a claim in the opposite
+direction was true and load-bearing until this amendment: *"3.991 is the suite's margin, not
+any one app's."* It was written into MyCal's own CSS comment as well as this section. **It is
+now false, and the version in the code will outlive the version here** unless someone
+corrects it — which is §2.5's whole complaint about numbers in prose, arriving on schedule.
+
+MyCal's light figure moved the other way, `5.169` → **`4.696`**, so no app improved on both
+axes. Nothing in the suite is near a threshold in light.
 
 Rules that follow from this, all of which have been got wrong at least once:
 
@@ -933,6 +1039,37 @@ This mechanism is also why the viewport position is adjustable by a single decla
 two of three apps. It was mandated for the separator's sake and happens to have made §8
 tractable; expect the same to be true of future shared elements.
 
+**The separator does not have to terminate against anything, and in MyCal it does not.**
+MyMail's and MyNotes' sidebar panels carry a `border-right` (`app.css:208` and `app.css:67`
+respectively), so their separators meet a vertical line at the column edge. MyCal's column
+carries none, so its separator simply stops. **That junction is a property two apps happen to
+have. It has never been required, and its absence in the third is not a defect.**
+
+This was proposed as a reason to drop MyCal's `border-top` entirely when §5.3 was withdrawn,
+and **refused.** Three reasons, in order of weight:
+
+1. The owner's instruction was about the colour behind the controls. Removing a shared visual
+   element is not implied by it, and a separator present in two apps and absent in the third
+   is exactly the divergence nothing in this suite detects (§10.7).
+2. The argument is §3.2's shape read in reverse — a rationale drawn from the two apps in view
+   and applied to the third, where here the third is the one being changed.
+3. **MyCal shipped precisely this configuration until `282f00f`.** That commit changed
+   `background: var(--bg)` → `var(--surface)` and *added* a `border-right`; it never touched
+   `border-top`. So `border-top` over a `--bg` footer with no `border-right` is what MyCal
+   showed for the entire life of the footer, and the owner's objection arrived only after the
+   white fill landed. **The configuration being called unacceptable is the one that was never
+   complained about.**
+
+Point 3 is the one worth reusing. When an app proposes removing something because of how it
+will look, check whether the app has already shipped that appearance — the repository often
+holds a cheap answer to a question that otherwise gets settled by argument.
+
+MyCal's `border-right` **was** removed with the fill, and correctly. It had been added so the
+band would not terminate in mid-air against a different-coloured page, and its comment said
+so; with the band gone, the condition its justification rested on is gone. See `AGENTS.md`
+§3.3 — this is that rule's first catch on the live path, and it worked because MyCal recorded
+the *condition* rather than only the verdict.
+
 ---
 
 ## 9. Verifying a change
@@ -998,31 +1135,42 @@ be surprised.
 
 ### Open, with the human
 
-1. **The hover fill does almost no visual work — in all three apps.** Both defects that
-   §5.3 was written to fix are fixed: the resting label passes 1.4.3 everywhere (§5.4) and
-   the fill is no longer invisible in MyCal. What remains is that the fill was always faint,
-   and pinning the backdrop made that uniform rather than fixing it. Fill against backdrop:
+1. **The hover fill does almost no visual work — in all three apps.** The fill was always
+   faint; no rule about the backdrop has ever fixed that, and the current one does not
+   either. Fill against each app's own backdrop:
 
    | | Light | Dark |
    |---|---|---|
-   | MyCal | 1.101:1 | 1.424:1 |
+   | MyCal | 1.125:1 | 1.721:1 |
    | MyMail | 1.101:1 | 1.424:1 |
    | MyNotes | 1.053:1 | 1.424:1 |
 
-   MyCal moved from **1.000** — literally invisible — to the best of three weak values. So
-   *"hover is now identical across the suite"* is true and reads as stronger than it is:
-   **identical was achieved; "the fill does visible work" was not.**
+   The floor in §5.1 exists to stop this reaching 1.000 again; it does not make the fill do
+   work. **Clearing a floor and being visible are different claims** — as was
+   *"hover is now identical across the suite"*, which was true of the old figures and read as
+   stronger than it was.
 
-   Not a defect and not a standards failure. Hover stays clearly signalled by the border and
-   text, which both change in both themes, and §5.5 exempts the fill because the label
-   identifies the control. Raising it is a **design** change beyond the two defects that were
-   asked for, it touches other components in two repos, and no criterion requires it. With
-   the human as an optional follow-up. **Do not act on it in one app.**
-2. *(closed — was the WCAG 1.4.3 failure in MyCal's light theme, 4.393:1.* Fixed by §5.3
-   pinning the backdrop to `--surface`: MyCal's resting label now measures **4.834:1**
-   against a required 4.5:1. Kept as a numbered entry so references to §10.2 elsewhere still
-   resolve, and because the *reason* it existed is worth not losing — a colour was pinned
-   without pinning what it sits on, which specifies nothing about how it reads.)
+   Not a defect and not a standards failure. Hover stays clearly signalled by the **border and
+   text, which both change in both themes** — so even at 1.000:1 the control still responded,
+   which is why the invisible fill was a degradation rather than a loss of function. §5.5
+   exempts the fill because the label identifies the control.
+
+   Raising it is a **design** change, it touches other components in two repos, and no
+   criterion requires it. With the owner as an optional follow-up. **Do not act on it in one
+   app** — and note that this is where the direction question belongs: MyCal's light fill now
+   *darkens* against its backdrop like the other two only because `#e5e7eb` was chosen over
+   `#ffffff` (§5.1), and a suite-wide redesign should settle direction deliberately rather
+   than inherit it from three separate local choices.
+2. **MyCal's light resting label — the 4.393:1 failure — has now been introduced twice and
+   fixed twice.** First by leaving the backdrop unpinned; then again when the backdrop pin was
+   withdrawn (§5.3) on an instruction about appearance that said nothing about contrast. It is
+   currently fixed, by a MyCal-local label value measuring 6.867:1 (§5.1).
+
+   Kept as an open entry rather than closed, because **the failure mode is live, not
+   historical**: MyCal's light backdrop `#f3f4f6` cannot carry the shared `#6b7280` label. Any
+   future change that reverts MyCal's label to the shared value, or moves another app's
+   backdrop toward `#f3f4f6`, reintroduces it. §5.4's two near-line rows (MyNotes at 0.126
+   over, MyMail at 0.334 over) are where it would surface next.
 3. **`aria-pressed` alongside an action-phrased name.** All three toggles carry
    `aria-pressed={dark}` *and* an accessible name of "Switch to light mode", so a screen
    reader announces "Switch to light mode, pressed" — ambiguous about what "pressed" refers
@@ -1146,6 +1294,22 @@ an old comment or an old report:
 | `@media (forced-colors: active) { outline: revert }` | Nothing — deleted | An outline is painted under forced colours; the block would override the real fix |
 | WCAG 2.4.11 cited for contrast | 1.4.11, §6.3 | 2.4.11 is Focus Not Obscured |
 | Footer inset by horizontal margin | Full-bleed footer, inset by padding, §8.5 | The separator must span the whole sidebar |
+| "The backdrop behind the controls is the app's `--surface`" | Per-app recorded backdrop, §5.3 | Owner ruling: MyCal's footer must sit on the left column's background, and the three are accepted to differ |
+
+**Two of these were withdrawn on the owner's instruction rather than because they were
+wrong**, and the distinction is worth keeping. The `--surface` rule was not mistaken about
+accessibility — it fixed two real defects and its reasoning still stands. It was overreaching
+about **appearance**: it specified a colour when what it needed to specify was a relationship.
+
+The practical form of that, for anyone writing a rule here: **prefer pinning the constraint a
+value has to satisfy over the value that satisfies it today.** A rule stated as a relationship
+survives an appearance ruling; a rule stated as a colour is withdrawn by one.
+
+And a withdrawal is never confined to the section it lands in. Retiring this one **put a
+WCAG 1.4.3 failure straight back** in the app whose appearance was being adjusted (§5.4,
+§10.2), because the withdrawn rule had been holding up something it was not written about.
+**Re-derive everything a rule was carrying before retiring it**, not just the thing it was
+named for.
 
 **Two of the three repos once shipped comments describing histories that never existed in
 their own repository** — describing a ring being removed, when that ring had only ever

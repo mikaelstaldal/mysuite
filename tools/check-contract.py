@@ -124,6 +124,40 @@ COLOURS = [
     ("hover",  "border-color",  "#9ca3af", "#6b7280", "§5.1 hover border"),
 ]
 
+# ─── Recorded per-app values (§5.3, §5.1) ───────────────────────────────────
+#
+# The backdrop behind the controls is no longer one shared colour. The owner
+# ruled that the three apps may differ there, so what this checks is that each
+# app matches the value the CONTRACT RECORDS for it — not that the three agree.
+#
+# That distinction is the whole reason §5.3 writes the values down. A rule
+# saying "any opaque colour" would be checkable by nothing; recording them keeps
+# a changed backdrop a change to the spec first, exactly as it was before.
+#
+# (light, dark) — spec/sidebar-footer.md §5.3.
+BACKDROPS = {
+    "mycal":   ("#f3f4f6", "#111827"),   # --bg: the left column's own background
+    "mymail":  ("#ffffff", "#1f2937"),   # --surface
+    "mynotes": ("#f9fafb", "#1f2937"),   # --surface
+}
+
+# Sanctioned departures from COLOURS, per app and theme (§5.1's deviation table).
+# A value is allowed to differ ONLY where that app's own backdrop makes the
+# shared value fail a stated threshold, and only with the measurement recorded
+# in the spec. Anything not listed here is still expected to be shared, so an
+# unlisted difference is drift and fails.
+#
+# (app, rule, property, theme) -> resolved value
+DEVIATIONS = {
+    # MyCal's light backdrop is #f3f4f6, not #ffffff:
+    #   shared #6b7280 label  -> 4.393:1, FAILS WCAG 1.4.3 (needs 4.5:1)
+    #   local  #4b5563 label  -> 6.867:1
+    ("mycal", "button", "color", "light"): "#4b5563",
+    #   shared #f3f4f6 fill IS the backdrop -> 1.000:1, an absent fill
+    #   local  #e5e7eb fill   -> 1.125:1, clearing §5.1's 1.101 floor
+    ("mycal", "hover", "background", "light"): "#e5e7eb",
+}
+
 # Declarations that must NOT be present. `0` and `none` compute identically, and
 # the base button rule is at least as natural a place to add one as :focus-visible,
 # so both rules and both spellings are checked.
@@ -359,9 +393,9 @@ def check(apps: dict[str, App], report: Report) -> None:
             report.ok(label, f"`{expected}` in all {len(apps)}")
 
     for rule, prop, light, dark, section in COLOURS:
-        for theme, expected in (("light", light), ("dark", dark)):
+        for theme, shared in (("light", light), ("dark", dark)):
             label = f"{section:<28} [{theme}]"
-            bad = []
+            bad, deviated = [], []
             for app in apps.values():
                 raw, err = app.declared(rule, prop)
                 if err:
@@ -369,14 +403,25 @@ def check(apps: dict[str, App], report: Report) -> None:
                     continue
                 props = app.light if theme == "light" else app.dark
                 actual = resolve(raw, props).lower()
+                # A recorded deviation (§5.1) is checked against ITS OWN value,
+                # not waived. An app that deviates differently from the way the
+                # contract says it deviates still fails.
+                expected = DEVIATIONS.get((app.name, rule, prop, theme), shared)
+                if expected is not shared:
+                    deviated.append(f"{app.name} `{expected}`")
                 if actual != expected:
+                    why = ("expected the recorded deviation" if expected is not shared
+                           else "expected the shared value")
                     bad.append(f"{site(app, rule)}\n"
                                f"           `{prop}: {raw}` resolves to `{actual}` "
-                               f"in {theme}, expected `{expected}`")
+                               f"in {theme}, {why} `{expected}`")
             if bad:
                 report.fail(label, bad)
+            elif deviated:
+                report.ok(label, f"`{shared}` shared; recorded deviation: "
+                                 + ", ".join(deviated))
             else:
-                report.ok(label, f"`{expected}` in all {len(apps)}")
+                report.ok(label, f"`{shared}` in all {len(apps)}")
 
     for rules, prop, banned, why in FORBIDDEN:
         bad = []
@@ -392,38 +437,57 @@ def check(apps: dict[str, App], report: Report) -> None:
             report.ok(why, f"absent in all {len(apps)}")
 
     # §5.3 — the RESOLVED backdrop, not which element declares it. An app whose
-    # panel already paints --surface needs nothing on the footer (MyNotes); an
-    # app with a sticky footer needs it there regardless (§8.3). Checking the
-    # footer alone would fail a correct repo, which is worse than admitting a gap.
+    # panel already paints it needs nothing on the footer (MyNotes); an app with
+    # a sticky footer needs it there regardless (§8.3). Checking the footer alone
+    # would fail a correct repo, which is worse than admitting a gap.
+    #
+    # The three apps are NO LONGER expected to agree here — the owner ruled that
+    # they may differ, so each is compared against the value BACKDROPS records
+    # for it. This still fails on an unrecorded change, which is the point: the
+    # colour stopped being shared, the obligation to write it down did not.
     #
     # This is the WEAK form and is labelled as such in the output. It assumes the
     # painting element is either the footer or the one panel named in APPS — true
-    # of all three today, required by nothing. An app painting --surface three
+    # of all three today, required by nothing. An app painting the colour three
     # levels up would satisfy the contract and fail here. The robust form is a
     # browser walking up from the button to the first ancestor whose computed
     # backgroundColor is not transparent; that is out of reach for a static
     # reader, so this says which form it ran rather than implying more.
     for theme in ("light", "dark"):
-        label = f"{'§5.3 backdrop is --surface':<28} [{theme}]  (STATIC approximation)"
+        label = f"{'§5.3 backdrop is as recorded':<28} [{theme}]  (STATIC approximation)"
         bad = []
         for app in apps.values():
             props = app.light if theme == "light" else app.dark
-            want = resolve("var(--surface)", props).lower()
+            want = BACKDROPS.get(app.name, (None, None))[0 if theme == "light" else 1]
+            if want is None:
+                # An app with no recorded backdrop cannot be checked, and that is
+                # a failure rather than a pass. §5.3 requires the value to be
+                # written down; not finding one is the contract being incomplete,
+                # not the app being fine.
+                bad.append(f"{app.name:<8} {SPEC}\n"
+                           f"           no backdrop recorded for this app in §5.3 — "
+                           f"the contract cannot be checked here, so this is not a pass")
+                continue
             raw, source = app.backdrop()
             if raw is None:
+                # "Could not look" is never "agrees" — the same rule the e2e walk
+                # follows with its non-null assertion (measurement-protocol.md).
                 bad.append(f"{app.name:<8} {app.cfg['css'][0]}\n"
                            f"           no background on `{app.cfg['footer']}` or "
-                           f"`{app.cfg['panel']}` — cannot determine the backdrop statically")
+                           f"`{app.cfg['panel']}` — cannot determine the backdrop "
+                           f"statically, which is a failure and not a pass")
                 continue
             actual = resolve(raw, props).lower()
             if actual != want:
                 bad.append(f"{app.name:<8} {app.cfg['css'][0]}   in rule `{source}`\n"
                            f"           `background: {raw}` resolves to `{actual}` in {theme}, "
-                           f"expected --surface `{want}`")
+                           f"but §5.3 records `{want}` for {app.name}")
         if bad:
             report.fail(label, bad)
         else:
-            report.ok(label, f"--surface behind the controls in all {len(apps)}")
+            recorded = ", ".join(
+                f"{n} `{BACKDROPS[n][0 if theme == 'light' else 1]}`" for n in sorted(apps))
+            report.ok(label, f"each app matches its recorded value — {recorded}")
 
     # The focus outline is one declaration in every app, but its colour comes
     # from a token, so shape and resolved colour are checked together per theme.
@@ -459,7 +523,15 @@ failing one covers less ground than the count suggests.
     identical to correct here.
   · Markup is unverified — icon size, aria-label wording, the element type, and
     the width-stable label structure all live in TSX, not CSS (§7).
-  · Contrast ratios are not computed; only that the colours are the pinned ones.
+  · Contrast ratios are not computed; only that the colours are the recorded
+    ones. This matters more than it used to: since §5.3 let the three apps have
+    DIFFERENT backdrops, agreeing with the record is no longer evidence that a
+    colour reads well on what it sits on. The 4.5:1 and 3:1 obligations in §5.4
+    and §6.2 are held by hand-measurement and review, not by this script.
+  · Recorded per-app deviations (§5.1) are checked against their own values, not
+    waived — but this script cannot tell you whether a deviation SHOULD exist.
+    An app that quietly stops deviating fails here; an app that deviates for a
+    bad reason passes, provided the spec records the same value.
   · The §5.3 backdrop check is a STATIC APPROXIMATION, labelled as such above. It
     resolves the footer's background, falling back to the panel named in APPS —
     which assumes the painting element is one of those two. That is true of all

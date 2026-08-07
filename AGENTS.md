@@ -253,6 +253,18 @@ So, when writing a rationale:
 - Prefer stating the **required result** over the mechanism that achieves it. "The colour
   behind the controls is `--surface`" survives all three implementations; "the footer paints
   `--surface`" does not.
+
+  **That example has since been overtaken, and the correction is the more useful lesson.**
+  The owner later ruled that the three apps may differ in the colour behind the controls, so
+  the "durable" phrasing was withdrawn too (`spec/sidebar-footer.md` §11) — one rung later
+  than the mechanism version, but withdrawn. It survived *implementation* differences and
+  not a *product* decision, because it still named a colour. What replaced it names a
+  relationship instead: the backdrop must be opaque, recorded per app, and everything drawn
+  on it verified against it.
+
+  So the ladder is: mechanism → required result → **the constraint the result has to
+  satisfy.** Each rung survives a class of change the one below does not, and nothing
+  survives everything. Climb it when you can, and expect to be wrong about where the top is.
 - Watch for a rationale that is true today by coincidence. The third row above is that case:
   nothing requires the painting element to be the footer's parent, so any check assuming it
   must say it is assuming it (§2.4).

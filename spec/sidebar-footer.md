@@ -521,9 +521,27 @@ general mechanism is:
 
 ```css
 position: sticky;
-bottom: <the B offset this app needs>;
+bottom: <see the sum rule below>;
 background: <an opaque colour>;   /* content must not show through as it scrolls under */
 ```
+
+**The sum rule.** `bottom` is not independently meaningful — what B actually equals is:
+
+    sticky `bottom`  +  the footer's own `padding-bottom`  =  8px
+
+Both landed implementations satisfy it from opposite ends, which is why they look divergent
+and are not:
+
+| | `bottom` | footer `padding-bottom` | B |
+|---|---|---|---|
+| MyMail | `0` | `8px` | 8 |
+| MyCal | `8px` | `0` (`padding: 8px 8px 0`) | 8 |
+
+MyMail keeps its own padding as the inset and pins the box to the window edge; MyCal pins the
+box 8px up and lets `.app`'s padding sit below it, because its e2e suite holds the footer
+box's bottom edge against the view beside it. **Setting `bottom: 8px` on a footer that also
+has `padding-bottom: 8px` doubles the inset to 16px** — the most likely way to get this
+wrong.
 
 **Treat this as the normative approach for any app whose sidebar can overflow**, rather than
 as a local quirk. It was first written down as a MyCal detail — MyCal needed it because its

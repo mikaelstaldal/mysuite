@@ -174,6 +174,18 @@ So:
   The convention: `AGENTS.md §2.2` when it is this file, a bare `§` only inside the document
   it refers to, and a header line saying which file bare `§` means in any app-repo comment that
   uses several.
+- **When you tell the app repos a rule has changed, name the commit — and know that a message
+  quoting a *figure* is more perishable than one stating a *rule*.** A broadcast announcing the
+  backdrop withdrawal was still entirely correct about the withdrawal an hour later, while the
+  one number it quoted had been corrected in the meantime. A reader acting on it nearly filed a
+  defect that no longer existed.
+
+  Naming the commit is what makes staleness **diffable**; it is the sender's half and the half
+  that could be automated later. Re-reading the spec at `HEAD` before acting on a report about
+  the spec is what makes staleness **noticed**; it is the reader's half, it costs a minute, and
+  it is what actually caught this one. Do both, and if a broadcast has to quote a figure, say
+  which claims are rules and which are values. *(Framing owed to mynotes-dev, from the near-miss
+  it had.)*
 
 ### 3.1 Provenance — say what a contract was written from
 
@@ -215,8 +227,9 @@ that are silently missing the rules nothing can check.
 ### 3.2 Beware a rationale that is true of the apps you were thinking about
 
 The most common defect in this contract has not been a wrong value. It is **a reason that
-holds for two apps, written as though it held for three.** Three instances so far, each
-caught by the repo it was false of:
+holds for two apps, written as though it held for three.** Four instances so far — the first three
+each caught by the repo it was false of, the fourth caught only because the app it was false
+of happened to be the one supplying the number:
 
 | Written | False of | Because |
 |---|---|---|
@@ -230,6 +243,30 @@ caught by the repo it was false of:
 its author, while writing it down. That is not irony worth enjoying — it is the measure of how
 easily the pattern slips past someone actively looking for it. Check the claim against all
 three by name; do not assume you are immune because you just wrote the warning.
+
+#### Why writing the warning does not protect you: attention follows the last defect
+
+mynotes-dev named the mechanism, from a case of its own: it wrote a false claim about the code
+(*"nothing in this block declares a background of its own"*, on a rule that declares
+`background` three lines later) **while correcting someone else's stale comment, with the spec
+open.** Its attention was on citations and figures — the class the previous error had been in.
+In its words: *"the wrong claim was in the sentence I was least worried about, because I had
+just written it."*
+
+That accounts for every instance in the table above and two more from the same week:
+
+| The new defect | Was committed while |
+|---|---|
+| `spec/REQUIREMENTS.md` named for all three | writing §3.2 itself |
+| the hover-fill floor set at 1.101 | extending §3.2 |
+| three bare `§2.2`/`§2.5` citations | introducing the deviation rule two of them cite |
+| a false claim about a `background` declaration | fixing another comment's citations |
+
+**Freshly written text is the least reviewed text in any changeset**, and it is least reviewed
+precisely when the author is concentrating hardest on some other failure mode. So the practical
+form is not "be careful" — it is: **re-read what you added last, against the code, after you
+have finished the thing you were concentrating on.** The sentence you are most confident in is
+the one nobody has checked, including you.
 
 The last row adds a mechanism, because "check all three" did not catch it. The figure was
 taken from a per-app table that had just been read, and **the value appearing in two of three

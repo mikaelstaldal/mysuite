@@ -2,6 +2,14 @@
 
 **Status:** binding. Implemented in MyCal, MyMail and MyNotes.
 
+**Written from** the three apps' shipped code — which is the ground truth wherever it and a
+document disagree — checked against the nineteen-document handover indexed as `INDEX.md`:
+`spec-v1` through `spec-v1.6`, `note-literal`, `goal-correction`, `offset-ruling`,
+`canonical-LB`, `mycal-gutter`, `ack-mycal`, `aria-ruling`, `defer-fc`, `chromium-ok`, and
+the measurement sources `hold`, `stale-check`, `browser-stale`, `js-check`, `closeout`,
+`closeout2`. **If you find a ruling cited that is not in that list, it was not available when
+this was written — get it and check this document against it** (`AGENTS.md` §3.1).
+
 The bottom of the left sidebar in all three apps holds two controls: a light/dark theme
 toggle, and — to its right — Settings. This document is the single definition of how they
 look, where they sit, and how they behave. The three repositories implement it; none of

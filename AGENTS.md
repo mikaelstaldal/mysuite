@@ -135,6 +135,43 @@ So:
   it is accepted only for these three rules.
 - **One contract per file** in `spec/`, indexed in [`spec/README.md`](spec/README.md). Add a
   row to that table when you add a file.
+
+### 3.1 Provenance — say what a contract was written from
+
+A contract here is written from somewhere: a set of decisions, rulings, measurements and
+messages produced while the thing was being built. **State which set, in the contract**, and
+make the set enumerable before you start writing.
+
+This is not bookkeeping. It failed once already, and it is worth knowing exactly how.
+
+**Verify the source set by enumerating what was written, not by recalling what was sent.**
+`spec/sidebar-footer.md` was written from a handover of thirteen documents that was assembled
+from memory and believed complete. It was missing six. The audit that found them took about
+two minutes and would have taken the same two minutes beforehand.
+
+**The detection mechanism is the part that generalises: a citation to a document you were
+never given is a gap.** Nobody can spot an absent premise by reading — there is nothing to
+see. But anyone can spot a dangling reference. That is exactly how this one surfaced: an agent
+in an app repo cited a ruling *by name* to justify something the contract contradicted, and
+the contract's author had never received that document. So:
+
+- If someone cites a document that is not in your source set, **stop and get it.** Do not
+  reconstruct what it probably said, and do not treat the contradiction as a disagreement to
+  be resolved on the merits — you are missing a premise, not losing an argument.
+- If you write a contract, say which documents it came from, so the next reader can run the
+  same check against you.
+
+**What the miss actually cost, so the risk is concrete.** One of the unreceived documents
+carried a standing ruling that the shared `transition` takes no `prefers-reduced-motion`
+guard, because it animates colour only. Absent that, adding such a guard is a plausible,
+well-intentioned accessibility edit — and one that changes nothing observable, in a property
+no test asserts. It would have produced a **permanent, undetectable three-way divergence**:
+not caught by the e2e suite, not by review, not by a screenshot, not by painted-pixel
+comparison. Every other defect found in this work was visible to *someone*; that one was
+visible to no one.
+
+An incomplete source set does not produce obviously-wrong contracts. It produces contracts
+that are silently missing the rules nothing can check.
 - **State resolved values, not token names** (§2.3), and give the local names for each repo
   in a table.
 - **Specify observable results, not mechanisms** — unless the mechanism genuinely is the

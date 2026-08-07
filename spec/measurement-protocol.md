@@ -188,6 +188,62 @@ State what your coverage is complete *relative to*, and what event invalidates i
 routes, as of the current route table" is a useful claim; "all routes" is one that quietly
 stops being true.
 
+## Measuring a backdrop: walk the ancestors, never read one element
+
+Any contrast figure needs the colour *behind* the thing being measured. **Do not read that
+off the element itself, or off the element you assume paints it.** Walk up until you find an
+ancestor that actually paints:
+
+```js
+// The colour painted immediately behind an element. Walks up from the parent to
+// the first ancestor with a non-transparent background-color.
+// Returns null when nothing paints — a distinguishable result, not a default.
+function resolveBackdrop(el) {
+  for (let p = el.parentElement; p; p = p.parentElement) {
+    const bg = getComputedStyle(p).backgroundColor;
+    if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') {
+      return { painter: p, backgroundColor: bg };
+    }
+  }
+  return { painter: null, backgroundColor: null };
+}
+```
+
+Two agents arrived at this independently, from different repos, which is reasonable evidence
+it is the right primitive. It is engine-level, not app-specific: only the starting selector
+differs.
+
+**Why not just read the element that paints it.** Because which element that *is* differs per
+app and is not part of any contract. One app's footer declares a background; another's is
+transparent and inherits from a panel two levels up. A test reading the footer's own
+`backgroundColor` gets the right answer in the app whose footer happens to declare one, and
+silently computes contrast against `rgba(0, 0, 0, 0)` everywhere else.
+
+That is `sidebar-footer.md` §3.1 **in executable form** — right answer in this repo, wrong
+method, and no way to notice from inside it. §3.1 is about CSS pins that one app's rendering
+cannot defend; the identical trap applies to measurement code, and there it is worse, because
+the wrong method produces a confident number instead of nothing.
+
+### Limitations — state these wherever the walk is used
+
+1. **`background-color` only.** A `background-image`, gradient, or shorthand carrying an image
+   is not detected, and the walk goes straight past an element that visibly paints.
+2. **Semi-transparent backgrounds are treated as opaque.** The walk stops at the first
+   non-transparent colour; if that colour is `rgba(…, 0.5)`, the true backdrop is a composite
+   and this returns the wrong one.
+3. **It reports the painter, not the composite** — which is usually what is wanted, but if (2)
+   fires, painter ≠ effective colour and every figure derived from it is wrong.
+4. **`painter: null` is not "no backdrop."** It means the canvas, which is white by default —
+   a different claim. Treat null as *could not determine*, never as a pass.
+5. **Needs a real browser.** jsdom does no layout and does not resolve cascaded backgrounds
+   usefully.
+
+(1) and (2) are the ways it can be *confidently wrong*; the rest are ways it declines to
+answer. Put those two in the output.
+
+**Normalise before comparing.** Tokens are authored as hex (`#f9fafb`); `getComputedStyle`
+returns `rgb(249, 250, 251)`. Comparing the two raw forms fails on formatting alone.
+
 ## Reporting measurements
 
 State, every time:

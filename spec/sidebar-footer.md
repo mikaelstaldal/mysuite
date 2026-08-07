@@ -322,8 +322,13 @@ requirement is about the resolved colour, so a check must resolve `var()` chains
 rather than match token names — MyMail reaches `--surface` through `var(--sidebar-bg)`, so a
 name match would fail the app that satisfies the requirement most explicitly. And a static
 reader must *assume* which element paints, where a browser can simply walk up from the button
-to the first ancestor with a non-transparent background. `tools/check-contract.py` runs the
-static form and labels it as an approximation; the browser walk is the authority.
+to the first ancestor with a non-transparent background.
+
+**The walk is the authoritative method** — see `measurement-protocol.md`, which carries the
+primitive and its limitations. `tools/check-contract.py` runs the static form and labels it an
+approximation. **Never obtain this backdrop by reading one element's own `backgroundColor`**:
+that returns the right answer only in an app whose footer happens to declare one, and computes
+contrast against transparency everywhere else — §3.1's trap in executable form.
 
 Leaving this unpinned was the root cause of two defects at once — an invisible hover fill and
 a WCAG 1.4.3 failure — because every colour above is only half of a contrast ratio. Pinning

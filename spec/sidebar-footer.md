@@ -745,12 +745,17 @@ declarations that produce them. Read §8.5 before concluding otherwise.
 
 | | Threat 1 (sidebar scrollport) | Threat 2 (page scroll) |
 |---|---|---|
-| **MyCal** | **A** — `footerInScrollport = false` in all 20 readings; footer is a flex sibling of `.sidebar-content`. Verified at 26 calendars, sidebar scrollable by 369px (16px root) / 835px (24px root), both extremes | **B** — month and year scroll the document; `position: sticky; bottom: 8px; background: var(--bg)`. Page scrollable by 455/784px (month) and 342/734px (year) |
+| **MyCal** | **A** — `footerInScrollport = false` in all 20 readings; footer is a flex sibling of `.sidebar-content`. Verified at 26 calendars, sidebar scrollable by 369px (16px root) / 835px (24px root), both extremes | **B, in 2 of 5 views only** — week/day/schedule are structurally immune (`.app:has(…)` makes them `height: 100dvh; overflow: hidden`, so `pageMax = 0`); month and year scroll the document and use `position: sticky; bottom: 8px; background: var(--bg)`. Page scrollable by 455/784px (month), 342/734px (year) |
 | **MyMail** | **B** — footer is a last child of `overflow-y: auto` `.sidebar` | **immune** — `.app { height: 100vh }` |
 | **MyNotes** | **A** — `.sidebar-content` scrolls inside `overflow: hidden` `.sidebar` | **immune** — `html, body { height: 100% }` |
 
 **MyCal is the concrete case for sanctioning two mechanisms rather than mandating one**: it
 needs A for its sidebar and B for its page scroll, in the same app, at the same time.
+
+It also shows that **exposure can vary by view within one app** — three of MyCal's five views
+are structurally immune to threat 2 and two are not. So "this app is immune" is a claim about
+a *layout*, and an app with more than one layout has to establish it for each. Measuring one
+view and generalising is how this would be missed.
 
 L = 8.00 in every reading across all three. B = 8.00 throughout, with one 8.22 at
 year/24px/bottom-extreme — the same subpixel scroll-extent artefact as MyMail's 8.02–8.50 range,

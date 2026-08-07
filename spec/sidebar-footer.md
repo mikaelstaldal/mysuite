@@ -567,8 +567,11 @@ because the footer is outside the box that scrolls.
 - **MyNotes** is built this way: `.sidebar` is `overflow: hidden` with `.sidebar-content`
   scrolling inside it and `.sidebar-footer` beside it. Measured `sidebarOverflowsY` **false
   in all 108 readings, including at 41× overflow.**
-- **MyCal** was restructured to this shape during the gutter work — verified in its shipped
-  markup, `.sidebar-content` and `.sidebar-footer` as siblings inside `.left-sidebar`.
+- **MyCal** was restructured to this shape during the gutter work. In its own words:
+  *"`.left-sidebar` now holds two children instead of three: `.sidebar-content`, the
+  scrolling half, and `.sidebar-footer`, a sibling, never inside the scrollport. The
+  scrollport moved from `.left-sidebar` to `.sidebar-content`."* Independently confirmed here
+  from its shipped markup.
 
 Preferred because it adds **no declarations, no stacking context, no opaque background, and
 no scroll-position dependence.** There is nothing to get wrong.
@@ -626,6 +629,28 @@ where sticky was one declaration plus a background and touched nothing else.
 **So prefer A, but do not assume it is a pure refactor.** Where it would change behaviour
 outside this contract, that is a cost to weigh and state — not an obstacle to route around
 silently, and not a reason to pretend B is equivalent.
+
+#### Immunity to threat 2 is structural, and one word from being lost
+
+An app can be immune to page scrolling by construction rather than by positioning. MyMail is:
+
+```css
+.app { display: grid; grid-template-rows: auto 1fr auto; height: 100vh; }
+```
+
+The shell is **exactly** the viewport, so every overflowing region carries its own scrollport
+inside it and the document itself never scrolls. Verified across 24 combinations:
+`documentElement.scrollHeight === clientHeight` in all of them, `window.scrollTo(0, 99999)`
+leaves `scrollY` at `0.0`, and B stays 8 before and after.
+
+**That immunity ends if `height` becomes `min-height`, or if any descendant escapes its
+scrollport.** `min-height` is normally the more forgiving choice and is exactly the edit
+someone makes for a good reason. Nothing in the repo tests it, and the consequence — threat 2
+returning, the footer scrolling away — would not appear until a window happened to be short
+enough.
+
+So: **if an app relies on structural immunity to threat 2, say so at the declaration that
+provides it.** A `height: 100vh` that is load-bearing looks identical to one that is not.
 
 #### Mechanism B in detail
 

@@ -498,19 +498,23 @@ the panel background instead. Measured against each app's own backdrop:
 All six pass, under both the strict-adjacency and the same-pixels readings.
 
 > **Do not copy a figure out of this table into another app.** The light column differs, and
-> it differs by an amount that looks like rounding. This has already happened: a reviewer
-> reported MyCal's light focus contrast as **4.90:1**, which is MyNotes' `4.946` — rounded to
-> `4.9` in MyNotes' own CSS comment — read across from a sibling repo and stated as a
-> measurement of MyCal, where the true value is `5.169`. Nothing else in any palette produces
-> 4.90.
+> it differs by an amount that looks like rounding.
 >
-> Two things make that worth recording rather than just fixing. It happened to a **reviewer**,
-> which is the role relied on to catch exactly this. And **it was only catchable because the
-> light column is per-app**: dark is `3.991` in all three, so a sibling's dark figure would
-> have been indistinguishable from a correct one.
+> **A reviewer produced a sibling's figure for this app.** It reported MyCal's light focus
+> contrast as **4.90:1**, where the true value is `5.169`. **The mechanism was not
+> determined**: 4.90 matches `4.946` rounded to `4.9` in a readable neighbouring repo's CSS
+> comment, and no route to 4.90 exists from MyCal's own palette — but the reviewer's
+> transcript was not accessible, it stated MyCal's *correct* operands alongside the wrong
+> result, and an arithmetic error landing on a value that happens to exist next door is not
+> excluded.
 >
-> That is the cost of the convergence noted below — it removes a class of error in dark by
-> making the error invisible rather than impossible. Recompute; do not transcribe.
+> Two things hold regardless of how the number was obtained, and they are the reason this is
+> here. It happened to a **reviewer** — the role relied on to catch exactly this. And **it was
+> catchable only because the light column is per-app**: dark is `3.991` in all three, so a
+> sibling's dark figure would have been indistinguishable from a correct one.
+>
+> That second point is a cost of the convergence noted below: it removes a class of error in
+> dark by making it invisible rather than impossible. **Recompute; do not transcribe.**
 
 **Dark has the least headroom, and it shrank.** Against a required 3:1, every app now sits at
 **3.991:1** — MyCal's figure moved from 4.823 when its footer painted `--bg` (§5.3), which is

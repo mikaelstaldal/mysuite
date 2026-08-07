@@ -741,11 +741,21 @@ Where each app stands:
 **Differing here is not a deviation** — the coordinates are the contract, not the
 declarations that produce them. Read §8.5 before concluding otherwise.
 
-> **Open at the time of writing.** MyMail has landed sticky + an explicit background. MyCal
-> and MyNotes are measuring their own overflow cases before changing anything, so that one
-> mechanism is chosen for all three rather than two agents inventing two. When those numbers
-> arrive this section should say which mechanism all three use. Until then, the *requirement*
-> in §8.2 is settled and binding; the uniform mechanism is not yet chosen.
+#### Where each app stands — all three measured against both threats
+
+| | Threat 1 (sidebar scrollport) | Threat 2 (page scroll) |
+|---|---|---|
+| **MyCal** | **A** — `footerInScrollport = false` in all 20 readings; footer is a flex sibling of `.sidebar-content`. Verified at 26 calendars, sidebar scrollable by 369px (16px root) / 835px (24px root), both extremes | **B** — month and year scroll the document; `position: sticky; bottom: 8px; background: var(--bg)`. Page scrollable by 455/784px (month) and 342/734px (year) |
+| **MyMail** | **B** — footer is a last child of `overflow-y: auto` `.sidebar` | **immune** — `.app { height: 100vh }` |
+| **MyNotes** | **A** — `.sidebar-content` scrolls inside `overflow: hidden` `.sidebar` | **immune** — `html, body { height: 100% }` |
+
+**MyCal is the concrete case for sanctioning two mechanisms rather than mandating one**: it
+needs A for its sidebar and B for its page scroll, in the same app, at the same time.
+
+L = 8.00 in every reading across all three. B = 8.00 throughout, with one 8.22 at
+year/24px/bottom-extreme — the same subpixel scroll-extent artefact as MyMail's 8.02–8.50 range,
+and inside the 0.5px tolerance these assertions use. **Expect fractional B at a scroll extreme;
+it is a rounding artefact of the scroll range, not drift.**
 
 ### 8.4 The 4px floor — L ≥ 4 and B ≥ 4
 

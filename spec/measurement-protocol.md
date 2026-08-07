@@ -180,3 +180,24 @@ children's widths plus the gaps and compare against `clientWidth`.
 arbitrary point in the input space, usually near-empty, and measuring only there means the
 overflow behaviour of every container is untested. If you did not choose the content volume
 deliberately, you did not choose it.
+
+**Prove the reset — do not merely perform it.** A three-volume table was nearly reported as
+three volumes agreeing, when the reset command was `rm mycal.db` against a database actually
+named `mycal.sqlite`. Nothing was deleted; all three "volumes" measured the same 26 records.
+Identical rows across volumes reads as *stronger* evidence than a single measurement while
+being strictly weaker — it is one data point wearing three hats.
+
+So: stop the server, **confirm the files are gone**, confirm the API reports the state you
+intended, and then assert **in the browser** that the volume being measured is the volume you
+meant. Make the run fail when the API's count and the rendered DOM disagree.
+
+What caught that one was not the reset failing loudly — it failed silently — but **a number
+that did not fit**: a "1 record" run claiming 369px of sidebar overflow, against a separately
+measured single-record sidebar of 655/655 with no list rendered at all. Two of its own numbers
+contradicted each other, so one of them was wrong. **Cross-check your numbers against each
+other, not only against expectations.**
+
+As it was put at the time: *there, a stale binary made a broken change look fine; here, a
+stale database made an untested volume look tested. Both are cases where the measurement
+apparatus lies in the direction of a pass.* That direction is the thing to notice — these
+failures do not produce alarming results, they produce reassuring ones.

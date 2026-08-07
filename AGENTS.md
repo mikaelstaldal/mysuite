@@ -136,6 +136,13 @@ So:
 - **A checking script must state its limits in its own output**, not only in the docs. A
   reader of a green run has to know what green does and does not mean — see §2.4, and
   `spec/sidebar-footer.md` §9.1 on why "gates publication" beat "prevents breakage".
+
+  **And verify it does so on the failing path.** `tools/check-contract.py` printed its limits
+  only on success. While one app's change was pending it failed on *every* run — so the one
+  artefact this rule exists to guarantee was dead code on every run anyone would actually
+  read. A red reader over-reads a result at least as easily as a green one: they see "2 values
+  disagree" and infer the other thirty assertions are coverage. **Print the limits on every
+  terminating path, and confirm it by running each of them.**
 - **No remote is configured.** Commit locally; do not attempt to push. Cross-references from
   the app repos name this repo by path (`../mysuite`, `spec/sidebar-footer.md`) rather than
   by URL, because there is no URL to give. When a remote is added, those references should be
@@ -202,6 +209,12 @@ caught by the repo it was false of:
 | "the sidebar column is sized in `rem`" | MyNotes | its column is `420px`, a sanctioned exemption |
 | "the footer paints `--surface`" | MyNotes | its footer is transparent; the panel behind it paints |
 | "the panel is the footer's parent" | nobody *yet* | true of all three today, required by none |
+| "that app's own `AGENTS.md` or `spec/REQUIREMENTS.md`" | MyCal | it has no `spec/` directory at all |
+
+The last row was committed **in the changeset that added this section**, by its author, while
+writing it down. That is not irony worth enjoying — it is the measure of how easily the
+pattern slips past someone actively looking for it. Check the claim against all three by
+name; do not assume you are immune because you just wrote the warning.
 
 The value was right every time. The *justification* was written from whichever
 implementations the author had in mind, and it fails the moment a reader checks it against

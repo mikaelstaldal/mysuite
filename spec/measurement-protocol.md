@@ -185,12 +185,38 @@ work:
     kill -0 "$pid"                          succeeds on a zombie → "server alive" → 48/48
                                             against the wrong server
     ! cmd | grep -q "still-running"          cmd fails → grep matches nothing → "finished"
+    @import url("…");  .rule { … }          parser merged the two → dropped the rule →
+                                            checked nothing and reported agreement
 
 The third was a watcher polling for a background job to end; a transient failure of the
 listing command was indistinguishable from the job having finished, and it reported
 completion while the job ran on. Whenever you write "if X is not there, we are fine", ask
 what happens when you simply could not see X — and make that a third outcome, not a silent
 merge into the reassuring one.
+
+### The worst place for this failure is inside a guard
+
+The fourth line above is the one to dwell on. A CSS parser accumulated a selector without
+resetting on a top-level `;`, so `@import url("…");` merged into the rule that followed and
+that rule was dropped. It was live, and it was discarding a real rule from a real stylesheet
+on every run.
+
+What makes it different in kind from the other three is **where** it sat. It was inside the
+cross-repo guard — the artefact whose entire purpose is to be believed when it is green. Had
+a `:root` block followed that import, the whole palette would have vanished and every colour
+comparison would have reported **fabricated agreement**: thirty green assertions, none of
+them looking at anything.
+
+**A guard that lies toward a pass is worse than no guard, because it removes the check that
+would have caught the others.** Everything else in this document assumes something is
+watching. When the watcher is the thing that is broken, nothing downstream can notice.
+
+So a guard needs its own sensitivity proven, and re-proven as it changes — not its
+correctness argued from reading it. That is what `tools/check-contract.py --self-test` is
+for, and why the acceptance criterion above ("shown red for the right reason") applies to a
+guard's own machinery and not only to the contract it polices. Applying the criterion to the
+thing that applies the criterion is not circular; it is the only way the sensitivity survives
+the next edit.
 
 ### Know what your coverage expires against
 

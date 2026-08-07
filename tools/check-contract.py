@@ -565,7 +565,8 @@ failing one covers less ground than the count suggests.
     file; a custom property whose value contains `;` inside `url()` mis-parses.
 
 Rendering and this check are complements, not substitutes. Neither sees what the
-other does — and only MyCal has a rendering suite at all."""
+other does — all three apps now have a rendering suite, but each sees only its
+own app, and only MyCal's runs in CI."""
 
 
 # ─── Self-test: prove the guard can still fail ──────────────────────────────

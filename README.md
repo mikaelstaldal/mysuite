@@ -95,9 +95,13 @@ documents rather than restating its values.
 
 A shared value changed in one app is not a partial improvement — it is a defect, and it is
 the specific defect this repository was created to prevent. The three apps have no shared
-stylesheet and no cross-repo test, so **nothing anywhere will detect the divergence.** It
-will be found by a person noticing that a button moved when they switched tabs, possibly
-months later.
+stylesheet and **no cross-repo test that runs automatically**, so **nothing will detect the
+divergence.** It will be found by a person noticing that a button moved when they switched
+tabs, possibly months later.
+
+(`tools/check-contract.py` can see cross-repo drift and is the only thing that can, but no
+pipeline runs it — see `spec/sidebar-footer.md` §10.7. Each app's own e2e suite checks that
+app alone.)
 
 The same applies in the other direction. If you are working in one of the app repos and find
 a shared value that looks wrong there, **do not fix it locally.** Raise it here. Whatever is

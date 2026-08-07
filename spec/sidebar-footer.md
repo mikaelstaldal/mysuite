@@ -3,12 +3,28 @@
 **Status:** binding. Implemented in MyCal, MyMail and MyNotes.
 
 **Written from** the three apps' shipped code — which is the ground truth wherever it and a
-document disagree — checked against the nineteen-document handover indexed as `INDEX.md`:
+document disagree — checked against the handover indexed as `INDEX.md`:
 `spec-v1` through `spec-v1.6`, `note-literal`, `goal-correction`, `offset-ruling`,
 `canonical-LB`, `mycal-gutter`, `ack-mycal`, `aria-ruling`, `defer-fc`, `chromium-ok`, and
 the measurement sources `hold`, `stale-check`, `browser-stale`, `js-check`, `closeout`,
 `closeout2`. **If you find a ruling cited that is not in that list, it was not available when
 this was written — get it and check this document against it** (`AGENTS.md` §3.1).
+
+> That block called this a **"nineteen-document handover"** while enumerating **22 names**
+> (7 `spec-v1.x`, 9 rulings, 6 measurement sources). The count has been dropped rather than
+> corrected to 22, because which of the two is wrong cannot be settled from inside this
+> repository — `INDEX.md` is not here — and `AGENTS.md` §3.1 exists because *guessing* at a
+> source set is what went wrong the first time. The enumeration is the usable half: it is what
+> the dangling-reference test runs against. Someone holding `INDEX.md` should reconcile it.
+
+**Added in the revision that recorded the three e2e suites** (§9, §9.1), and subject to the
+same test: MyMail's and MyNotes' suites and CI workflows as committed on their
+`e2e-sidebar-footer` branches; their authors' acceptance runs and mutation results, relayed by
+the coordinating agent and recorded as their measurements rather than mine; and first-hand
+re-measurements taken for this revision against all three apps' served builds — the §3 route
+probe, the §2.4 row widths, the §10.8 narrow-layout coordinates and the §10.12 horizontal-scroll
+readings. Every figure in those four is stated with the conditions it was read under; where a
+number came from someone else's run, the text says so.
 
 The bottom of the left sidebar in all three apps holds two controls: a light/dark theme
 toggle, and — to its right — Settings. This document is the single definition of how they
@@ -140,6 +156,14 @@ Against the width each app has for it, at the default root size:
 | MyMail | 220px (`13.75rem`) | 203px (220 − 1px border − 16px padding) | 29px |
 | MyNotes | 420px | 403px (420 − 1px border − 16px padding) | 229px |
 
+**MyCal has the tightest budget of the three, at 26px.** Stated explicitly because the rest of
+this section is mostly about MyMail — it is where the font size was forced and where the
+two-word label overflows — and a reader who takes "the app this section keeps naming" for "the
+app with the least room" gets it backwards. One author did, and corrected themselves. The
+binding constraint is MyCal's 26px; MyMail's 29px is second; MyNotes' 229px never binds
+(§6.4). Re-measured against all three servers while this was written, and the table above still
+holds to the pixel: pair 174px in 200 / 203 / 403px of content box.
+
 That budget sized the font. At the original `0.85rem` the row measured 182px against
 MyCal's then-164px — an 18px overflow that clipped Settings — and the fix was `0.80rem`
 together with widening MyCal's sidebar from 180px to 200px. Separately, in MyMail a
@@ -164,19 +188,33 @@ text-align: center;
 **These change nothing today. That is precisely why pinning them is safe, and it is not why
 they are pinned.**
 
-They are pinned because the three apps arrive at the same values **by three different
-mechanisms**, which means they agree by coincidence rather than by contract:
+They are pinned because the controls arrive at the same values **by different mechanisms**,
+which means they agree by coincidence rather than by contract. The routes are per *control*
+and per *property*, not per app — the property matters, because `text-align` does not travel
+with the other two:
 
-- **MyCal** — `<button>` elements take weight and style from the UA `button` rule's `font`
-  shorthand, and alignment from the UA's separate `text-align: center` on buttons. Nothing
-  is inherited.
-- **MyMail** — its toggle is a `<button>` and works like MyCal's, but its Settings control
-  is an `<a>`, which inherits all three from `body`. Two controls in one app, two routes to
-  the same value. This was proved live: setting
-  `body { font-weight: 700; font-style: italic; text-align: right }` moved the anchor and
-  left the button untouched.
-- **MyNotes** — its own `button { font: inherit }` rule means the UA button font never
-  applies at all, so its buttons inherit from `body` the way MyMail's anchor does.
+| | `font-weight`, `font-style` | `text-align` |
+|---|---|---|
+| **MyCal** — both controls, `<button>` | UA `button` rule's `font` shorthand | UA's separate `text-align: center` on buttons |
+| **MyMail** — toggle, `<button>` | UA `font` shorthand | UA `text-align` |
+| **MyMail** — Settings, `<a>` | inherited from `body` | inherited from `body` |
+| **MyNotes** — both controls, `<button>` | inherited from `body` — its own `button { font: inherit }` displaces the UA font | UA `text-align`, **as MyCal** |
+
+**`font: inherit` does not carry alignment.** `text-align` is not part of the `font`
+shorthand, so MyNotes' `button { font: inherit }` never displaces the UA's separate
+`text-align: center` for buttons. MyNotes reaches alignment by exactly the route MyCal does,
+and **the only control in the suite that inherits `text-align` from `body` is MyMail's
+Settings anchor** — which is also the only one with no UA `text-align` of its own to fall
+back on.
+
+Measured in **all three apps**, against each one's served build (Chromium/Linux, 16px root):
+with the pins deleted from the rule and `body` moved to
+`font-weight: 700; font-style: italic; text-align: right`, MyNotes' buttons went to
+`700 / italic / center` and MyMail's anchor to `700 / italic / right`, while **MyMail's button
+and both of MyCal's stayed `400 / normal / center`** — and neither MyCal nor MyMail has a bare
+`button` rule carrying a `font` shorthand, so in those two the UA font is what applies. That is
+the table above, one cell at a time. The earlier wording — that MyNotes inherits all three from
+`body` — is withdrawn (§11).
 
 An entirely ordinary `button { font-weight: 500 }` added to any one of the three repos would
 break the match, in one app only, with nothing anywhere to catch it. And the UA values are
@@ -201,14 +239,61 @@ is why these are the easiest declarations in the contract to delete by accident:
 > construction, unenforceable by rendering in at least one of them.
 
 Delete `flex-shrink: 0`, `text-align: center` or `font-weight: 400` from MyCal and **nothing
-observable changes there** — its `<button>` inherits all three from the UA anyway. What breaks
-is the match with MyNotes, which routes them through `button { font: inherit }` to `body`.
-Every computed value in the repo you edited stays correct; the divergence is in a repo you did
-not touch.
+observable changes there** — the UA `button` rule supplies all three regardless. Nothing is
+inherited, so there is nothing to notice.
 
-So a test measuring the *rendered result* cannot protect these. **Assert that the declaration
-is present** — read it off the CSSOM rather than off the box. MyCal's suite does this, and it
-is what catches three of its seven silent-breakage items (§9.2).
+> **And the earlier version of this paragraph went on to say that what breaks is the match
+> with MyNotes. That is wrong, and it was wrong in the reassuring direction.** Measured: with
+> each app's `body` at its shipped typography, deleting one of these pins **from MyCal** changes
+> no computed value in **any** of the three. MyNotes routes weight and style through `body` —
+> but `body` is `400 / normal`, so the value that arrives is the value that was pinned. Deleting
+> MyCal's declaration cannot reach into MyNotes' rule in any case; the two are separate files in
+> separate repositories, and the old sentence quietly implied otherwise.
+
+That makes the exposure worse than the old wording claimed, not better. The pin does not guard
+a divergence that is visible somewhere the moment it is made; it guards one that is **latent**,
+waiting on an unrelated edit — `body` taking a weight, or an ordinary
+`button { font-weight: 500 }` — in whichever repo receives it.
+
+**One deletion is visible today, and it is not the one the old sentence named.** Deleting
+`text-align: center` **from MyMail's own rule** takes its Settings anchor's computed value to
+`start`, because an `<a>` has no UA `text-align: center` to fall back on. Even that moves
+nothing on screen. So the honest summary is: **no deletion of any of these pins, in any of the
+three repos, changes anything a user could see** — and exactly one changes something a computed
+value could see.
+
+**Three levels of detectability** (Chromium/Linux, 16px root, each app's `body` at its shipped
+typography, the four pins deleted from the live rule and the page re-read):
+
+| Delete a pin and read… | What can see it |
+|---|---|
+| the **rendered box** | **nothing, in any of the three** — for `font-weight`, `font-style`, `text-align` *or* `flex-shrink`. No control's box changes by any amount |
+| the **computed value** | **one control only** — MyMail's Settings anchor, and only for `text-align`, which falls to `body`'s `start` because an `<a>` has no UA `text-align: center` behind it. (`flex-shrink` also moves, `0` → `1`, in every app — but it is a computed value nothing renders differently while the row has slack) |
+| the **CSSOM declaration** | **everything**, in all three |
+
+*Basis, since the rows are not all the same kind of claim.* Directly measured: MyCal, all four
+pins, both controls, boxes identical to three decimals across all four conditions; and MyMail
+for `text-align`, the one case where a computed value actually moved, where the anchor's box,
+its icon and its text rect are identical to the pixel because `display: flex` gives alignment
+no layout effect on its contents. For the three inherited pins elsewhere, the computed values
+do not change at all, so no movement follows without needing its own measurement.
+
+**`flex-shrink` is the one that does not follow that way**, because its computed value *does*
+move — `0` → `1`, in every app. It is invisible only while the row has slack, which all three
+have at rest (26 / 29 / 229px, §2.4). MyMail's authors saw the same thing from the other side:
+deleting it failed their assertions **with nothing rendering differently**. So this row says
+nothing whatever about the overflow case, which is §2.3's subject and the entire reason that
+pin exists.
+
+So a test measuring the *rendered result* cannot protect these, and a test measuring the
+*computed value* protects one case in one app. **Assert that the declaration is present**,
+read off the CSSOM rather than off the box. All three suites now do this, and in MyCal it is
+what catches three of its seven silent-breakage items (§9.2).
+
+That one exception is worth keeping straight rather than rounding away: **MyMail's
+computed-value test is discriminating for `text-align` where MyCal's and MyNotes' are not.**
+It is the single place in this contract where the rendering side of the pair earns its keep,
+and it earns it in the app that was not previously credited with it.
 
 Same shape as the `prefers-reduced-motion` ruling (§6.1) and the surface coincidence (§5.4):
 wherever two things agree today for different reasons, agreement is not evidence that the
@@ -463,20 +548,20 @@ cannot be resolved is a failure, not a pass** — the null case is "could not lo
 this is now more dangerous than it was, not less: the light column already differed, and dark
 has stopped converging too (§6.2).
 
-> **Implementation status.** MyMail and MyNotes are unchanged by this amendment and already
-> match their recorded rows. **MyCal's change exists but is not committed** — it is in that
-> repo's working tree at the time of writing, on top of `282f00f`.
+> **Implementation status — resolved.** MyMail and MyNotes were unchanged by this amendment and
+> already matched their recorded rows. **MyCal's change has since landed**, as `8719695` on
+> `main`, so all three rows above are now backed by committed code.
 >
-> `tools/check-contract.py` therefore currently reports green **against an uncommitted tree**,
-> which is a weaker statement than the green run that accepted `9aa9cae` (§10.7) and must not
-> be quoted as the same thing. The script reads working files, not `HEAD`; nothing in its
-> output says which it read. Re-run it after MyCal commits, and treat *that* result as the
-> acceptance signal.
+> The paragraph this replaces said MyCal's change was uncommitted and that
+> `tools/check-contract.py` was therefore green **against an uncommitted tree** — a weaker claim
+> than green against a commit, and one the script's own output cannot distinguish. That state is
+> over, but the discipline it required is not: **when quoting a green run of that script, say
+> which state it read.** Nothing in the script says it for you.
 >
 > The general form, since it will recur: **a checker that reads the filesystem tells you about
 > the filesystem.** Uncommitted work, a stashed change and a landed commit are indistinguishable
 > to it, so "the check is green" and "the contract holds in the repositories" are different
-> claims whenever anyone is mid-edit.
+> claims whenever anyone is mid-edit — which, in a three-repo change, is most of the time.
 
 ### 5.4 Text contrast — WCAG 1.4.3 Contrast (Minimum), Level AA
 
@@ -958,10 +1043,28 @@ scrollport. Verified across 24 combinations, with the intermediate state asserte
 `documentElement.scrollHeight === clientHeight` throughout, `window.scrollTo(0, 99999)` leaves
 `scrollY` at `0.0`, B stays 8.
 
-**Both are one-word edits, neither is tested anywhere, and both are changes someone makes for
-a good reason** — `min-height` is normally the more forgiving choice. Nothing would fail at
-the time. The consequence would not appear until a window happened to be short enough, and by
-then the edit is long past.
+**Both are one-word edits, and both are changes someone makes for a good reason** —
+`min-height` is normally the more forgiving choice. Nothing would fail at the time. The
+consequence would not appear until a window happened to be short enough, and by then the edit
+is long past.
+
+**Both are now asserted, which they were not when this section was written.** Each app's own
+suite holds its own declaration's *effect* — not the declaration — across every route in its
+table:
+
+| | How the immunity is exercised |
+|---|---|
+| MyMail | every route at a **1000 × 400** window, deliberately short enough that a shell sized by content rather than by the viewport would overflow it — `height: 100vh` and `min-height: 100vh` are indistinguishable in a tall window with little content |
+| MyNotes | every route **at volume** — 41 notes and a 400-paragraph note — with the assertion that something inner *was* scrolling, so the run cannot pass by having stressed nothing |
+
+Both force `window.scrollTo(0, 99999)` and assert `scrollY` is still 0: an unscrolled page and
+an unscrollable one look identical until you try.
+
+**Neither runs anywhere but locally** (§9.1), so this is coverage that exists rather than
+coverage that fires. And note the two exercise the immunity along different axes — MyMail's
+would not catch a regression that only appears at volume, MyNotes' would not catch one that
+only appears in a short window. Neither gap is currently covered by the other, because neither
+suite can see the other app.
 
 So: **if an app relies on structural immunity, say so at the declaration that provides it.** A
 load-bearing `height: 100vh` looks identical to an incidental one.
@@ -1099,8 +1202,8 @@ and **refused.** Three reasons, in order of weight:
 1. The owner's instruction was about the colour behind the controls. Removing a shared visual
    element is not implied by it, and a separator present in two apps and absent in the third
    is exactly the divergence nothing in this suite detects (§10.7).
-2. The argument is §3.2's shape read in reverse — a rationale drawn from the two apps in view
-   and applied to the third, where here the third is the one being changed.
+2. The argument is `AGENTS.md` §3.2's shape read in reverse — a rationale drawn from the two
+   apps in view and applied to the third, where here the third is the one being changed.
 3. **MyCal shipped precisely this configuration until `282f00f`.** That commit changed
    `background: var(--bg)` → `var(--surface)` and *added* a `border-right`; it never touched
    `border-top`. So `border-top` over a `--bg` footer with no `border-right` is what MyCal
@@ -1129,16 +1232,52 @@ The one-line version: **a green build proves nothing about geometry**, because a
 apps embed `web/static/` into the binary and a running server keeps serving what it started
 with.
 
-MyCal's `e2e/tests/sidebar-footer.spec.ts` is the only machine-checkable statement of this
-contract anywhere. Read it before changing anything here — it encodes the acceptance height,
-both viewport coordinates in all five views, theme-toggle width stability, overflow headroom
-at 20px and 24px roots, and composited focus contrast in both themes.
+**All three apps now have a `sidebar-footer` suite.** Until recently MyCal's was the only
+machine-checkable statement of this contract anywhere; that is no longer true. Read the one
+belonging to the repo you are working in before changing anything here — and read the other
+two when you change anything shared, because each one records where and why it *departs* from
+the others, which is information that exists nowhere else.
 
-### 9.1 MyCal's suite runs in CI, and **gates publication**
+| | Tests | Beyond the shared core |
+|---|---|---|
+| **MyCal** `e2e/tests/sidebar-footer.spec.ts` | 26 | both coordinates in all five calendar views; page-scroll in the two views that scroll; the dark alias-naming check §5.3 requires of a deviating app; that the footer paints an opaque background of its own |
+| **MyMail** `e2e/tests/sidebar-footer.spec.ts` | 33 | its five-route table plus a sixth with a scrolling reading pane; sidebar overflow at 40 folders at 16px and 24px roots; the document-never-scrolls immunity; icon size and opacity; the anchor's `text-decoration`; §8.4's 4px floor; §8.5's full-bleed separator |
+| **MyNotes** `e2e/tests/sidebar-footer.spec.ts` | 27 | its five routes; overflow at 41 notes; §8.4's floor **and** the clipping premise the floor depends on; §8.5; a CSSOM walk that follows `@import` into `render/note.css`, with a separate test asserting the walk got there |
+
+The shared core all three hold: the acceptance height, (8, 8) from the window, theme-toggle
+width stability, the pinned declarations read off both the computed values and the CSSOM,
+resize headroom at 20px and 24px roots, and composited focus contrast in both themes.
+
+**Three per-app suites are not a cross-repo check.** Each asserts its own app's values against
+its own rendering, and none can see the other two — so all three stay green through a
+divergence between them. That is §10.7, and closing two thirds of the coverage gap has not
+touched it.
+
+**Only MyCal's runs in CI.** The other two are wired but have never executed. §9.1 is exact
+about which claim belongs to which app, because the difference is the difference between a
+guard and a file.
+
+### 9.1 What each suite's status actually is — one runs, three were accepted
+
+**The three are not in the same state, and the difference is not cosmetic.** MyCal's suite is
+executed by a pipeline on every push to `main`. The other two have never run anywhere except
+the machine that wrote them.
+
+| | Landed on | Runs in CI | Shown red for the right reason |
+|---|---|---|---|
+| MyCal | `main`, `7e65102` | **yes** — gates Pages and the release | yes, **in the pipeline** |
+| MyMail | `e2e-sidebar-footer`, **unpushed** | **no** — the step is committed and has never executed | yes, **locally** |
+| MyNotes | `e2e-sidebar-footer`, **unpushed** | **no** — same | yes, **locally** |
+
+Deliberately no commit hashes for the two unpushed branches: both were still being amended
+while this was written, so a hash recorded here would name a commit that no longer exists. See
+§11's closing note — this document has already cited one such commit.
+
+#### MyCal — runs in CI, and **gates publication**
 
 As of MyCal `7e65102`, the suite runs in `.github/workflows/main.yml` — after `./build.sh`,
-before Pages and the release. All 48 tests run; **nothing is skipped, loosened or
-conditional.** `build.sh` is byte-unchanged; Playwright installs in the workflow.
+before Pages and the release. **Nothing is skipped, loosened or conditional.** `build.sh` is
+byte-unchanged; Playwright installs in the workflow.
 
 **"Gates publication" is the accurate claim, not "prevents breakage."** The workflow triggers
 on push to `main`, so a commit that breaks the contract is *already on `main`* when the suite
@@ -1150,9 +1289,203 @@ because `./build.sh` stays green, so the suite genuinely runs) failed exactly th
 assertions with `Expected: "solid"  Received: "none"`, 3 failed / 45 passed, exit 1; reverting
 gave 48 passed, exit 0.
 
+**Those counts are the whole MyCal suite as of `7e65102`, not a current figure.** It has since
+grown past 48 — 56 across seven spec files at the time of writing, 26 of them in
+`sidebar-footer.spec.ts`. The 48/45/3 above is a record of one accepted run, and it stays
+written as one; do not read it as a count of what runs today.
+
 Operational notes worth keeping: retries stay at **0** deliberately; traces and screenshots
 upload on failure. (The config previously paired `trace: 'on-first-retry'` with `retries: 0`,
 so it had been capturing nothing at all.)
+
+#### MyMail and MyNotes — accepted locally, CI wiring committed but unexercised
+
+Both workflows trigger on push to `main`. **Both branches are unpushed, so neither step has
+ever run.** The YAML was validated by parsing it with `yq`, which establishes that it is
+well-formed and nothing whatever about whether it works. Neither author could run `npm ci`
+either — npm is unusable in that sandbox, and both copied MyCal's `node_modules` — so the
+committed lockfiles are verified by parsing and internal consistency, not by an install.
+
+**Do not write that these two run in CI, and do not let "wired into CI" stand in for it.**
+`measurement-protocol.md` is explicit that the honest description of a new guard is "added"
+until it has been shown red, and it adds a second requirement these two have not met: *wire it
+in suspiciously* — a pipeline step is evidence only once the pipeline has run it. The first
+push to `main` is the event that converts these rows, and nothing before it does.
+
+What each *has* earned, in full, is the local half:
+
+**MyMail — 33 tests.** Three mutations, each failing on its own assertion:
+
+| Break | Result |
+|---|---|
+| `outline: none` + a box-shadow ring | 3 failed / 30 passed — `Expected: "solid"  Received: "none"` |
+| delete `flex-shrink: 0` | 2 failed / 31 passed — computed `Expected "0" Received "1"`, CSSOM `Expected "0" Received ""` |
+| `.sidebar-footer` padding 8px → 24px | 14 failed / 19 passed — `Expected 8 Received 24` |
+
+The `flex-shrink` row is the one to keep. **Nothing rendered differently** — the row had slack,
+so no box moved — and it still failed, on both the computed value and the declaration. That is
+§3.1's class caught in the act, in an app whose rendering could not have caught it.
+
+**MyNotes — 27 tests.** Two mutations:
+
+| Break | Result |
+|---|---|
+| delete `font-weight: 400` | 1 failed / 26 passed — **the CSSOM test only**, `Expected: "400"  Received: ""`, with the computed-value test staying green |
+| `.sidebar-footer` padding 8px → 24px | 12 failed / 15 passed |
+
+Each reverted to 27 passed, exit 0. The first row is §3.1 again, and note *which* test survived:
+the computed-value test stayed green because the deleted value still arrives from `body`, which
+is exactly why the CSSOM assertion is not redundant with it.
+
+**Both authors also showed their harness red, not only their assertions** — the freshness check
+against a deliberately stale asset, and the pre-flight port guard against a deliberate squatter.
+`measurement-protocol.md` requires this of a guard's own machinery and not only of the contract
+it polices, after a liveness check once passed 48/48 against the wrong server.
+
+**The padding break is the informative one, and it is informative because of what it is not.**
+Changing `.sidebar-footer`'s padding from 8px to 24px moves the buttons off (8, 8) — the single
+violation this whole contract exists to prevent — and §10.7 records that
+`tools/check-contract.py` **passes it cleanly**, because geometry is invisible to a source
+reader. It now fails 14 of MyMail's 33 tests and 12 of MyNotes' 27. The two mechanisms are
+complements, and this is the one break that demonstrates it from both sides at once.
+
+#### A caveat on MyCal as the reference — and what porting fails to carry in *both* directions
+
+Both new suites were ported from MyCal's, and porting carried two of its harness defects across
+with it. **Both have since been fixed in the two copies and remain in the original** — so the
+script this contract points at as the model is now the only one carrying either. These are repo
+hygiene rather than contract terms and are owned by the app repos, but they are recorded here
+because **this is the only place that can see one defect in three repositories at once**, which
+is the whole reason this repository exists. Verified by reading all three scripts at the time of
+writing:
+
+- **`test-e2e.sh`'s CSRF rationale.** MyCal's says `-public-url` must match "or CSRF rejects
+  every mutating request with 403 and every write test fails." It does not. `csrf.Middleware`
+  allows a request carrying neither `Origin` nor `Referer` — the native-client path, stated in
+  its own doc comment — so an API-level call sails through a mismatched flag: measured 201 with
+  no headers, 403 with either, independently twice. The flag is still required, because in-page
+  `fetch` is stamped with the page's origin. The wrong version matters in the direction that
+  costs time: it predicts a 403 for exactly the calls that are allowed, sending anyone debugging
+  a write failure to the wrong flag. **MyMail and MyNotes have both corrected their wording;
+  MyCal's is unchanged.**
+- **`e2e/tsconfig.json` exits non-zero and buries real errors — and in MyCal four of them were
+  real.** Run with `-p` (not with file arguments, which makes `tsc` ignore the config and
+  measure a different program), against a clean `git archive main e2e` extraction, MyCal's own
+  config: **100 errors, 96 of them in Playwright's own type definitions and 4 in its tests.**
+
+  | | Errors in its own `tests/` |
+  |---|---|
+  | MyCal, `main` | **4** — `import.spec.ts` TS2591 `path`, TS2304 `__dirname`, TS2591 `Buffer`; `sidebar-footer.spec.ts:518` TS2345 `'string \| null'` not assignable to `'string'` |
+  | MyMail, MyNotes | **0** — both now exit 0 outright on `ES2022` + `skipLibCheck` |
+
+  Two consequences, and they are why this is not merely noise:
+
+  **MyCal is the only one of the three whose suite reaches for Node globals.** `import.spec.ts`
+  uses `path`, `__dirname` and `Buffer`; neither other suite touches any of them. So MyMail and
+  MyNotes could keep "`@types/node` deliberately not a dependency" for free and MyCal could not
+  — **`skipLibCheck` + `ES2022` alone leaves MyCal non-zero**, and fixing it there needed changes
+  to test code rather than two compiler options. The three repos are not interchangeable here,
+  which is exactly the kind of thing this document exists to record.
+
+  **One of the four is in the file this contract points at.** `sidebar-footer.spec.ts:518`
+  passed a `string | null` backdrop into `parseRgb`. `expect(…).not.toBeNull()` is present on
+  the line above and **does not narrow the type for `tsc`**. It is the only one of the nine
+  `parseRgb(<backdrop>)` call sites across the three suites without a non-null assertion,
+  including the two in its own file. MyCal's fix replaces it with a `throw`, which is a better
+  answer than the `!` its siblings use — a broken measurement should stop the test where it
+  broke, rather than crash three lines later inside a helper.
+
+  > **What that null check does and does not protect against — because the intuitive reading is
+  > wrong, and it is wrong in all three repos' comments.** Running `parseRgb` exactly as written:
+  >
+  > | Input | Result |
+  > |---|---|
+  > | `null` | **TypeError** — fails loudly |
+  > | `'transparent'` | **TypeError** — fails loudly |
+  > | `'rgba(0, 0, 0, 0)'` | **`[0, 0, 0]`** — parses to black, scores a huge ratio against a light backdrop |
+  >
+  > So `parseRgb(null)` is **not** the meaningless pass; it throws. The genuine silent wrong
+  > answer is `rgba(0, 0, 0, 0)`, and **what excludes it is the `toMatch(/^rgb\(/)` guard, not
+  > the null check.**
+  >
+  > The null check is still worth having, for a different reason: it distinguishes **"could not
+  > look"** from **"looked and disagreed"** — §5.3's rule that a backdrop which cannot be
+  > resolved is a failure and never a pass. Two guards, two distinct hazards, and neither
+  > substitutes for the other. *(Found by mynotes-dev, which priced the unreachable branch
+  > instead of assuming it; reproduced here before recording.)*
+
+  So the conclusion is **understated, not merely intact**: the file was not just noisy, it was
+  hiding four defects in the reference suite, one of them on this contract's own
+  soft-assertion trap. And the larger point survives any fix: the file is wired into no build
+  and no CI in any of the three, so its `strict: true` still buys nothing anywhere.
+
+  > **The clause "every one in `node_modules` and none in any suite's own tests" was false of
+  > MyCal, and it is a `AGENTS.md` §3.2 instance that reached this document's text.** The split
+  > was measured for MyMail and MyNotes, found to be zero in each, and generalised to the third —
+  > whose *total* had been taken but never broken down. The four-error gap between 100 and 96 was
+  > visible the whole time and was explained away as "MyCal has extra spec files". **The number
+  > that was rationalised was the finding.** Re-measured here from a clean extraction before this
+  > bullet was rewritten.
+
+**And the traffic runs the other way too, which this caveat must not be read as denying.**
+MyMail's and MyNotes' docs claimed their suites "gate publication in CI" — false, since neither
+workflow has ever run (§9.1 above). **MyCal makes the same claim and makes it correctly**, in
+`web/AGENTS.md`, *and bounds it*: the workflow triggers on push to `main`, so a breaking commit
+is already on `main` when the suite goes red, and what the gate prevents is a broken contract
+reaching Pages or the release rather than the commit landing. That is this section's own
+"gates publication, not prevents breakage" distinction, written into the app repo.
+
+So the careful version existed in the reference and **the other two did not inherit it.** Two
+failures that look identical in a list and are opposites:
+
+| | Direction | Example |
+|---|---|---|
+| **Defect originates in the reference and spreads** | argues *against* MyCal as the model | the CSRF rationale, the tsconfig |
+| **Care originates in the reference and does not spread** | argues *for* it | the bounded gating claim |
+
+Recording only the first kind would make a ledger that indicts the reference while omitting the
+evidence for it. *(Distinction owed to mycal-dev, which checked the claim that its repo was the
+clean one rather than accepting it.)*
+
+**How that false claim was actually removed is worth recording, because none of it was
+procedural.** Each app agent was handed two locations. Both swept their own repo instead and
+found more — MyMail three further, MyNotes seven in total, spanning its workflow, three
+`AGENTS.md` files, `spec/REQUIREMENTS.md`, its Playwright config and its spec file
+(mynotes `d9f8ff1`). A claim of this kind does not live where you expect it to.
+
+And both, independently and without conferring, reached the same judgement about the **workflow
+files**: keep the *"placed to gate publishing"* rationale there and qualify it rather than delete
+it, because in the file that *defines* the step the phrase is about ordering, and `on: push` is
+visible a few lines above. The claim is only false when it is repeated somewhere that context is
+missing. MyMail's addition is the durable form, and it is a rule rather than a correction:
+
+> **"Do not describe it as a gate elsewhere in the repo until it has run once."**
+> — `mymail/.github/workflows/main.yml`
+
+That inoculates against re-propagation instead of merely undoing this instance, which is the
+difference between fixing seven files and stopping an eighth. **Two agents, the same evidence,
+the same answer, no conferring** — which is the best available signal that the answer is a
+property of the problem rather than of whoever looked at it.
+
+**When this caveat can be retired.** MyCal's fixes for the first two are queued on their own
+branch at the time of writing. When they land, this section stops being true — but **retire it
+by verifying the fixes, not by assuming them**: read MyCal's `test-e2e.sh` and
+`e2e/tsconfig.json` and confirm the wording and the two compiler options, then delete the
+bullets. `AGENTS.md` §3.3's discipline applies in the ordinary direction here — the condition
+that makes this caveat *live* is written down, so a future reader can check whether it still is.
+
+A third difference was reported and **is not a defect**. Read at the time of writing, in full:
+**MyMail and MyNotes both carry `trap 'exit 1' INT TERM PIPE` alongside `trap cleanup EXIT`;
+MyCal carries only the latter.** The leak this was thought to prevent did not reproduce — the
+report of it turned out to be an artefact of the probe's own marker going into a closed pipe,
+the pattern `measurement-protocol.md` records under *the gap read as the answer*. Only `SIGKILL`
+leaks, in all three, and nothing can trap that.
+
+Recorded so the next person comparing the three scripts does not re-derive a bug from the
+inconsistency — **and stated as which-repo-has-what rather than as "some do and some do not"**,
+because the vague form is what let a wrong version of this survive a report. Two successive
+accounts of this line have now been wrong in two different directions. If you are about to
+restate it, read all three files rather than any summary of them, this one included.
 
 ### 9.2 What CI does **not** catch
 
@@ -1173,6 +1506,32 @@ documented limit. Then a change broke that layout badly enough to be obvious on 
 **the suite stayed green**, because the breakage was in the axis the test had declared out of
 scope. A documented blind spot is still a blind spot; writing it down makes it honest, not
 covered.
+
+**The app that runs in CI is now the app with the least complete suite**, and that is worth
+stating plainly rather than leaving to be inferred from §9's table. Three gaps, all in MyCal:
+
+- **§8.5, the full-bleed separator**, was asserted by nothing at all until the two new suites
+  landed, and **it is still asserted by nothing in MyCal**.
+- **§8.4's 4px floor** — same. Both are now held in MyMail and MyNotes, in the two repos where
+  no pipeline will run them.
+- **§8.3 requires mechanism B to be measured at *both* scroll extremes**, because a sticky
+  element behaves differently at each end of its range. MyCal's two page-scroll tests scroll to
+  the bottom only. MyMail's sidebar-overflow tests do visit both ends; MyCal's do not.
+
+None of these is a claim that MyCal is wrong — its numbers were measured by hand at the time and
+§8.3 records them. It is a claim about what would still be true *tomorrow* if someone changed
+it, which is the only thing a suite is for.
+
+The resulting shape is worth holding in mind before quoting any of this as coverage:
+
+> **What runs is not what is most thorough, and what is most thorough does not run.**
+
+§8.5 is a good example of why that matters rather than being merely untidy. The prohibited
+alternative — insetting the buttons with a horizontal margin instead of the footer's padding —
+puts the buttons in exactly the right place and the separator in the wrong one. **No position
+assertion can see it**, which is why §8.5 exists as a separate rule; and in the one app whose
+assertions actually execute, nothing looks at it. The habit here is to record where the
+reference implementation is behind rather than to flatter it, and this is where it is behind.
 
 ---
 
@@ -1249,20 +1608,37 @@ be surprised.
 
 ### Structural
 
-7. **There is no cross-repo test.** Nothing anywhere can detect that one app has drifted
-   from the other two. MyCal's `sidebar-footer.spec.ts` is one app's half of the contract —
-   and **MyMail and MyNotes have no e2e suite at all**, so every number either of them has
-   reported is hand-measured. Two thirds of this contract rests on measurements that were
-   correct once, on one machine. **This is the largest gap.**
+7. **There is no cross-repo test that runs automatically.** Nothing that runs anywhere can
+   detect that one app has drifted from the other two. **This is the largest gap, and it is
+   untouched by everything that has just changed.**
 
-   **MyCal's third is now genuinely guarded** — its suite runs in CI as of `7e65102` and
-   gates publication, verified by a demonstrated red run (§9.1). That is a real change in the
-   contract's protection, and it is confined to MyCal.
+   *(The qualifier is load-bearing and this item used to lack it. `tools/check-contract.py` —
+   described forty lines below — is a cross-repo test; what it is not is one that anything
+   runs. The unqualified version contradicted the rest of its own item. See `AGENTS.md` §3.5.)*
 
-   **It does not shrink this gap as much as it looks.** The guard is one-sided: it proves
-   MyCal still satisfies the contract, and it cannot see the other two. **Cross-repo drift
-   remains undetectable by anything** — if MyMail or MyNotes moves, MyCal's pipeline stays
-   green, correctly. And `0.80rem` is uncatchable even within MyCal (§9.2).
+   This item used to carry two claims at once. They have come apart, so they are separated
+   here — and the half that closed is the smaller half.
+
+   **Closed: the two missing suites.** MyMail and MyNotes now each have a
+   `sidebar-footer.spec.ts` holding their own half of this contract, each accepted by a
+   demonstrated red (§9.1). The sentence this item used to carry — *"every number either of
+   them has reported is hand-measured"* — is no longer true, and neither is *"two thirds of
+   this contract rests on measurements that were correct once, on one machine."*
+
+   **Open, and undiminished: nothing can see between the repos.** Three suites are still three
+   one-sided guards. Each proves its own app satisfies the contract and is structurally blind
+   to the other two — so if MyMail's row moves, MyCal's pipeline stays green, *correctly*, and
+   so does MyNotes'. **Adding suites cannot close this, however many are added**, because the
+   thing missing is not coverage of each app but a comparison between them. That is a
+   difference in kind, not in degree, and it is the reason this item keeps the weight it had.
+
+   Two further reasons the closed half is worth less than it looks:
+
+   - **Two of the three suites do not run** (§9.1). They are committed on unpushed branches
+     with CI steps that have never executed, so what exists today is one pipeline and two
+     files. A file that would go red is not a guard until something runs it.
+   - **`0.80rem` is uncatchable even within a single app** (§9.2), so per-app coverage has a
+     floor it cannot reach by construction.
 
    **A partial cross-repo guard now exists: [`tools/check-contract.py`](../tools/check-contract.py).**
    The human lifted this repo's Markdown-only rule for it. It reads the three sibling
@@ -1290,12 +1666,32 @@ be surprised.
    | `--text-subtle` `#6b7280` → `#6b7281` in MyCal | fails §5.1 resting text, resolved through the token |
    | `padding: 4px 8px` → `4px 10px` in MyNotes | fails §2 button.padding |
    | delete `flex-shrink: 0` from MyCal | fails §2.3 — the §3.1 class, invisible to MyCal's own rendering |
-   | MyCal's backdrop, in the live repos | went red, then **green** when MyCal landed `9aa9cae` |
+   | MyCal's backdrop, in the live repos | went red, then **green** when MyCal landed the change (see the note below on which commit that was) |
 
    The last row is the only one that was not staged: the contract was written ahead of the
    code, the check reported the difference, and it cleared when the change landed. **That is
    the first acceptance signal in this work that did not come from the agent making the
    change.**
+
+   > **That row named `9aa9cae`, and no branch contains that commit.** It was real when it was
+   > recorded — the green run genuinely happened against it — and MyCal then amended it away.
+   > What is on `main` is `282f00f`: same parent (`7e65102`), same subject, thirteen minutes
+   > later, carrying more than the original did.
+   >
+   > The acceptance signal stands. **`git show 9aa9cae` does still resolve in that repo** — an
+   > unreferenced object survives until it is garbage-collected — so the failure is not that the
+   > hash is unreadable today but that **nothing reaches it from any branch**, and one `gc` ends
+   > even that. A hash that resolves only from a reflog is not a citation anyone else can follow.
+   >
+   > Recorded rather than quietly swapped for `282f00f`, because the substitution is an
+   > inference — the two are not the same object, and saying "it landed as `282f00f`" would
+   > assert a history I reconstructed rather than one I read. **This is `AGENTS.md` §2.5's own
+   > failure, in this repository, in the document that warns about it**: two of the three app
+   > repos once shipped comments describing a rule's removal that had only ever existed in an
+   > uncommitted amend chain, and this is the same defect one level up. Naming a commit is what
+   > makes a claim checkable, and it is also what makes it perishable when somebody rebases.
+   > **Prefer naming the commit anyway** — an unresolvable hash announces itself, and a
+   > description with no hash does not.
 
    `--self-test` proves the *parser* still behaves as the checks assume, with ten inline
    cases. It exists because a parser defect is how thirty assertions go green-and-blind at
@@ -1314,6 +1710,25 @@ be surprised.
    precisely on the window edge. Deliberately out of scope and documented rather than left
    to be discovered; the left edge is still asserted. Any future reduction anywhere in that
    chain starts clipping the indicator.
+
+   **This is MyCal's alone, and the other two are better rather than merely different.**
+   Measured at a 375 × 700 viewport, 16px root, Chromium on Linux:
+
+   | | L | B |
+   |---|---|---|
+   | MyCal | 8 | **4** |
+   | MyMail | 8 | 8 |
+   | MyNotes | 8 | 8 |
+
+   MyMail has no width breakpoint at all — one media query in its whole stylesheet,
+   `@media (hover: none)` — so nothing about its layout responds to width and the footer keeps
+   the contract's 8. MyNotes has no breakpoint either and clips instead, via `.app-body`'s
+   `overflow: hidden`. So the contract's own coordinates are **fully satisfied at a phone width
+   in two of three apps**, and the exemption is one app's.
+
+   Worth stating in that direction, because "narrow layouts drop to B = 4" would read as a
+   property of the contract rather than of MyCal, and a reader checking MyMail or MyNotes
+   against it would find a disagreement that is not there.
 9. **MyNotes' demo builds have only one control.** Settings is rendered only when
    `!isDemo()`, because a demo has no server to hold the MyMail URL. The geometry contract
    still applies to the toggle; the pair does not exist.
@@ -1326,6 +1741,48 @@ be surprised.
     difference in a contract whose goal is that the three behave identically. Never
     specified in either direction. Unresolved; not worth a three-repo change on its own,
     worth folding into the next one that touches this markup.
+
+### Unspecified — a question for the human, not a defect
+
+12. **The contract says nothing about horizontal page scroll, and in MyMail the controls leave
+    the window.** §8's (L, B) is measured against the viewport, and §8.3's two threats are both
+    vertical. Nothing anywhere addresses the horizontal axis, which was never a decision — the
+    case simply did not arise while the rules were being written.
+
+    It arises in MyMail. Nothing in its layout responds to width, so its shell has a
+    **min-content width of 415px**; below that the *document* scrolls horizontally. Scrolled
+    fully right at a 375px viewport, the toggle measures **L = −32** — it is off the left of
+    the window entirely. *(A Chromium-on-Linux, 16px-root, this-container reading, in §2.4's
+    sense: `scrollX` reaches 40 and L is 8 − 40. The 415px is a binary search — 414 still
+    scrolls, 415 does not — and it depends on the rendered text width, so it is a reading and
+    not a constant.)*
+
+    **Measured against all three, because it is exactly the shape `AGENTS.md` §3.2 warns
+    about.** The tempting general statement — *"these apps do not respond to width, so they
+    scroll horizontally when narrow"* — is false of two of them:
+
+    | | Horizontal document scroll at 375px | Why |
+    |---|---|---|
+    | MyCal | **no** | its `@media (max-width: 600px)` stacks the sidebar under the content |
+    | MyMail | **yes** — `scrollWidth` 415 in a 375 window | one media query in the stylesheet, and it is `(hover: none)` |
+    | MyNotes | **no** | no breakpoint either, but `.app-body { overflow: hidden }` clips rather than widening the document |
+
+    So MyMail is exposed and the other two are not, and they avoid it by two different
+    mechanisms, neither of which this contract asks for.
+
+    **Left unasserted deliberately, and that was the right call.** MyMail's suite asserts the
+    at-rest values and writes the blind spot down rather than either asserting a number or
+    "fixing" the layout — a fix here would be a responsive-design change to an app, decided in
+    an app repo, on the strength of a contract that says nothing about it (`AGENTS.md` §2.2).
+
+    **The question for the human, stated as a question:** should this contract say anything
+    about the horizontal axis — and if so, is the requirement about *the controls* (they must
+    remain within the window at every reachable scroll position) or about *the app* (the
+    document must not scroll horizontally at supported widths)? Those are different rules with
+    different owners: the first belongs here, the second is a per-app layout decision this
+    document has consistently refused to make (§6.4 declines exactly that for the sidebar
+    column). **Not settled here.** Until it is, the honest position is that MyMail's behaviour
+    violates nothing, because there is nothing to violate.
 
 ---
 
@@ -1343,6 +1800,15 @@ an old comment or an old report:
 | WCAG 2.4.11 cited for contrast | 1.4.11, §6.3 | 2.4.11 is Focus Not Obscured |
 | Footer inset by horizontal margin | Full-bleed footer, inset by padding, §8.5 | The separator must span the whole sidebar |
 | "The backdrop behind the controls is the app's `--surface`" | Per-app recorded backdrop, §5.3 | Owner ruling: MyCal's footer must sit on the left column's background, and the three are accepted to differ |
+| "MyNotes' buttons inherit `font-weight`, `font-style` **and `text-align`** from `body` via `button { font: inherit }`" | The per-property route table, §3 | `text-align` is not in the `font` shorthand, so `font: inherit` never displaces the UA's `text-align: center` on buttons. MyNotes takes alignment by MyCal's route, and MyMail's Settings anchor is the only control in the suite that inherits it |
+| "Deleting a pin from MyCal breaks the match with MyNotes" | The detectability table, §3.1 | With every `body` at its shipped typography, deleting a pin changes no computed value in **any** of the three. The divergence is latent everywhere, not visible somewhere |
+| "MyCal's `sidebar-footer.spec.ts` is the only machine-checkable statement of this contract anywhere" | The three-suite table, §9 | MyMail and MyNotes now have one each. The cross-repo half of the gap (§10.7) is unaffected |
+
+**The first two of those are the same defect at two removes**, and both were written by
+someone who had the mechanism right for the app in front of them. The route table in §3 exists
+because a per-app claim was not per-property enough — `AGENTS.md` §3.2's pattern arriving on an
+axis it had not previously arrived on. Checking against all three *apps* by name would not have
+caught either one; checking each *property* against each *control* did.
 
 **Two of these were withdrawn on the owner's instruction rather than because they were
 wrong**, and the distinction is worth keeping. The `--surface` rule was not mistaken about
@@ -1363,3 +1829,21 @@ named for.
 their own repository** — describing a ring being removed, when that ring had only ever
 existed in an amend chain. A comment that describes history nobody can see from the diff is
 worse than no comment. Prefer an assertion over prose.
+
+**And this document has now done it too**, which is why §10.7 carries the note rather than a
+quiet correction: it cited `9aa9cae` as the commit whose landing turned the cross-repo check
+green, and that commit is on no branch. It was real when it was written down and was amended
+away afterwards.
+
+The practical rule that follows, since this will recur in any three-repo change:
+
+> **A commit hash is the most checkable thing you can write and the first thing to rot.** Name
+> it anyway — an unresolvable hash announces itself, where a description with no hash fails
+> silently. But **do not record a hash from a branch that is still being amended, or one that
+> has not been pushed**: there, the cost is paid and the benefit is not, because nobody else
+> can resolve it even while it is current.
+
+That is the reason §9.1's table gives commits for MyCal and deliberately gives none for MyMail
+and MyNotes. Both of those branches were being amended while this section was written — one of
+them twice within the hour — so any hash here would have named a commit that had already
+stopped existing.

@@ -23,6 +23,34 @@ Tests being green tells you the code compiles and the assertions hold against *s
 It says nothing about whether that something is your change. Geometry in particular is only
 ever established by measuring a rendered page.
 
+### This has been demonstrated, not just asserted
+
+The claim above is easy to nod along to and easy to under-rate, so it was reproduced on demand
+— both paths run side by side, in the same state, in MyCal:
+
+1. Server started; `web/static/app.css` then edited **without rebuilding**, so the served
+   stylesheet no longer matched disk. Confirmed by `md5sum`, not assumed.
+2. `playwright test tests/sidebar-footer.spec.ts` — which is exactly what `npm test` execs, its
+   `test` script being a bare `playwright test` — reported **26 passed**, against assets that
+   were not the ones on disk.
+3. `./test-e2e.sh`, in that same state, **refused**: exit 1, *"Something is already listening on
+   port 8089."*
+
+**Twenty-six green assertions describing a stylesheet nobody was editing.** Nothing was broken,
+nothing errored, and no output anywhere hinted that the file under test and the file on disk had
+diverged.
+
+The two paths differ by which one *manages the server*. `npm test` attaches to whatever is
+already listening; `test-e2e.sh` builds, starts its own, and compares served bytes against disk.
+So: **run the suite through the script, and treat a bare `playwright test` against a
+long-running server as unverified**, however green. *(Demonstrated by mycal-dev. The numbers are
+its readings; the two commands' behaviour is checkable in any of the three repos.)*
+
+> It caught itself mid-measurement, which is worth keeping: the first attempt read
+> `test-e2e.sh`'s exit code through a pipe into `tail` and got the *pipeline's* status, printing
+> "exit: 0" next to a refusal message. See *the gap read as the answer* below — the apparatus
+> reading reassuring, in the act of demonstrating apparatus that reads reassuring.
+
 **This applies to CI exactly as it does locally.** A pipeline that starts a server from
 anything other than the binary built in that same job has the identical trap, and it is worse
 there: nobody is watching, and a green pipeline is trusted more than a green local run. If you
@@ -217,6 +245,112 @@ for, and why the acceptance criterion above ("shown red for the right reason") a
 guard's own machinery and not only to the contract it polices. Applying the criterion to the
 thing that applies the criterion is not circular; it is the only way the sensitivity survives
 the next edit.
+
+### The gap read as the answer — truncation and non-matching are one mechanism
+
+The third line of that table is a pipe, and it is not the only way a pipe lies. **A truncated
+or discarded stream is indistinguishable from a short one**, and the missing part is read as an
+absence rather than as a gap in the instrument. This produced five wrong findings in a single
+week's work, none of which involved a mistaken measurement — in each case the apparatus
+measured correctly and the answer was thrown away, or never asked for, before anyone saw it:
+
+| What was concluded | What actually happened |
+|---|---|
+| *"the `EXIT` trap does not fire on `SIGPIPE`, so the server survives"* | the probe printed its `CLEANUP RAN` marker to stderr and was run as `script 2>&1 \| head -1`. The trap **did** fire; its evidence went into the pipe `head` had just closed. With stderr to a file the marker appears. A defect was reported in three repositories on the strength of it, and there was none |
+| *"`tsc` reports about 30 errors"* | the run was piped through `head -20`. The real count is 96 in the tree that was being measured — and 100 in MyCal's, so the figure is also per-repo |
+| *"the server is serving a stale asset"* | an ad-hoc freshness loop written as `served=$(curl -sf "$url" \| md5sum)` **without `pipefail`**: a pipeline's exit status is its last command's, so a 404 left `curl` failing silently and `md5sum` hashing empty input. It reported a stale asset where the truth was a missing one |
+| *"MyMail removed its `trap … INT TERM PIPE` line"* | the comparison was `grep -n 'trap ' test-e2e.sh \| head -3`. MyMail's second `trap` is on line 69 and its comment block is long, so the three lines returned were the first `trap` and two comment lines. **The line was there.** Reported to a colleague as a state change; corrected by them re-reading the files |
+| *"MyCal never claims its suite gates publication"* | the sweep matched `gates publication\|gate publication\|gating publication`. MyCal writes **"gates publish*ing*"** — twice. The pattern could not match the word in use, so the search was incapable of returning the hit it was run to find |
+
+**Those are not a family of related mistakes. They are one mechanism.** In every row the tool
+returned a well-formed, clean-looking result that was silent about what it had left out, and
+**the gap was read as the answer.** Truncation and non-matching are the same failure wearing
+different clothes: nothing in the output distinguishes *"there is no more"* from *"I did not ask
+for more"*.
+
+That unification is worth more than the individual rows, because it covers the search-shaped
+variant that a rule about pipes would miss:
+
+> **A negative grep result is only as good as the pattern — and a phrase that varies by one word
+> across three repos is not a pattern.** *(mymail-dev.)*
+
+Note where the two halves differ in danger. `head` at least leaves a plausible trace: a
+suspiciously round count, output ending mid-thought. **A non-matching pattern leaves nothing at
+all** — clean exit, no output, and a result identical in every respect to the truth it is
+misreporting.
+
+**The last row is the one to study, because it inverted a finding rather than merely missing
+one.** It produced a confident statement about *another repo's* cleanliness — and a wrong claim
+about your own repo gets caught by you, while a wrong claim about someone else's is caught only
+if that someone happens to read it. Here they did, and checked. That was luck, not process.
+*(Framing owed to mymail-dev.)*
+
+Of the rows above, the first two are the classic shape: the conclusion was the *reassuring*
+reading of an absence — nothing printed, therefore nothing happened.
+
+> **The fourth was committed by the author of this section, in the same sitting, about the
+> subject of the first row.** Having just written "do not count, measure or conclude from a
+> stream you paginated", I compared three scripts with a `grep` ending in `head -3` and reported
+> a line as removed because it fell outside the window. It is the cheapest possible instance —
+> one flag, on a command whose whole purpose was to establish presence or absence.
+>
+> That is `AGENTS.md` §3.2's mechanism operating at full strength: **freshly written text is the
+> least reviewed text, and it is least reviewed precisely when its author is concentrating on
+> the failure mode it describes.** Knowing the pattern by name did not help. What caught it was
+> a second person reading the files.
+>
+> So the practical form is not *"remember this"*. It is: **a claim about what a file contains is
+> checkable in seconds and should be re-derived rather than recalled** — including from your own
+> notes, including when you are the one who wrote the warning, and **including when a colleague
+> hands it to you already verified.**
+>
+> That last clause is the one that did the work here. The correction arrived with a table of all
+> three files in it, already checked; what made the fix right was re-reading the files anyway
+> rather than transcribing the table. Across this batch the pattern appeared five times among
+> four agents, and **in every instance what caught it was a second person reading the primary
+> source — never the author, and never the pattern being known.** Plan for the reader, not for
+> the author's vigilance. *(Final clause owed to mysuite-manager-e2e, from two instances of its
+> own.)*
+
+**The third is here for the opposite reason — it is the one the apparatus already gets right,
+and it was reintroduced by someone reimplementing it.** All three repos' `test-e2e.sh` open
+with `set -euo pipefail`, which is precisely what makes their `curl … | md5sum` freshness
+checks sound: with `pipefail` the failing `curl` propagates and the check reports a fetch
+failure rather than a bogus hash. The instance above was a throwaway loop written alongside
+them, by someone who copied the pipeline and not the `set` line, and it produced a
+false "stale asset" report within minutes.
+
+So the transferable point is not only *"watch your pipes"*. It is: **the protections in a
+mature script are load-bearing and mostly invisible, and the moment to lose them is when you
+reimplement a piece of it ad hoc to check something quickly.** A one-off probe is exactly where
+nobody sets `pipefail`, and exactly where a wrong answer is most likely to be believed, because
+it was written to answer one question and is not treated as apparatus at all.
+
+So:
+
+- **Never let a diagnostic share a stream with the thing being truncated.** If a probe's own
+  output proves it ran, send it somewhere nothing is closing — a file, a different descriptor.
+- **Do not count, measure or conclude from a stream you paginated.** `head`, `tail`, `grep -m1`
+  and a scrolled-back terminal all produce a number that is a property of the pager.
+- **In a shell pipeline, the exit status is the last command's** unless `pipefail` is set — so
+  the failure of the step you care about is silently replaced by the success of the step that
+  formatted it. All three `test-e2e.sh` scripts set it. **A quick one-off probe is where it
+  goes missing**, and a one-off probe's answer gets acted on just as readily.
+- Then ask the question this whole document keeps returning to: **if the thing I am looking for
+  were there, could I see it from here?** An absence is only evidence when the instrument could
+  have shown a presence.
+
+This is the same failure as the stale server and the zombie liveness check, arriving through
+the plumbing rather than through the system under test — and it is worth naming separately
+precisely because the plumbing is the part nobody treats as part of the measurement.
+
+**It predates this batch, and it has already changed a design here.**
+`tools/check-contract.py` prints its verdict twice, once before its caveats and once after,
+because a reviewer running the acceptance check on a `tail -20` landed in three screens of
+epistemics and never reached the line saying whether it passed. The comment in that file says
+so. That fix — ordering and repetition rather than fewer caveats — is the right shape for
+output somebody will truncate, and it is worth copying: **assume the reader will see a window
+of your output, not all of it, and put the verdict where any window catches it.**
 
 ### Know what your coverage expires against
 

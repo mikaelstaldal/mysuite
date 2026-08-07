@@ -15,9 +15,14 @@ The UI elements required to be identical across them are specified **here**, in
 [`spec/`](spec/), and the three app repos reference those contracts rather than restating
 them.
 
-There is no shared stylesheet, no shared component library, and no code of any kind in this
-repository. It is Markdown. Each app implements the contract in its own CSS, with its own
-class names and its own tokens.
+There is no shared stylesheet and no shared component library. This repository is Markdown,
+**plus `tools/`** — scripts that *check* a contract, and nothing else (§3). Each app implements
+the contract in its own CSS, with its own class names and its own tokens.
+
+*(This paragraph read "no code of any kind in this repository" until `tools/check-contract.py`
+landed and made it false, with no edit to it — §3.5's own shape, in §1, corrected 120 lines
+later in §3 and nowhere near the reader who starts here. `README.md` states the exception
+inline and was never wrong.)*
 
 Currently binding:
 
@@ -38,9 +43,14 @@ Cross-cutting:
 A value in `spec/` is implemented in MyCal, MyMail and MyNotes. **Changing it means changing
 all three, or none.**
 
-There is no shared stylesheet and no cross-repo test, which means **nothing anywhere can
-detect that the three have drifted apart.** No build fails. No test goes red. The divergence
-is found by a person noticing a button move when they switch browser tabs.
+There is no shared stylesheet and **no cross-repo test that runs automatically**, which means
+**nothing will detect that the three have drifted apart.** No build fails. No test goes red.
+The divergence is found by a person noticing a button move when they switch browser tabs.
+
+The qualifier is exact and is not a softening. `tools/check-contract.py` *can* see cross-repo
+drift and is the only thing that can — but nobody's CI runs it, so it guards nothing until
+somebody chooses to run it (`spec/sidebar-footer.md` §10.7). Each app's own e2e suite is blind
+to the other two by construction, and two of the three do not run anywhere either.
 
 Treat any change to a specified value as touching three repositories from the start.
 
@@ -103,14 +113,21 @@ than no comment: it is confidently wrong, and nothing checks it.
 
 So:
 
-- If a number matters, **put it in a test.** MyCal's `e2e/tests/sidebar-footer.spec.ts` is
-  the model — the only machine-checkable statement of any of this, and it now runs in CI and
-  gates publication. MyMail and MyNotes still have no harness, so cross-repo drift remains
-  undetectable by anything.
+- If a number matters, **put it in a test.** All three repos now have an
+  `e2e/tests/sidebar-footer.spec.ts` holding their own half of the contract. **Only MyCal's
+  runs anywhere** — it gates publication on push to `main`; MyMail's and MyNotes' are
+  committed on unpushed branches whose CI steps have never executed. See
+  `spec/sidebar-footer.md` §9.1, which is exact about which claim belongs to which app.
+
+  **Three per-app suites are still not a cross-repo check**, and adding more cannot make one:
+  each is blind to the other two by construction, so all three stay green through a
+  divergence. **Cross-repo drift remains undetectable by anything that runs.**
 - **Some pins cannot be defended by rendering at all.** Where a value is already correct in
   one app for its own reasons, that app's rendering cannot detect the pin going missing — so
   assert the *declaration* off the CSSOM, not the computed box. See
-  `spec/sidebar-footer.md` §3.1. And a few pins are uncatchable by any test
+  `spec/sidebar-footer.md` §3.1, which now measures how narrow this is: for the three pinned
+  inherited properties, **no app's rendered box can detect any of them going missing**, and
+  exactly one computed value in the whole suite can. And a few pins are uncatchable by any test
   (`0.80rem` vs `0.8rem` is identical computed *and* serialised); those are held by review,
   and saying which are which is part of describing coverage honestly.
 - If it cannot be tested, **say in the comment that it is a reading rather than a contract**,
@@ -158,6 +175,11 @@ So:
   §2 for the three-repo rules, the individual contract for anything about a specific value.
   When you change one, change the others; this is the one place duplication is accepted, and
   it is accepted only for these three rules.
+
+  **"The longest one wins" settles which copy is canonical, not which copy is correct** — and
+  those come apart as soon as the copies drift. Before consolidating or moving any of them,
+  read §3.4: a move between files silently picks a winner among statements that disagree, and
+  it does so without breaking a single reference.
 - **One contract per file** in `spec/`, indexed in [`spec/README.md`](spec/README.md). Add a
   row to that table when you add a file.
 - **Always name the file when citing a section number across files.** `AGENTS.md` and
@@ -227,9 +249,9 @@ that are silently missing the rules nothing can check.
 ### 3.2 Beware a rationale that is true of the apps you were thinking about
 
 The most common defect in this contract has not been a wrong value. It is **a reason that
-holds for two apps, written as though it held for three.** Four instances so far — the first three
-each caught by the repo it was false of, the fourth caught only because the app it was false
-of happened to be the one supplying the number:
+holds for two apps, written as though it held for three.** Every instance found so far — the
+first three each caught by the repo it was false of, the fourth caught only because the app it
+was false of happened to be the one supplying the number:
 
 | Written | False of | Because |
 |---|---|---|
@@ -238,11 +260,66 @@ of happened to be the one supplying the number:
 | "the panel is the footer's parent" | nobody *yet* | true of all three today, required by none |
 | "that app's own `AGENTS.md` or `spec/REQUIREMENTS.md`" | MyCal | it has no `spec/` directory at all |
 | "the hover fill's floor is 1.101:1, the weakest the suite ships" | MyNotes | it ships 1.053:1 — 1.101 is the other two |
+| "MyNotes' buttons inherit `text-align` from `body` via `button { font: inherit }`" | MyNotes | `text-align` is not in the `font` shorthand, so the UA's `text-align: center` is never displaced |
+| "the `curl \| md5sum` exit-status bug is live in all three `test-e2e.sh`" | **all three** | every one of them sets `pipefail` on line 12, which is exactly what defeats it |
+| "every `tsc` error is in `node_modules`, none in any suite's own tests" | MyCal | it has 4 in `tests/` — the split was measured for the other two and generalised to it |
+| "only MyMail's docs claim its suite gates publication in CI — one repo, not a pattern" | MyMail *and* MyNotes | the grep covered `web/AGENTS.md` in three repos; the claim was in four locations across root, `web/` and `e2e/` files |
+
+*(The count that used to open this paragraph is gone deliberately. It said "four" beside five
+rows — a number in prose describing a list directly below it, stale within one changeset, which
+is §2.5's complaint arriving inside §2.5's own neighbour.)*
 
 **Two of those rows were committed in the changeset that added or extended this section**, by
 its author, while writing it down. That is not irony worth enjoying — it is the measure of how
 easily the pattern slips past someone actively looking for it. Check the claim against all
 three by name; do not assume you are immune because you just wrote the warning.
+
+**And "all three by name" is necessary, not sufficient.** The sixth row above was checked
+against all three apps and still went in wrong, because the unit that varies is not always the
+app: `text-align` reaches MyMail's two controls by two different routes, so a per-app answer
+could not be right for both. **Check each property against each control**, and when a claim is
+about the repos' tooling rather than their CSS — the seventh row — the unit is the file, and
+the only check is opening all three.
+
+**The ninth row is that same refinement, violated by the person who had just written it.** The
+claim was about the app repos' own documentation, checked by grepping one filename —
+`web/AGENTS.md` — across all three repos. Three repos, dutifully, by name. But the claim lived
+in four places spread over root, `web/` and `e2e/` files, so **the axis that was fully covered
+was the one that did not vary, and the axis that varied was not swept at all.** It was caught by
+someone re-running the same grep wider.
+
+So the operative question is not *"did I check all three?"* but:
+
+> **What is the unit this claim ranges over — the app, the control, the property, the file? —
+> and did my search cover that unit, or just the one I happened to iterate?**
+
+A search that iterates the wrong axis produces a *thorough-looking* negative. Three repos
+checked reads as more careful than one, and here it was the shape of the mistake.
+
+#### The number you explain away is the finding
+
+The eighth row is the one to study, because nothing above would have caught it and the evidence
+was in plain sight. Its author measured the errors-in-tests split for two repos, got zero from
+both, and reported it of all three — having taken the third's *total* but never its breakdown.
+
+**The totals did not match: 100 against 96.** That four-error gap was noticed and explained, as
+*"MyCal's 100 differs only by its extra spec files"* — a guess with the grammar of a finding.
+The four errors it dismissed were the whole discovery, and one of them sat on the exact line of
+the reference suite whose own comment warns against measurements that fall through to a
+meaningless pass.
+
+So, as a check that is cheap and would have fired here:
+
+> **When two measurements of the same thing differ, the difference is a result, not an
+> irregularity to be accounted for.** If you find yourself composing a reason why one number is
+> larger, stop and measure the gap instead. The explanation costs a sentence; the measurement
+> costs a command; only one of them can be wrong.
+
+This is the same shape as `spec/measurement-protocol.md`'s *"cross-check your numbers against
+each other, not only against expectations"* — a run there was caught by two of its own figures
+contradicting each other. The addition is the failure mode when you *do* notice: **noticing and
+rationalising is worse than not noticing**, because it converts an open question into a settled
+one and leaves no trace that anything was ever unresolved.
 
 #### Why writing the warning does not protect you: attention follows the last defect
 
@@ -260,12 +337,29 @@ That accounts for every instance in the table above and two more from the same w
 | the hover-fill floor set at 1.101 | extending §3.2 |
 | three bare `§2.2`/`§2.5` citations | introducing the deviation rule two of them cite |
 | a false claim about a `background` declaration | **replacing a clause it had just disproved** |
+| "the `pipefail` bug is live in all three scripts" | writing the section on evidence discarded by a pipe |
+| "MyMail removed its `trap … PIPE` line" — read off a `grep \| head -3` that cut the file at line 51 | **the same sitting as writing "do not conclude from a stream you paginated"** |
+| "the cross-repo check predates MyCal's suite" — backwards; it postdates it by 26 minutes | correcting a *different* false claim in the same sentence — **and caught before shipping, by its own author** |
 
 **Freshly written text is the least reviewed text in any changeset**, and it is least reviewed
 precisely when the author is concentrating hardest on some other failure mode. So the practical
 form is not "be careful" — it is: **re-read what you added last, against the code, after you
 have finished the thing you were concentrating on.** The sentence you are most confident in is
 the one nobody has checked, including you.
+
+**The last row is the only one an author caught themselves, and how is the useful part.** Every
+other entry here was found by someone else reading the primary source, which is the pattern the
+rest of this document rests on. That one was found because its author checked a claim that
+*felt obviously true* and needed no checking — the ordering of two commits, in a sentence that
+did not depend on the ordering at all. It was backwards.
+
+> **Inside a correction, check the incidental facts too — especially the ones you did not stop
+> to doubt.** The claim under repair gets scrutiny by definition. The scaffolding you write
+> around it does not, and it is where the next defect goes.
+
+The sentence was then rewritten to make no claim about the ordering, since it never needed one.
+**That is the better repair**: an unnecessary fact that has to be right is a liability with no
+upside, and deleting it beats verifying it.
 
 **And the sharpest case is the last row, which is why its wording is specific.** That claim was
 not merely written while its author was distracted — it was written *as the replacement for a
@@ -348,6 +442,132 @@ So, when writing a rationale:
   long after the code has moved on, and the list is how somebody finding one knows it is
   stale.
 
+### 3.4 Moving text can introduce a defect without breaking anything
+
+*(Owed to mymail-dev, which found this in its own repo while doing the move.)*
+
+Splitting a document is the safest-looking edit there is: nothing is added, nothing is deleted,
+the diff is a cut and a paste. It has a failure mode that no reference check will find.
+
+**The specimen.** MyMail's root `AGENTS.md` described `-init` in two places. The Operating Modes
+table said it seeds an *"optional initial identity"*. A bullet further down — inside the E2E
+section being moved out — said `-init` *"itself requires `-identity-address`"*. The bullet was
+right: `./mymail -init` without it exits 1 with `error: -identity-address is required`. **The
+correct statement was in the text being moved, and the wrong one stayed behind.**
+
+So a faithful, careful move *introduces* the defect — not by breaking a reference, but by
+**deleting the copy that happened to be right and leaving the copy that was wrong.**
+(mymail `84683bc`; the table has since been corrected.)
+
+**This is not §3.1, and the difference decides the audit.** A dangling reference leaves a
+pointer aimed at nothing, which is *visible* — anyone who follows it finds the hole. Here every
+reference still resolves, perfectly, to a statement that is false, with the true version removed
+by the same commit. **Nothing dangles, nothing is unreachable, and the diff reads as tidying.**
+The repository is quietly less correct than before and nothing anyone runs will say so.
+
+Hence the procedure, which does not follow from §3.1 and has to be stated separately:
+
+> **Grep the origin file for the *fact*, not for the *pointer*.**
+
+Every worker in this batch grepped for pointers, because that is the obvious audit and it is
+what they were asked for. It passes cleanly here: no reference broke.
+
+And the observation that makes it more than a caution:
+
+> **A redundancy is also a disagreement nobody has had to resolve yet, and a move picks the
+> winner silently.** The duplication was load-bearing *precisely because it was inconsistent* —
+> while both copies existed, a reader had a decent chance of hitting the right one. The move
+> removed that chance, in the direction nothing checks.
+
+**This repository is more exposed to it than the app repos are**, which is why it sits here
+rather than in §4. §3's duplication bullet says in as many words that several rules are stated
+in more than one file *deliberately* — the three-repo rule in `README.md` and `spec/README.md`,
+the measurement warning and the stale-numbers lesson in `measurement-protocol.md` — and that
+"the canonical statement is the longest one". That rule settles which copy **wins**. It says
+nothing about which copy is **right**, and those come apart the moment the copies drift. So
+before consolidating any of them, diff the copies against each other rather than picking the
+longest and moving on.
+
+#### The audit itself can return a clean-looking nothing
+
+The procedure above is a search, and **a search reports on your pattern before it reports on the
+repository.** Two ways it produced confident false negatives in the same week as the move
+described above:
+
+- **Wrong axis.** A claim about the three repos' documentation was checked by grepping one
+  filename, `web/AGENTS.md`, across all three. The claim lived in four files spread over root,
+  `web/` and `e2e/`. Three repos, dutifully, by name — and the axis fully swept was the one that
+  did not vary. (§3.2's refinement, arriving in the audit rather than in a rationale.)
+- **Wrong vocabulary.** A sweep for repos claiming their suite "gates publication" matched
+  `gates publication|gate publication|gating publication`, and reported that MyCal made no such
+  claim. MyCal says it twice, writing **"gates publish*ing*"** — so the pattern was incapable of
+  returning the hit it was run to find. That one **inverted** a finding: the conclusion drawn was
+  that care had failed in the reference repo, when the reference had the careful version and the
+  other two had not inherited it (`spec/sidebar-footer.md` §9.1).
+
+So, on top of "grep for the fact, not the pointer":
+
+> **Before publishing "repo X does not say Y" on the strength of a search, run it a second way**
+> — a synonym, a stem, the noun instead of the verb, a wider file set — or open the place the
+> claim would have to live and read it.
+
+The tell is that you are about to assert a **negative** from a **search**. Positives are
+self-verifying; the hit is right there. Negatives are only as good as the axis and the vocabulary
+you guessed.
+
+`spec/measurement-protocol.md` § *the gap read as the answer* is the canonical statement, and it
+is worth reading rather than summarising here: it establishes that this and truncation are **one
+mechanism**, not two — in both, a tool returns a well-formed result that is silent about what it
+left out, and the gap is read as the answer.
+
+**What actually corrected both of these was somebody searching wider than they were asked to.**
+Handed two locations each, MyMail's and MyNotes' agents independently swept their whole repos
+and found three more and seven respectively — MyNotes' fix spans its workflow, three `AGENTS.md`
+files, `spec/REQUIREMENTS.md`, its Playwright config and the spec file itself. A narrow brief is
+not a licence for a narrow search, and the person who widens it is doing the audit the brief
+should have asked for.
+
+### 3.5 "There is no X" goes false without an edit, and has no owner
+
+*(Owed to mymail-dev.)*
+
+Every rule above assumes a false claim entered the repository in a changeset — so a reviewer, a
+grep or a re-read has *something* to be run against. **A negative claim about tooling has no such
+moment.**
+
+**The specimen.** MyMail's and MyCal's docs said *"there is no shared stylesheet and no cross-repo
+test"*. Both were true when written and were falsified by `tools/check-contract.py` landing —
+**with no edit to either file.** MyCal's had been contradicting itself ever since, naming the
+script forty lines from where it denied one existed. So had `spec/sidebar-footer.md` §10.7, in
+this repository, in the item that describes the script.
+
+Why nothing catches it:
+
+- **No diff contains it.** No changeset, in any repo, ever added a wrong sentence. Review has
+  nothing to review.
+- **A grep finds it only if you already suspect it.** This is the complement of §3.4: that section
+  is about being unable to *find* a false claim; this is a claim with no event to search for.
+- **It has no owner.** *"There is no X"* is an assertion about the whole world at a moment in
+  time, made in a file that has no reason to be watching the repository where X will appear. §3.3
+  is the nearest neighbour — a dormant defect whose harmlessness rested on a condition elsewhere —
+  but §3.3's condition at least changes inside one repository.
+
+What to do instead:
+
+> **Write the qualifier that survives the thing being built.** *"No cross-repo test"* went false;
+> **"no cross-repo test that runs automatically"** did not, and would not have even after the
+> script landed. Prefer the form that names *why* the gap bites — nothing runs it, nobody owns it,
+> it does not gate anything — over the form that asserts nonexistence.
+
+And when you *do* build the X that some other file denies exists, **that commit's blast radius
+includes every document that ever said there was no X** — including in the other repositories,
+which is exactly the sweep nobody runs because the commit does not touch them. This repository is
+where such a commit is most likely to happen and least likely to be swept for, because it is the
+only one that owns cross-repo tooling.
+
+Both instances were caught by an agent fixing something else, noticing the shape and thinking to
+check its siblings. That is not a process, and it is the reason this is written down.
+
 ## 4. Working in one of the app repos
 
 - Read the relevant contract in `spec/` **before** editing a rule it covers, and read the
@@ -366,14 +586,38 @@ So, when writing a rationale:
 - **Put the warning where an agent actually reads.** A requirements or product document is
   not what someone opens before editing a stylesheet — so a pointer that lives only there
   will be missed by exactly the person who needed it. Each app repo should carry a short
-  section in its own `AGENTS.md` saying that these declarations are governed from outside
-  the repo, and naming the *routine tidying* that breaks them silently: normalising
+  section saying that these declarations are governed from outside the repo, and naming the
+  *routine tidying* that breaks them silently: normalising
   `0.80rem` to `0.8rem`, folding the rule back into a shared button class, dropping a
   "redundant" `flex-shrink: 0` or `text-align: center`, adding a `font-weight` to the base
   `button` rule, restoring `outline: none`. Every one of those is a reasonable edit
   everywhere else in the same file.
 
-  MyNotes' `AGENTS.md` §"The sidebar footer is governed from outside this repo" is the
-  model. This is the highest-value thing an app repo can add, because it is the only
-  guard that fires before the change rather than after — and in two of the three repos
-  there is no test that fires at all.
+  **It belongs in `web/AGENTS.md`, not the repo root**, for the same reason the rule exists:
+  that file loads automatically when working under `web/`, and the CSS it guards is
+  `web/static/app.css`. The root file is one level further from the edit. All three repos now
+  place it that way:
+
+  | | Where the warning lives |
+  |---|---|
+  | MyNotes | `web/AGENTS.md` §"The sidebar footer is governed from outside this repo" — **the model**: a distinctly titled section a reader can find and cite |
+  | MyCal | `web/AGENTS.md`, as a bullet in a list — no title of its own, but the richest content of the three: it names each tidy-up alongside the assertion that catches it |
+  | MyMail | split between the repo-root preamble and `web/AGENTS.md` |
+
+  So "MyNotes is the model" is a claim about **findability, not coverage** — all three carry a
+  form of this, and MyCal's says more. What MyNotes has that the others do not is a heading,
+  which is what makes it citable from here at all.
+
+  > **The citation above was stale from the day §4 was written**, naming MyNotes' root
+  > `AGENTS.md` for a section that had moved to `web/AGENTS.md` in an earlier commit. That is
+  > the §3.1 dangling-reference shape landing in the file that defines it — and on the one
+  > citation a reader is most likely to follow, since §4 calls it *the* model. **The repair is
+  > the path, not the placement:** anyone reconciling the two should move the citation, never
+  > move the section back to the root to match it.
+
+  This is the highest-value thing an app repo can add, because it is the only guard that fires
+  **before** the change rather than after — and in two of the three repos nothing fires
+  automatically at all: their suites exist but sit on unpushed branches whose CI has never run
+  them (`spec/sidebar-footer.md` §9.1). A suite somebody has to remember to run is not what
+  catches an edit made for a good reason by someone who did not know the rule existed. The
+  prose is.

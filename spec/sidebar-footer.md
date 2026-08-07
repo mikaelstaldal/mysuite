@@ -497,6 +497,21 @@ the panel background instead. Measured against each app's own backdrop:
 
 All six pass, under both the strict-adjacency and the same-pixels readings.
 
+> **Do not copy a figure out of this table into another app.** The light column differs, and
+> it differs by an amount that looks like rounding. This has already happened: a reviewer
+> reported MyCal's light focus contrast as **4.90:1**, which is MyNotes' `4.946` — rounded to
+> `4.9` in MyNotes' own CSS comment — read across from a sibling repo and stated as a
+> measurement of MyCal, where the true value is `5.169`. Nothing else in any palette produces
+> 4.90.
+>
+> Two things make that worth recording rather than just fixing. It happened to a **reviewer**,
+> which is the role relied on to catch exactly this. And **it was only catchable because the
+> light column is per-app**: dark is `3.991` in all three, so a sibling's dark figure would
+> have been indistinguishable from a correct one.
+>
+> That is the cost of the convergence noted below — it removes a class of error in dark by
+> making the error invisible rather than impossible. Recompute; do not transcribe.
+
 **Dark has the least headroom, and it shrank.** Against a required 3:1, every app now sits at
 **3.991:1** — MyCal's figure moved from 4.823 when its footer painted `--bg` (§5.3), which is
 convergence with the other two rather than a regression, but it halves the margin MyCal used

@@ -248,10 +248,9 @@ three by name; do not assume you are immune because you just wrote the warning.
 
 mynotes-dev named the mechanism, from a case of its own: it wrote a false claim about the code
 (*"nothing in this block declares a background of its own"*, on a rule that declares
-`background` three lines later) **while correcting someone else's stale comment, with the spec
-open.** Its attention was on citations and figures — the class the previous error had been in.
-In its words: *"the wrong claim was in the sentence I was least worried about, because I had
-just written it."*
+`background` three lines later) **while correcting a stale comment, with the spec open.** In
+its words: *"the wrong claim was in the sentence I was least worried about, because I had just
+written it."*
 
 That accounts for every instance in the table above and two more from the same week:
 
@@ -260,13 +259,24 @@ That accounts for every instance in the table above and two more from the same w
 | `spec/REQUIREMENTS.md` named for all three | writing §3.2 itself |
 | the hover-fill floor set at 1.101 | extending §3.2 |
 | three bare `§2.2`/`§2.5` citations | introducing the deviation rule two of them cite |
-| a false claim about a `background` declaration | fixing another comment's citations |
+| a false claim about a `background` declaration | **replacing a clause it had just disproved** |
 
 **Freshly written text is the least reviewed text in any changeset**, and it is least reviewed
 precisely when the author is concentrating hardest on some other failure mode. So the practical
 form is not "be careful" — it is: **re-read what you added last, against the code, after you
 have finished the thing you were concentrating on.** The sentence you are most confident in is
 the one nobody has checked, including you.
+
+**And the sharpest case is the last row, which is why its wording is specific.** That claim was
+not merely written while its author was distracted — it was written *as the replacement for a
+clause just deleted for being wrong*. The old text said MyCal's fill "vanishes"; the new text
+made a claim about which element paints, and attached it to the wrong rule. mynotes-dev's
+form: **the most dangerous text in a correction is the correction itself, because it is the
+part that has been reasoned about most recently and therefore feels most settled.**
+
+So the re-read pass matters most on exactly the changesets that feel safest — the ones whose
+purpose was fixing something. A correction inherits none of the scrutiny that found the defect
+it replaces.
 
 The last row adds a mechanism, because "check all three" did not catch it. The figure was
 taken from a per-app table that had just been read, and **the value appearing in two of three

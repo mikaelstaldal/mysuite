@@ -341,6 +341,23 @@ No `:active` styling. Do not style `aria-pressed`.
 MyNotes qualifies its hover selector with `:not(:disabled)`; the other two do not. Neither
 control is ever disabled, so this has no observable effect. Left as-is rather than churned.
 
+**The transition takes no `prefers-reduced-motion` guard — in any of the three.** This is a
+standing ruling, not an omission:
+
+```css
+transition: background 0.12s, color 0.12s, border-color 0.12s;
+```
+
+It animates **colour only**. There is no movement, no scaling, and nothing that transforms,
+so `prefers-reduced-motion` has nothing to act on and a guard would be noise. Adding one is
+a plausible, well-intentioned accessibility edit that would diverge whichever repo received
+it — and because the guard changes nothing observable, nothing would ever reveal the
+divergence.
+
+Worth knowing: in MyCal this is **the only `transition` in a ~2600-line stylesheet**, so it
+looks anomalous there and invites deletion for local consistency. It is mandated. Do not
+delete it, and do not guard it.
+
 ### 6.2 Focus
 
 ```css
@@ -413,8 +430,14 @@ differently — correctly:
 
 **MyNotes' `px` column is a sanctioned exemption, not drift.** With 403px available against a
 174px row it has ~229px of slack — at a 24px root the row reaches only 217px, still leaving
-~186px spare. The resize case never binds there, so converting would have been churn. MyCal
-and MyMail had no such margin and had to convert.
+~186px spare, so the resize case never binds.
+
+And converting would not have been merely unnecessary — it would have been **a regression**:
+`420px` becomes `26.25rem`, which at a 24px root is a **630px** sidebar, eating the note list
+for no benefit. That is the reason the exemption was granted rather than merely tolerated.
+
+Sidebar widths were never unified — 200 / 220 / 420 are deliberately different — so the
+*unit* is not a consistency requirement either. Only the buttons must match.
 
 So: do not "fix" MyNotes' `420px`, and do not infer from MyCal and MyMail that a `rem` column
 is part of this contract. **It is not.** The contract covers the two controls; how a column
@@ -516,8 +539,24 @@ that failed.
 
 ### 8.3 Taking the footer out of the scroll flow
 
-A footer inside a scrollable panel has to be removed from the scroll flow, or it moves. The
-general mechanism is:
+**There are two independent scroll threats, and an app may face either, both, or neither:**
+
+1. **The sidebar's own scrollport** — the list beside/above the footer overflows its panel.
+2. **The page scrolling** — the whole document is taller than the window.
+
+They have different answers, which is why the three implementations look different.
+
+**For (1), the structural fix is preferred: put the footer *outside* the scroll container.**
+Make the scrolling region a sibling of the footer rather than its parent, so the footer
+cannot scroll by construction. MyNotes has always been built this way (`.sidebar-content`
+scrolls inside an `overflow: hidden` `.sidebar`, with `.sidebar-footer` as a sibling), and
+MyCal was restructured to match it. A footer pinned inside a scrolling list *is* the defect;
+positioning it is treating a symptom. Where this restructure is achievable, take it.
+
+MyMail's footer is a child of its `overflow-y: auto` `.sidebar`, which is why it hit §8.2 —
+and it fixed the position rather than the structure.
+
+**For (2), and for (1) where the restructure is not achievable, use sticky positioning:**
 
 ```css
 position: sticky;
@@ -543,24 +582,22 @@ box's bottom edge against the view beside it. **Setting `bottom: 8px` on a foote
 has `padding-bottom: 8px` doubles the inset to 16px** — the most likely way to get this
 wrong.
 
-**Treat this as the normative approach for any app whose sidebar can overflow**, rather than
-as a local quirk. It was first written down as a MyCal detail — MyCal needed it because its
-month and year views page-scroll — but MyMail needs the identical mechanism for an unrelated
-reason, which is what shows it to be general rather than specific. An app whose sidebar
-genuinely cannot scroll does not need it; an app that is not sure does.
-
 The explicit **opaque background** is part of the mechanism, not decoration. A sticky footer
-with a transparent background has content sliding visibly underneath it.
+with a transparent background has content sliding visibly underneath it. It must match the
+surface behind it, or the footer reads as a band of a different colour.
 
-Around that, per-app detail is local:
+Where each app stands:
 
-- **MyCal** cannot use a uniform padding, because `e2e/tests/calendar-views.spec.ts` pins the
-  footer *box*'s bottom edge to the bottom of the view beside it — the box may not move down
-  even though the buttons must. It therefore cancels `.app`'s horizontal padding with
-  `margin-left: calc(-1 * var(--app-padding-x))`, uses `padding: 8px 8px 0` so `.app`'s own
-  8px supplies B rather than doubling it, and sets `bottom: 8px`.
-- **MyMail** and **MyNotes** sit flush against the window edge, so their footer padding alone
-  supplies both coordinates when nothing scrolls.
+- **MyCal** — footer outside the sidebar's scrollport (structural, threat 1) **and** sticky
+  (threat 2: its month and year views page-scroll). It cannot use a uniform padding, because
+  `e2e/tests/calendar-views.spec.ts` pins the footer *box*'s bottom edge to the bottom of the
+  view beside it — the box may not move down even though the buttons must. So it cancels
+  `.app`'s horizontal padding with `margin-left: calc(-1 * var(--app-padding-x))`, uses
+  `padding: 8px 8px 0`, and sets `bottom: 8px`.
+- **MyMail** — footer inside the scrolling sidebar, fixed positionally with sticky +
+  `background` (threat 1).
+- **MyNotes** — footer outside the scrollport by construction (threat 1); its page does not
+  scroll, so threat 2 does not arise.
 
 **Differing here is not a deviation** — the coordinates are the contract, not the
 declarations that produce them. Read §8.5 before concluding otherwise.
@@ -708,9 +745,12 @@ be surprised.
    It requires a deliberate exception to "Markdown only, no build system" (`AGENTS.md` §3),
    which is why it is recorded here as a proposal rather than done. **Do not add it without
    the human's decision.**
-8. **MyCal's narrow layout is out of scope for B.** Below 600px `.app`'s padding drops to
-   4px and the sidebar stacks under the main content. The 8px *bottom* rule is deliberately
-   not asserted there; the left edge still is.
+8. **MyCal's narrow layout sits exactly on the 4px floor.** Below 600px `.app`'s padding
+   drops to 4px and the sidebar stacks under the main content, so **B = 4, not 8**. That is
+   within §8.4's floor but with *nothing* spare — the focus outline's outer edge lands
+   precisely on the window edge. Deliberately out of scope and documented rather than left
+   to be discovered; the left edge is still asserted. Any future reduction anywhere in that
+   chain starts clipping the indicator.
 9. **MyNotes' demo builds have only one control.** Settings is rendered only when
    `!isDemo()`, because a demo has no server to hold the MyMail URL. The geometry contract
    still applies to the toggle; the pair does not exist.

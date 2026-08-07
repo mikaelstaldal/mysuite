@@ -641,19 +641,24 @@ def main() -> int:
     # Degrade honestly: two of three agreeing is not a pass.
     missing = [n for n in APPS if not os.path.isdir(os.path.join(repos, n))]
     if missing:
-        print(f"CANNOT CHECK: repo(s) not found at {repos}: {', '.join(sorted(missing))}")
+        verdict = (f"CANNOT CHECK: repo(s) not found at {repos}: "
+                   f"{', '.join(sorted(missing))}")
+        print(verdict)
         print("This contract is a three-repo agreement; checking a subset would be misleading.")
         print()
         print(CANNOT_CHECK)
+        print(f"\n{verdict}")
         return 2
 
     apps = {}
     for name in APPS:
         app = App(name, os.path.join(repos, name))
         if app.problems:
-            print(f"CANNOT CHECK: {name}: " + "; ".join(app.problems))
+            verdict = f"CANNOT CHECK: {name}: " + "; ".join(app.problems)
+            print(verdict)
             print()
             print(CANNOT_CHECK)
+            print(f"\n{verdict}")
             return 2
         apps[name] = app
 
@@ -673,13 +678,23 @@ def main() -> int:
 
     print()
     if report.failures:
-        print(f"FAILED — {len(report.failures)} pinned value(s) disagree across the three repos.")
+        verdict = (f"FAILED — {len(report.failures)} pinned value(s) disagree "
+                   f"across the three repos.")
+        print(verdict)
         print(f"Every value above is fixed by {SPEC}. Changing one is a change in all three")
         print("repos, or in none — a local 'fix' is the defect this check exists to find.")
     else:
-        print(f"PASSED — every pinned value agrees across {', '.join(sorted(apps))}.")
+        verdict = f"PASSED — every pinned value agrees across {', '.join(sorted(apps))}."
+        print(verdict)
     print()
     print(CANNOT_CHECK)
+    # The verdict again, last. The caveats above run to three screens, so a reader
+    # who tails the output, scrolls to the bottom, or opens a collapsed CI log
+    # lands on the epistemics and never sees whether it passed — which happened to
+    # a reviewer running the acceptance check, on a `tail -20`. The honesty of that
+    # section is what made a truncated read feel complete, so the fix is ordering
+    # and repetition, not less of it.
+    print(f"\n{verdict}")
     return 1 if report.failures else 0
 
 

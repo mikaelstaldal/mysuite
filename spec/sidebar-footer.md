@@ -287,7 +287,7 @@ Three things about that number, because it is weaker than it looks:
 
 The values above are shared. Where an app's own backdrop (§5.3) makes a shared value fail a
 stated threshold, that app deviates on that one value — **recorded here with its measurement,
-and only then implemented.** §2.2 is unchanged: a deviation is never decided in an app repo.
+and only then implemented.** `AGENTS.md` §2.2 is unchanged: a deviation is never decided in an app repo.
 Anything not in this table is still shared, and finding a difference that is not listed here
 means one of the three has drifted.
 
@@ -395,7 +395,7 @@ between the colour and what is drawn on it*. Per app, both themes:
 3. **Everything drawn on it re-measured against it** — the resting label to 4.5:1 (§5.4,
    WCAG 1.4.3), the focus indicator to 3:1 (§6.2, WCAG 1.4.11), the hover fill to the product
    floor in §5.1. A shared value that fails one of those against an app's own backdrop
-   becomes a recorded per-app deviation (§5.1), never a locally-taken decision (§2.2).
+   becomes a recorded per-app deviation (§5.1), never a locally-taken decision (`AGENTS.md` §2.2).
 
 #### The recorded backdrops
 
@@ -671,7 +671,7 @@ This is worth stating rather than leaving as a table entry, because a claim in t
 direction was true and load-bearing until this amendment: *"3.991 is the suite's margin, not
 any one app's."* It was written into MyCal's own CSS comment as well as this section. **It is
 now false, and the version in the code will outlive the version here** unless someone
-corrects it — which is §2.5's whole complaint about numbers in prose, arriving on schedule.
+corrects it — which is `AGENTS.md` §2.5's whole complaint about numbers in prose, arriving on schedule.
 
 MyCal's light figure moved the other way, `5.169` → **`4.696`**, so no app improved on both
 axes. Nothing in the suite is near a threshold in light.

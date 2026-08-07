@@ -160,6 +160,20 @@ So:
   it is accepted only for these three rules.
 - **One contract per file** in `spec/`, indexed in [`spec/README.md`](spec/README.md). Add a
   row to that table when you add a file.
+- **Always name the file when citing a section number across files.** `AGENTS.md` and
+  `spec/sidebar-footer.md` both have a §2.2, a §2.5 and a §3.1, and they are about entirely
+  different things — this file's §2.2 is *never fix a shared value in one app*, the contract's
+  is *the 29.2px acceptance height*. A bare `§2.2` in a colour comment therefore sends a
+  reader to arithmetic and leaves them concluding the comment is confused.
+
+  This is not hypothetical: mynotes-dev found it in its own CSS, and fixing it exposed **three
+  bare citations in this repository**, two of them written the same day by the author of the
+  rule they were citing. If an app repo carries a bare `§` in a comment about a shared value,
+  it has the same defect.
+
+  The convention: `AGENTS.md §2.2` when it is this file, a bare `§` only inside the document
+  it refers to, and a header line saying which file bare `§` means in any app-repo comment that
+  uses several.
 
 ### 3.1 Provenance — say what a contract was written from
 

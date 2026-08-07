@@ -957,22 +957,27 @@ be surprised.
    remains undetectable by anything** — if MyMail or MyNotes moves, MyCal's pipeline stays
    green, correctly. And `0.80rem` is uncatchable even within MyCal (§9.2).
 
-   **A proposal, needing a human decision because it breaks this repo's own rules.** A
-   cross-repo guard does not need a browser and does not need CI in the app repos: one
-   script here that reads the three sibling stylesheets and fails if they disagree on the
-   values this contract pins as literals — `0.80rem`, `padding: 4px 8px`, `gap: 6px`,
-   `border-radius: 6px` (resolved), `outline: 2px solid`, `outline-offset: 2px`, and the
-   twelve hex values of §5.1. It would catch exactly the drift §2.3 and §5.2 say is the
-   shared thing, and it is immune to the staleness trap in `measurement-protocol.md`
-   because it never renders anything.
+   **A partial cross-repo guard now exists: [`tools/check-contract.py`](../tools/check-contract.py).**
+   The human lifted this repo's Markdown-only rule for it. It reads the three sibling
+   stylesheets and fails if they disagree on a pinned value — the literals, and the §5.1
+   colours resolved through each app's own tokens, in both themes. It never renders
+   anything, so it is immune to every staleness trap in `measurement-protocol.md`.
 
-   What it would *not* catch is geometry — computed height, the (8, 8) position, overflow —
-   which needs a rendered page and therefore an e2e suite in each app. So this is a partial
-   guard, and worth being honest that it is.
+   It is the only thing anywhere that can see **cross-repo** drift, and the only thing that
+   can catch `0.80rem` → `0.8rem` at all (§9.2). It also catches the §3.1 class — a pin
+   deleted in the app where its value already arrives by another route, which that app's own
+   rendering cannot detect by construction.
 
-   It requires a deliberate exception to "Markdown only, no build system" (`AGENTS.md` §3),
-   which is why it is recorded here as a proposal rather than done. **Do not add it without
-   the human's decision.**
+   Its limits are real and are printed on every green run rather than left in this document:
+   **geometry, the cascade, and markup are all invisible to it.** A footer padding changed
+   from 8px to 24px — moving the buttons off (8, 8), the violation this whole contract exists
+   to prevent — passes it cleanly. Rendering and this check are complements; neither sees
+   what the other does.
+
+   **Nobody's CI runs it.** It is a script someone has to run — precisely the state §9.1
+   describes MyCal's suite as having been in before `7e65102`. Wiring it in would mean
+   choosing whose pipeline runs it, and would need all three repos checked out there, which
+   no app repo's CI currently does. Until then it guards nothing on its own.
 8. **MyCal's narrow layout sits exactly on the 4px floor.** Below 600px `.app`'s padding
    drops to 4px and the sidebar stacks under the main content, so **B = 4, not 8**. That is
    within §8.4's floor but with *nothing* spare — the focus outline's outer edge lands

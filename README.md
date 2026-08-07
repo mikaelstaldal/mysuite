@@ -33,8 +33,15 @@ rule looks redundant.
   `spec/REQUIREMENTS.md`.
 - CSS class names, token names, or file layout. Those are deliberately per-project. What is
   shared is the *value*, never the name it is reached by.
-- Code. There is no shared stylesheet and no shared component library. This is a
-  specification repository: Markdown, no build system, no CI, no package manager.
+- Application code. There is no shared stylesheet and no shared component library — the
+  apps implement the contracts in their own CSS, with their own class and token names.
+
+  There is one exception, and it is deliberate: **`tools/` holds scripts that check a
+  contract.** A specification nothing can verify is a specification that drifts, and this
+  repository is the only place a *cross-repo* check can live, because it is the only place
+  that knows about all three apps at once. Such a script is a contract artefact — it will be
+  read more often than it is run — and must stay dependency-free: no package manager, no
+  network, no build step, nothing the app repos would have to adopt.
 - Aspirations. A contract here is binding on all three apps; if something is a proposal,
   mark it as one in its status line.
 
@@ -53,6 +60,16 @@ documents rather than restating its values.
 
 - **[`spec/`](spec/)** — the contracts, one file each, indexed in
   [`spec/README.md`](spec/README.md).
+- **[`tools/check-contract.py`](tools/check-contract.py)** — checks the three apps against
+  the sidebar-footer contract. Run it from a checkout with the app repos as siblings:
+
+  ```
+  tools/check-contract.py            # 0 agree · 1 disagree · 2 cannot check
+  ```
+
+  It compares source text and resolved tokens, never rendering, so it sees things no browser
+  test can — and misses everything only a browser can. Every green run prints what it did
+  not check; read that, because the accurate claim is narrower than the reassuring one.
 - **[`spec/measurement-protocol.md`](spec/measurement-protocol.md)** — how to verify a change
   to shared UI. Applies to every contract.
 - **[`AGENTS.md`](AGENTS.md)** — instructions for AI coding agents working in this repo or in

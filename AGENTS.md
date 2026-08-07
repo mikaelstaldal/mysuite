@@ -124,8 +124,18 @@ So:
 
 ## 3. Working in this repository
 
-- **Markdown only.** No build system, no CI, no package manager, no dependencies. Nothing to
-  run and nothing to install.
+- **Markdown, plus `tools/`.** The Markdown-only rule was lifted by the human for one
+  purpose: scripts that *check* a contract. `tools/check-contract.py` is the first. Still no
+  build system, no CI, no package manager, and no dependencies — a checking script must run
+  from a clean checkout with nothing installed, and must not introduce anything the app repos
+  would have to adopt (they have a standing rule against npm/npx). Python 3 or shell,
+  stdlib only.
+
+  A check belongs here when it is **cross-repo**: this is the only place that knows about all
+  three apps at once. Anything checkable inside one app belongs in that app's own suite.
+- **A checking script must state its limits in its own output**, not only in the docs. A
+  reader of a green run has to know what green does and does not mean — see §2.4, and
+  `spec/sidebar-footer.md` §9.1 on why "gates publication" beat "prevents breakage".
 - **No remote is configured.** Commit locally; do not attempt to push. Cross-references from
   the app repos name this repo by path (`../mysuite`, `spec/sidebar-footer.md`) rather than
   by URL, because there is no URL to give. When a remote is added, those references should be

@@ -614,6 +614,46 @@ The tell is that you are about to assert a **negative** from a **search**. Posit
 self-verifying; the hit is right there. Negatives are only as good as the axis and the vocabulary
 you guessed.
 
+#### Stop searching for the claim; enumerate what the claim is *about*, and read
+
+*(Owed to mynotes-dev, which found four files no pattern would have returned.)*
+
+Every remedy above is still a better *search*. There is a move that leaves searching behind, and
+on the one occasion it has been used it beat four keyword axes at once.
+
+Sweeping for the stale *"this suite has never run in CI"* claim, mynotes-dev ran the obvious
+keywords, the `unpushed` family, the human-in-the-loop phrasings (*"nothing runs it"*, *"but a
+person"*), and the `gates publishing`/`gates publication` variants. Those found three files. Then
+it did something different: **enumerate every file that mentions the e2e artefacts at all** —
+`test-e2e.sh`, `*.spec.ts`, `e2e/` — and read each one's claims. **That found four more, and two
+were unreachable by any pattern**, because they make the claim without any of the vocabulary:
+
+> *"meant to gate publishing — **meant to**, because the CI step … has never executed"*
+> — `e2e/playwright.config.ts`
+>
+> *"It still checks nothing on its own"* — `e2e/tests/sidebar-footer.spec.ts`
+
+Neither contains a word a sweep for the claim would have been built from. So:
+
+> **A lexical search is bounded by the phrasings you can imagine. A structural one is bounded by
+> the artefacts, which are enumerable.** When a claim is *about* something nameable — a file, a
+> script, a suite, a remote — list everything that mentions the thing, and read those. It converts
+> "did I guess the wording?" into "did I list the artefacts?", and only the second is a question
+> you can answer.
+
+Two riders, both from the same sweep:
+
+- **State the bound.** mynotes-dev's was *"complete with respect to these axes; a claim mentioning
+  neither the artefacts nor CI nor any of these phrasings would still be missed."* That is the
+  honest form — it says what was looked *with*, not merely what was found.
+- **Check the gap the structural axis leaves.** Files that discuss the subject without naming any
+  artefact are exactly what it cannot see, so it enumerated those too and read them.
+
+**And the sharpest specimen in that set is the workflow file**, whose own comment read *"do not
+describe this as protecting anything until it has run once"* — sitting directly above the step
+that had run. §3.5's lesson, in the file best placed to know better: a conditional written into
+the claim it will invalidate is still only as good as somebody noticing the condition fired.
+
 `spec/measurement-protocol.md` § *the gap read as the answer* is the canonical statement, and it
 is worth reading rather than summarising here: it establishes that this and truncation are **one
 mechanism**, not two — in both, a tool returns a well-formed result that is silent about what it

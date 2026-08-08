@@ -837,6 +837,17 @@ differently — correctly:
 >
 > **The exemption gets stronger, never weaker** — widening cannot put this section at risk.
 >
+> **Status: MyNotes has widened to 456px, on an unmerged branch.** Its `main` still ships
+> `420px`, so the table above and the `403` / `~229` figures elsewhere in this section remain
+> correct **for what MyNotes ships today**, and are deliberately left as they are. On that branch
+> the values are **456 / 439 / ~265**. The `26.25rem` → 630px argument below is about the *unit*
+> and is unaffected either way.
+>
+> **Update this section when the branch lands on `main`, not before** — this document describes
+> shipped code, and a figure changed ahead of the merge would describe a state no branch anyone
+> can fetch is in. That is `AGENTS.md` §2.5's complaint about describing history nobody can see,
+> arriving as a temptation rather than as a mistake.
+>
 > *(The first version of this annotation gave 266 / 339 / 413 — each 16px too high, from
 > subtracting the border but not the footer's padding, while the 403 it was derived from
 > already had both taken out. Caught in review. It is `AGENTS.md` §2.5's complaint in miniature:

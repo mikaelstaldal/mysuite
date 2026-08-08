@@ -1,8 +1,8 @@
 # App logo — the badge in the top left
 
-**Status:** binding. Implemented in **MyCal** and **MyMail**; **MyNotes implementation in
-progress** — see §10. Two of three is a transient state, not a standing exemption: the human has
-ruled that MyNotes gets the badge and has chosen how to make room for it (§10.1).
+**Status:** binding. Implemented and shipping in **MyCal** and **MyMail**. **MyNotes has
+implemented it and measured it against every value below, on an unmerged branch** — see §10.
+It is not on MyNotes' `main`, so it is not yet shipping, and this document does not say it is.
 
 **Scope: the logo only.** The app-name label beside it is **out of scope** — §2 states that as a
 ruling, with the human's words and the condition attached. Read §2 before concluding the labels
@@ -33,8 +33,8 @@ One element per app: a rounded square holding an app-specific mark, at the top l
 
 | | MyCal | MyMail | MyNotes |
 |---|---|---|---|
-| Badge | `.brand-logo` (`<span>`) | `.logo-icon` (`<div>`) | *to be recorded when it lands* |
-| Mark | `<Logo/>`, `web/ts/components/Logo.tsx` | `<Icon name="mail" size={17}/>` | from `web/static/favicon.svg` (§6.3) |
+| Badge | `.brand-logo` (`<span>`) | `.logo-icon` (`<div>`) | `.brand-logo` (`<span>`), **inside the brand anchor** |
+| Mark | `<Logo/>`, `web/ts/components/Logo.tsx` | `<Icon name="mail" size={17}/>` | `<Logo/>`, `web/ts/components/Logo.tsx` — the favicon "N", viewBox cropped (§6.3) |
 | Container | `.brand`, in `<header class="top-bar">` | `.sidebar-header`, in `<nav class="sidebar">` | `.sidebar-header`, in `<aside class="sidebar">` |
 | Stylesheet | `web/static/app.css` | `web/static/app.css` | `web/static/app.css` |
 | Markup | `web/ts/app.tsx` | `web/ts/layout/Sidebar.tsx` | `web/ts/app.tsx` |
@@ -121,8 +121,13 @@ ink        #ffffff, via currentColor from the badge's own `color`
 
 **"Renders at 17 × 17 measured" is the rule, never "the attribute says 17."** *(Phrasing owed to
 mycal-dev.)* The distinction is load-bearing because the two shipped apps reach the same 17 from
-**different layers** (§5), and a CSS rule can silently override an SVG attribute. A check that
-reads an attribute and calls it verified has checked nothing.
+**different layers** (§5), and an author CSS rule always beats an SVG presentation attribute.
+
+**That is not a theoretical gap — it is demonstrable in MyCal today.** Its SVG carries no size
+attributes, so a checker reading attributes finds nothing; and if someone adds
+`width="24" height="24"` to it, the attribute reads **24** while the glyph goes on rendering at
+**17**, because `.brand-logo svg` still wins (measured — §5). **A check that reads an attribute
+and calls it verified has checked nothing, and can report a number no user will ever see.**
 
 ### 3.3 The mark's extent inside the glyph box
 
@@ -135,7 +140,7 @@ Measured **stroke/ink-inclusive**, not as a bare `getBBox()`. Shipped readings:
 |---|---|---|---|
 | MyCal | **93.75%** (pixel ink 88.24%) | mixed fill + stroke + `<text>` | mycal-dev |
 | MyMail | **91.67%** (pixel ink 92.65%) | **stroke-only**, vendored Lucide 1.25.0 | mymail-dev |
-| MyNotes | **34.4%** — fails, and is being built to the rule | fill-only | mynotes-dev |
+| MyNotes | **91.67%** — reached by cropping the viewBox to `10 10 12 12`; **34.4%** uncropped | fill-only | mynotes-dev |
 
 **Why this rule exists.** Without it the contract cannot see a difference of roughly 3× in
 apparent size. Reusing MyNotes' favicon mark unchanged would put a **5.26 × 5.84px** mark inside
@@ -245,7 +250,7 @@ mycal-dev, for most widths, three of five views, a 24px root, and any scrolled p
 |---|---|
 | MyCal | (16, 14) — and only while the heading fits on one line |
 | MyMail | (16, 14) — invariant across all 17 widths tested, 1920 down to 280 |
-| MyNotes | *pending* |
+| MyNotes | **not recorded** — mynotes-dev measured the badge's box, glyph, extent and gap but not a viewport coordinate, and none is pinned here, so nothing depends on it |
 
 That the two shipped apps agree at rest is a coincidence of two unrelated rules — MyCal's `.app`
 padding plus a 40px bar, MyMail's `.sidebar-header { padding: 14px 16px 12px }`. **It is not a
@@ -262,11 +267,24 @@ shared mechanism and must not be written up as one.**
 | MyCal | **CSS** — `.brand-logo svg { width: 17px; height: 17px }`. The SVG carries no `width`/`height` attributes | hand-written `Logo.tsx`, deliberately **not** in the Lucide bundle |
 | MyMail | **SVG attributes** written by `<Icon size={17}>`. MyMail has **no CSS rule anywhere that sizes an SVG** | vendored Lucide `mail` |
 
-**Neither is mandated, and forcing either would make things worse** — endorsed independently by
-both app agents for the same reason. Sizing MyMail's glyph in CSS would create a second source of
-truth beside `size={17}`, and CSS would win silently, so the next `size=` edit would become a
-no-op. Putting attributes on MyCal's SVG would break the favicon parity it deliberately maintains
-(§6.3). Neither buys an observable difference.
+**Neither is mandated, and "harmonising" them would make things worse in both directions** —
+endorsed independently by both app agents. The two hazards look opposite and are **one fact**:
+
+> **An author CSS rule beats an SVG presentation attribute.** Presentation attributes carry
+> specificity zero and sit at the start of the author origin, so *any* rule that matches wins.
+
+| "Tidy" | What actually happens |
+|---|---|
+| Size **MyMail's** glyph in CSS, "to match MyCal" | The new rule wins and `size={17}` goes inert. The prop still reads 17, so the next `size=` edit is a **silent no-op** |
+| Put `width`/`height` attributes on **MyCal's** SVG, "so it carries its own size" | **Nothing happens at all** — `.brand-logo svg` still wins. It looks like it worked, and it **arms** a breakage that fires later, when someone deletes the now-genuinely-redundant CSS rule |
+
+**The MyCal row is measured, not reasoned.** mycal-dev set `width="24" height="24"` on the live
+SVG and re-measured: **still 17 × 17**. Only after also deleting the `.brand-logo svg` rule from
+the CSSOM did it become 24 × 24. So the hazard there is **delayed**, which is the worse kind —
+the edit that arms it and the edit that fires it are months and authors apart, and neither looks
+wrong on its own.
+
+Neither buys an observable difference today, and both convert a single source of truth into two.
 
 **MyCal's rule that its `Logo.tsx` must not be routed through the Lucide bundle is MyCal-local**
 and is not promoted here. Nothing in the reports justifies making it a three-app rule.
@@ -338,7 +356,7 @@ the theme; only the badge inverts.**
 | Role | Light | Dark | MyCal | MyMail | MyNotes |
 |---|---|---|---|---|---|
 | Badge fill | `#2563eb` | `#3b82f6` | `--primary` | `--sidebar-badge` → `--primary` | `--primary` |
-| Glyph ink | `#ffffff` | `#ffffff` | literal `#fff` | literal `#fff` | *pending* |
+| Glyph ink | `#ffffff` | `#ffffff` | literal `#fff` | literal `#fff` | literal `#fff` |
 
 **The glyph ink is a hard-coded literal in both shipped apps, not a token.** Recorded because a
 clause naming a token for it would describe neither app. MyCal declares `color: #fff` 18 times in
@@ -523,7 +541,7 @@ one media query is `(hover: none)`); MyNotes has none in any served stylesheet. 
 proposing to hide the badge needs its own reason recorded here** — an appeal to this precedent is
 not one. For MyNotes it would additionally mean introducing its first viewport media query.
 
-### 9.4 Nothing anywhere tests any of this
+### 9.4 Almost nothing tests any of this — and the one suite that does is not on a `main`
 
 Swept by all three agents across their own repos:
 
@@ -532,12 +550,21 @@ Swept by all three agents across their own repos:
   It is satisfied by any non-empty box, so it cannot distinguish 12px from 17px from 22px.
 - **MyMail:** the entire repository contains **two** references to the logo — the markup line and
   the CSS rule. Its e2e suite mentions neither `.logo-icon` nor `.sidebar-header`.
-- **MyNotes:** no coverage of the sidebar header at all.
+- **MyNotes:** **12 tests in `e2e/tests/logo.spec.ts`**, plus a `Logo.tsx` ↔ `favicon.svg` drift
+  guard that runs on every build. Each accepted by a demonstrated red (§10.4). **On an unmerged
+  branch**, so nothing runs it yet.
 - **`tools/check-contract.py`** does not know the logo exists.
 
-So every "what catches this?" answer in the reports is **"nothing"**, and that is from a coverage
-sweep rather than from a demonstrated red run — no agent mutation-tested, because the discovery
-phase was read-only.
+> **So the only real coverage of this contract belongs to the app that adopted it last, and does
+> not execute anywhere.** The two apps this contract was *written from* have none. That is worth
+> stating in that direction: a contract derived from two implementations ended up guarded only by
+> the third, because the third is the only one that had a reason to write assertions while the
+> rules were fresh.
+
+One of MyNotes' mutations is the one to keep, because it is this contract's own §3.3 caught in
+the act: reverting its mark to the uncropped `0 0 32 32` viewBox **failed 2 tests on the extent
+assertion while every badge-box and glyph-box assertion stayed green.** That is exactly the
+blindness §3.3 exists for, demonstrated rather than argued.
 
 **A check is deliberately deferred** until MyNotes lands, because a three-repo guard can only
 report `CANNOT CHECK` before then, and an artefact whose one reachable path nobody has exercised
@@ -565,7 +592,14 @@ be **printed on every terminating path**, verified by running each, not by readi
 
 ## 10. MyNotes
 
-**Not yet implemented.** MyNotes ships no badge: its brand is a bare text anchor (§1).
+**Implemented and measured, on an unmerged branch.** MyNotes' `main` still ships no badge and a
+420px column; the work sits on a local `logo-badge` branch, unpushed. **No commit hash is
+recorded here** — `spec/sidebar-footer.md` §11's rule is that a hash from an unpushed branch pays
+the cost of perishability and buys nobody the ability to resolve it.
+
+Every value in §3 was implemented and then **measured back** on a rendered page, and every one
+agreed. Nothing in this section is a report that code was written; §10.4 lists what was read off
+the page.
 
 ### 10.1 A 28px badge does not fit today, and the human has ruled how to make room
 
@@ -627,17 +661,22 @@ down.
 So: **pre-existing, not caused by this work, not fixed by it, and reported to the human as a
 standing item with its numbers.**
 
-### 10.3 One assertion must go before the widening — and why it was harmless until it wasn't
+### 10.3 One assertion had to go before the widening — and why it was harmless until it wasn't
 
-`../mynotes/e2e/tests/sidebar-footer.spec.ts` asserts `expect(column.width).toBeCloseTo(420, 0)`.
-**It pins a value `spec/sidebar-footer.md` §6.4 states is not part of that contract**, inside the
-suite whose job is to hold that contract. It is not a stale number; it is an assertion with no
-owner. The relational checks on the neighbouring lines — the controls fitting inside the column,
-and (8, 8) — are what the contract actually requires, and they survive any width.
+**Resolved: the assertion has been removed** (verified on the branch — what remains at that line
+is a comment recording the removal, not the assertion). What follows is why it had to go, kept
+because the mechanism generalises.
 
-**Delete it rather than update it to the new number.** Re-pinning re-arms the same trap at a
-different value. The right shape was already known in that same file, which reads the sidebar's
-content width live rather than hard-coding it.
+`../mynotes/e2e/tests/sidebar-footer.spec.ts` **used to assert**
+`expect(column.width).toBeCloseTo(420, 0)`. **It pinned a value `spec/sidebar-footer.md` §6.4
+states is not part of that contract**, inside the suite whose job is to hold that contract. It
+was not a stale number; it was an assertion with no owner. The relational checks on the
+neighbouring lines — the controls fitting inside the column, and (8, 8) — are what the contract
+actually requires, and they survive any width.
+
+**It was deleted rather than updated to the new number**, as this section directed. Re-pinning
+would have re-armed the same trap at a different value. The right shape was already known in
+that same file, which reads the sidebar's content width live rather than hard-coding it.
 
 > **This had been wrong the whole time and had cost nothing, because nothing executed that
 > suite.** That was the condition, and nobody had written it down. Then the branch was pushed and
@@ -649,10 +688,17 @@ content width live rather than hard-coding it.
 > The full statement of the pattern, including why the waking commit was in a *third* repository,
 > is `AGENTS.md` §3.3. It is the first cross-repo specimen of it.
 
-**Verify by running, not by reading.** The prediction that this is 2 of 18 tests came from
-reading the file. mynotes-dev should widen, run the suite through `./test-e2e.sh`, and report
-what actually goes red. Watch the `documentElement.scrollWidth` check at 20px and 24px roots in
-the same test — at a much wider column that is a real question, not a formality.
+**And the prediction was checked by running, which is the point.** I predicted "2 of 18 tests"
+from reading the file. mynotes-dev restored the assertion against the 456px column and ran it:
+**exactly 2 failed, both on that assertion, nothing else** — so the blast radius was right. **The
+denominator was not: the suite is 27 tests, not 18.** I had counted `test(` occurrences in a file
+rather than running it, which counts what a pattern matches and not what a runner collects.
+
+A wrong denominator is the harmless half of that mistake and it is worth naming anyway: **the
+same reading would have produced a wrong "N of M" in either direction, and only the run can tell
+you which half you got right.** The `documentElement.scrollWidth` check flagged here as a real
+question was also verified rather than assumed — it passes at both 20px and 24px roots with the
+wider column, because `.app-body`'s `overflow: hidden` absorbs it.
 
 ### 10.4 What MyNotes will implement
 

@@ -29,9 +29,10 @@ Currently binding:
 - **[`spec/sidebar-footer.md`](spec/sidebar-footer.md)** — the light/dark theme toggle and
   Settings button in the left sidebar's footer.
 - **[`spec/app-logo.md`](spec/app-logo.md)** — the app logo badge at the top left: its box, fill,
-  glyph size and extent, placement and accessibility. Implemented in MyCal and MyMail; **MyNotes
-  in progress.** The app-name label beside the badge is deliberately **out of scope** — that
-  contract's §2 records the ruling and its condition, so do not read the labels as an oversight.
+  glyph size and extent, placement and accessibility. Shipping in MyCal and MyMail; **MyNotes
+  implemented and measured on an unmerged branch, not yet on its `main`.** The app-name label
+  beside the badge is deliberately **out of scope** — that contract's §2 records the ruling and
+  its condition, so do not read the labels as an oversight.
 
 Cross-cutting:
 

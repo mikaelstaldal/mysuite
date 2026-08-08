@@ -7,15 +7,15 @@ required to render identically. A contract is binding on all three apps or on no
 yet.** A contract being adopted can be binding while one app is still implementing it — that is
 the state `app-logo.md` is in below, and it is transient by construction. What it must never
 become is a standing per-app exemption, which is the thing the sentence above forbids. A status
-of *"implementation in progress"* is a claim with a deadline; if you find one that has not moved,
-that is the defect.
+A status naming an app as still adopting is a claim with a deadline; if you find one that has not
+moved, that is the defect.
 
 ## Contracts
 
 | Contract                                 | Covers                                                                                                                                           | Status                            |
 |------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------|
 | [`sidebar-footer.md`](sidebar-footer.md) | The light/dark theme toggle and Settings button at the bottom of the left sidebar — geometry, colours, interaction, and their position on screen | Binding, implemented in all three |
-| [`app-logo.md`](app-logo.md)             | The app logo badge at the top left — its box, fill, glyph size and extent, placement, and accessibility. **The app-name label beside it is deliberately out of scope** (`app-logo.md` §2) | Binding. Implemented in MyCal and MyMail; **MyNotes implementation in progress** |
+| [`app-logo.md`](app-logo.md)             | The app logo badge at the top left — its box, fill, glyph size and extent, placement, and accessibility. **The app-name label beside it is deliberately out of scope** (`app-logo.md` §2) | Binding. Shipping in MyCal and MyMail; **MyNotes implemented and measured on an unmerged branch** |
 
 ## Cross-cutting
 

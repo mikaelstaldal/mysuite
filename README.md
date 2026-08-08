@@ -114,9 +114,13 @@ which copy is canonical. That is the only duplication this repository accepts.
 
 ## Status
 
-No remote is configured; this repository is local-only. Cross-references from the app repos
-name it by path (`../mysuite`, `spec/sidebar-footer.md`) rather than by URL. Once a remote
-exists, those references should be updated to point at it.
+The remote is <https://github.com/mikaelstaldal/mysuite>; the three app repos are linked at the
+top of this file.
+
+Cross-references from the app repos name this one **by path** (`../mysuite`,
+`spec/sidebar-footer.md`), because `tools/check-contract.py` and every relative link assume the
+four checkouts are siblings. `AGENTS.md` §3 is the canonical statement of that, and of when to
+give the URL as well.
 
 ## Licence
 

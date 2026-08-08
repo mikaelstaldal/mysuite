@@ -160,10 +160,17 @@ So:
   read. A red reader over-reads a result at least as easily as a green one: they see "2 values
   disagree" and infer the other thirty assertions are coverage. **Print the limits on every
   terminating path, and confirm it by running each of them.**
-- **No remote is configured.** Commit locally; do not attempt to push. Cross-references from
-  the app repos name this repo by path (`../mysuite`, `spec/sidebar-footer.md`) rather than
-  by URL, because there is no URL to give. When a remote is added, those references should be
-  updated.
+- **The remote is `origin` → `git@github.com:mikaelstaldal/mysuite.git`**
+  (<https://github.com/mikaelstaldal/mysuite>). Commit locally; **pushing is the human's
+  call** — say the work is ready rather than publishing it or routing around a missing
+  credential. `git remote -v` in each app repo is authoritative for where that one lives.
+
+  Cross-references from the app repos still name this repo **by path** — `../mysuite`,
+  `spec/sidebar-footer.md` — and should keep doing so: the path is what resolves for a reader
+  with the four checkouts side by side, which is also the layout `tools/check-contract.py`
+  assumes. What the remote changed is not the path but the *reason* some files gave for it.
+  Give the URL beside a path where a reader may not have the checkout; never in place of it.
+  See §3.5: what this bullet used to say is that section's second specimen.
 - **`CLAUDE.md` is a symlink to this file**, matching the convention in all three app repos.
   Edit `AGENTS.md`.
 - **Some rules are stated in more than one file here, and that is deliberate.** The
@@ -535,11 +542,11 @@ Every rule above assumes a false claim entered the repository in a changeset —
 grep or a re-read has *something* to be run against. **A negative claim about tooling has no such
 moment.**
 
-**The specimen.** MyMail's and MyCal's docs said *"there is no shared stylesheet and no cross-repo
-test"*. Both were true when written and were falsified by `tools/check-contract.py` landing —
-**with no edit to either file.** MyCal's had been contradicting itself ever since, naming the
-script forty lines from where it denied one existed. So had `spec/sidebar-footer.md` §10.7, in
-this repository, in the item that describes the script.
+**The first specimen.** MyMail's and MyCal's docs said *"there is no shared stylesheet and no
+cross-repo test"*. Both were true when written and were falsified by `tools/check-contract.py`
+landing — **with no edit to either file.** MyCal's had been contradicting itself ever since,
+naming the script forty lines from where it denied one existed. So had `spec/sidebar-footer.md`
+§10.7, in this repository, in the item that describes the script.
 
 Why nothing catches it:
 
@@ -565,8 +572,34 @@ which is exactly the sweep nobody runs because the commit does not touch them. T
 where such a commit is most likely to happen and least likely to be swept for, because it is the
 only one that owns cross-repo tooling.
 
-Both instances were caught by an agent fixing something else, noticing the shape and thinking to
+Both of those were caught by an agent fixing something else, noticing the shape and thinking to
 check its siblings. That is not a process, and it is the reason this is written down.
+
+#### A second specimen, in this repository, and a purer one
+
+§3 said *"No remote is configured. Commit locally; do not attempt to push … there is no URL to
+give."* `README.md` said the repository was local-only. Both were true, and both went false the
+moment a remote was configured — **an act that produces no commit in any repository.**
+
+The `check-contract.py` case at least had a changeset somewhere, so a sweep had a place to start.
+This one has nothing to diff, nothing to review, and no tracked file whose contents moved. It was
+corrected only because the person who made the change said so, in as many words.
+
+Two things it adds to the section above:
+
+- **The blast radius was wider than the repository that changed**, exactly as predicted — and
+  unevenly, which is the part worth checking rather than assuming. The false clause was here, in
+  `AGENTS.md` and `README.md`; in MyCal's `web/AGENTS.md`, twice; and in MyMail's root
+  `AGENTS.md` and `spec/REQUIREMENTS.md` (corrected in MyCal `2e68ef3` and MyMail `07d14cf`).
+  **Not in MyNotes**, whose references name `../mysuite` by path and simply never say why — it
+  needed no edit. That is this section's own advice arriving as evidence: the reference that
+  asserted nothing about the world survived, and the two that explained themselves both aged
+  into being wrong.
+- **The bullet had named its own successor, and that did not help.** It ended *"When a remote is
+  added, those references should be updated"* — a correct, specific, actionable instruction,
+  addressed to a moment that arrives with no diff, no notification and nobody assigned. A
+  conditional written into the claim it will invalidate is still only as good as somebody
+  noticing the condition fired.
 
 ## 4. Working in one of the app repos
 

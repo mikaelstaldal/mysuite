@@ -824,9 +824,24 @@ differently — correctly:
 > being prohibited. It does **not** prohibit changing the number — which the human has now ruled
 > should happen, to make room for the logo (`spec/app-logo.md` §10.1).
 >
-> **3. The slack figure is a function of a width that is changing.** It is content-box minus the
-> ~174px row: 403 − 174 today. At a 441px sidebar it is ~266px, at 514px ~339px, at 588px ~413px.
+> **3. The slack figure is a function of a width that is changing.** The available width is the
+> sidebar **less its 1px border and the footer's 16px of horizontal padding** — 420 − 17 = 403
+> today — and the slack is that minus the ~174px row. So:
+>
+> | Sidebar | Available | Slack vs a 174px row |
+> |---|---|---|
+> | 420 (today) | 403 | ~229 |
+> | 441 | 424 | ~250 |
+> | 514 | 497 | ~323 |
+> | 588 | 571 | ~397 |
+>
 > **The exemption gets stronger, never weaker** — widening cannot put this section at risk.
+>
+> *(The first version of this annotation gave 266 / 339 / 413 — each 16px too high, from
+> subtracting the border but not the footer's padding, while the 403 it was derived from
+> already had both taken out. Caught in review. It is `AGENTS.md` §2.5's complaint in miniature:
+> a derived number written beside the figure it was derived from, disagreeing with it by a
+> constant nobody re-checked.)*
 
 And converting would not have been merely unnecessary — it would have been **a regression**:
 `420px` becomes `26.25rem`, which at a 24px root is a **630px** sidebar, eating the note list

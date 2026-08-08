@@ -60,9 +60,15 @@ documents rather than restating its values.
 ## Contents
 
 - **[`spec/`](spec/)** — the contracts, one file each, indexed in
-  [`spec/README.md`](spec/README.md).
+  [`spec/README.md`](spec/README.md). Currently two:
+  - **[`spec/sidebar-footer.md`](spec/sidebar-footer.md)** — the theme toggle and Settings
+    button at the bottom of the left sidebar. Implemented in all three apps.
+  - **[`spec/app-logo.md`](spec/app-logo.md)** — the app logo badge at the top left.
+    Implemented in MyCal and MyMail; **MyNotes in progress.** The app-name label beside the
+    badge is deliberately out of scope, per that contract's §2.
 - **[`tools/check-contract.py`](tools/check-contract.py)** — checks the three apps against
-  the sidebar-footer contract. Run it from a checkout with the app repos as siblings:
+  the **sidebar-footer** contract only; the app-logo contract has no checker yet. Run it from
+  a checkout with the app repos as siblings:
 
   ```
   tools/check-contract.py            # 0 agree · 1 disagree · 2 cannot check

@@ -516,6 +516,16 @@ What this run does NOT tell you — on a pass OR a failure. It reads CSS source
 and never renders anything, so a clean result is narrower than it looks and a
 failing one covers less ground than the count suggests.
 
+  · IT CHECKS ONE CONTRACT. spec/ now holds TWO binding contracts and this script
+    knows only about spec/sidebar-footer.md. Nothing here looks at the app-logo
+    contract (spec/app-logo.md) — not the badge box, the fill, the glyph size,
+    the mark's extent, the placement, nor the accessibility rules. A green run
+    says nothing whatever about it. That contract has no checker of any kind, in
+    any repository, deliberately: see its own §9.4 for why one waits on MyNotes,
+    and for the asymmetry a future one must print — a CSS reader can defend the
+    badge box in all three apps but the GLYPH SIZE IN MYCAL ONLY, because MyMail
+    sizes its glyph in a TSX prop no stylesheet reader can see.
+
   · Geometry is unverified — the 29.2px height, the (8,8) viewport position, the
     4px outline clearance, overflow and clipping. All need a browser (§2.2, §8).
   · The cascade is unverified. This reads the declarations in the contract's own

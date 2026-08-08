@@ -28,6 +28,10 @@ Currently binding:
 
 - **[`spec/sidebar-footer.md`](spec/sidebar-footer.md)** — the light/dark theme toggle and
   Settings button in the left sidebar's footer.
+- **[`spec/app-logo.md`](spec/app-logo.md)** — the app logo badge at the top left: its box, fill,
+  glyph size and extent, placement and accessibility. Implemented in MyCal and MyMail; **MyNotes
+  in progress.** The app-name label beside the badge is deliberately **out of scope** — that
+  contract's §2 records the ruling and its condition, so do not read the labels as an oversight.
 
 Cross-cutting:
 
@@ -353,6 +357,7 @@ That accounts for every instance in the table above and two more from the same w
 | "the `pipefail` bug is live in all three scripts" | writing the section on evidence discarded by a pipe |
 | "MyMail removed its `trap … PIPE` line" — read off a `grep \| head -3` that cut the file at line 51 | **the same sitting as writing "do not conclude from a stream you paginated"** |
 | "the cross-repo check predates MyCal's suite" — backwards; it postdates it by 26 minutes | correcting a *different* false claim in the same sentence — **and caught before shipping, by its own author** |
+| `spec/app-logo.md` §3.3 explaining its extent rule with raw `getBBox()` *width* figures under a table headed *"larger axis, stroke/ink-inclusive"* — two statistics that differ by 8.3 points for MyMail | **writing the qualifier three paragraphs below that says every figure reported against that rule must name which box it is** |
 
 **Freshly written text is the least reviewed text in any changeset**, and it is least reviewed
 precisely when the author is concentrating hardest on some other failure mode. So the practical
@@ -360,11 +365,13 @@ form is not "be careful" — it is: **re-read what you added last, against the c
 have finished the thing you were concentrating on.** The sentence you are most confident in is
 the one nobody has checked, including you.
 
-**The last row is the only one an author caught themselves, and how is the useful part.** Every
-other entry here was found by someone else reading the primary source, which is the pattern the
-rest of this document rests on. That one was found because its author checked a claim that
-*felt obviously true* and needed no checking — the ordering of two commits, in a sentence that
-did not depend on the ordering at all. It was backwards.
+**Only two rows were caught by their own author, and how each was caught is the useful part.**
+Every other entry was found by someone else reading the primary source, which is the pattern the
+rest of this document rests on.
+
+**The `predates`/`postdates` row** was found because its author checked a claim that *felt
+obviously true* and needed no checking — the ordering of two commits, in a sentence that did not
+depend on the ordering at all. It was backwards.
 
 > **Inside a correction, check the incidental facts too — especially the ones you did not stop
 > to doubt.** The claim under repair gets scrutiny by definition. The scaffolding you write
@@ -374,7 +381,36 @@ The sentence was then rewritten to make no claim about the ordering, since it ne
 **That is the better repair**: an unnecessary fact that has to be right is a liability with no
 upside, and deleting it beats verifying it.
 
-**And the sharpest case is the last row, which is why its wording is specific.** That claim was
+**The `app-logo.md` §3.3 row is the first one caught by this section's own prescribed remedy** —
+*re-read what you added last, against the source, after you have finished the thing you were
+concentrating on* — rather than by luck or by a second person. That is the first evidence the
+remedy works on its author, and it is a different claim from another instance of the disease.
+Two things about it are worth keeping:
+
+- **The defect was in the explanation, not the rule.** The rule was right; the paragraph
+  illustrating it quoted the wrong statistic. Scaffolding again, exactly as the blockquote above
+  predicts.
+- **Adding this row broke the sentence you are reading.** It opened *"the last row is the only one
+  an author caught themselves"* — a **positional** reference, correct when written and falsified
+  by appending to a table above it. Repaired by naming the rows instead of their position, which
+  is the durable form: a reference that depends on where something sits is one insertion away from
+  pointing at the wrong thing, and nothing checks it.
+
+  **Two more were already broken, and finding them is the whole argument for the durable form.**
+  Sweeping this section for the same shape turned up two further *"the last row"* references that
+  had gone stale before this changeset: one describing the `background`-declaration case and one
+  describing the hover-fill floor, **neither of which is the last row of either table in this
+  section.** Both now name their case. *(What is not claimed: exactly when each broke. The
+  descriptions were matched to their cases and the positions checked; the history was not, and an
+  unverified account of how they got that way is the thing §3.2 keeps warning about.)*
+
+  So this is not a hazard the section merely predicts — it had already happened twice, here,
+  unnoticed, in the document that teaches it. **A positional reference is a claim about a
+  neighbour's position, and appending is the one edit nobody thinks of as a change to anything
+  above it.**
+
+**And the sharpest case is the `background`-declaration row, which is why its wording is
+specific.** That claim was
 not merely written while its author was distracted — it was written *as the replacement for a
 clause just deleted for being wrong*. The old text said MyCal's fill "vanishes"; the new text
 made a claim about which element paints, and attached it to the wrong rule. mynotes-dev's
@@ -385,8 +421,8 @@ So the re-read pass matters most on exactly the changesets that feel safest — 
 purpose was fixing something. A correction inherits none of the scrutiny that found the defect
 it replaces.
 
-The last row adds a mechanism, because "check all three" did not catch it. The figure was
-taken from a per-app table that had just been read, and **the value appearing in two of three
+The hover-fill-floor row adds a mechanism, because "check all three" did not catch it. The figure
+was taken from a per-app table that had just been read, and **the value appearing in two of three
 rows read as the value.** So: when deriving a bound from a per-app table, take the extreme
 rather than the common value, and **name the app it came from in the same sentence** — a
 bound with an app's name attached is falsifiable by anyone who knows that app, and one without

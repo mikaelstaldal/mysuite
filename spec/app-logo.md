@@ -167,10 +167,11 @@ implementing, which is the only reason it is a rule rather than a defect.)*
 > **Why the floor is 85% and not the weakest shipped value, which would be 91.67%.**
 > `spec/sidebar-footer.md` §5.1 sets its hover-fill floor *at* the worst shipped figure, so a
 > reader will otherwise read 85 as sloppiness. The distinguishing fact is what the operand is:
-> that contract's is a colour the app owns and can hold still. **MyMail's mark is a vendored third-party
-> drawing** — `lucide-1.25.0.js` — and icon sets get redrawn between versions. A floor at the
-> shipped extreme would put MyMail in violation on a routine bundle upgrade that trimmed the
-> envelope by two points, for a reason nobody performing that upgrade would think to check.
+> that contract's is a colour the app owns and can hold still. **MyMail's mark is a vendored
+> third-party drawing** — `lucide-1.25.0.js` — and icon sets get redrawn between versions. A
+> floor at the shipped extreme would put MyMail in violation on a routine bundle upgrade that
+> trimmed the envelope by two points, for a reason nobody performing that upgrade would think
+> to check.
 >
 > That would be **manufacturing** an `AGENTS.md` §3.3 dormant defect rather than recording one:
 > harmless today, conditional on something outside the repository not moving, with the condition
@@ -476,10 +477,10 @@ Stated honestly. None is a reason to hold up work; all are reasons not to be sur
 
 **This violates nothing in this contract**, which pins appearance and placement rather than
 coordinates (§4). It is recorded because of the shape:
-`spec/sidebar-footer.md` §8.2 and that contract's §8.3 identify this exact failure, and rescued the footer from
-it with `position: sticky` and an opaque background. **Nothing ever specified the header, so
-nothing rescued it.** The footer's rescue makes the header's exposure look deliberate, and it is
-not.
+`spec/sidebar-footer.md` §8.2 and that contract's §8.3 identify this exact failure, and rescued
+the footer from it with `position: sticky` and an opaque background. **Nothing ever specified
+the header, so nothing rescued it.** The footer's rescue makes the header's exposure look
+deliberate, and it is not.
 
 **With the human as an open item.** Fixing it is real work in an app repo — sticky plus an opaque
 background, with the stacking-context and clearance checks `spec/sidebar-footer.md` §8.3 lists —
@@ -592,8 +593,9 @@ that the containing column is not part of *that* contract either, that the three
 never unified — 200 / 220 / 420 are deliberately different". So widening is an **app-local
 change**, not a contract amendment.
 
-**Widen for the logo only** — about +20.4px against the ~15.63px shortfall, not the ~+168px that
-would also absorb §10.2's pre-existing overflow. **And not at the measured minimum:** a column
+**Widen for the logo only** — the shortfall is **20.4px** (a 36px cost against a 15.63px budget),
+not the ~+168px that would also absorb §10.2's pre-existing overflow. **And not at the measured
+minimum:** a column
 sitting exactly where the tabs stop overlapping is one label change, one font tweak or one
 translated string from failing again, in the invisible mode above. Take the minimum, add
 headroom, round to MyNotes' own spacing rhythm.
@@ -601,9 +603,10 @@ headroom, round to MyNotes' own spacing rhythm.
 > **Nothing in `spec/sidebar-footer.md` is disturbed by this, and it was checked rather than
 > assumed.** That contract pins its controls at (L, B) = (8, 8) from the **window** (its §8), and
 > MyNotes' sidebar is flush to the window's left edge — so widening moves the right edge only and
-> neither coordinate has a width term. That contract's full-bleed separator rule (its §8.5) is relational and
-> MyNotes implements it by reading the sidebar's content width live. And that contract's §6.4 slack figure
-> **grows** with the width, so the exemption it grants gets stronger, never weaker.
+> neither coordinate has a width term. That contract's full-bleed separator rule (its §8.5) is
+> relational and MyNotes implements it by reading the sidebar's content width live. And that
+> contract's §6.4 slack figure **grows** with the width, so the exemption it grants gets
+> stronger, never weaker.
 >
 > The one thing that *does* break is a test, not a rule — see §10.3.
 
@@ -626,7 +629,7 @@ standing item with its numbers.**
 
 ### 10.3 One assertion must go before the widening — and why it was harmless until it wasn't
 
-`mynotes/e2e/tests/sidebar-footer.spec.ts` asserts `expect(column.width).toBeCloseTo(420, 0)`.
+`../mynotes/e2e/tests/sidebar-footer.spec.ts` asserts `expect(column.width).toBeCloseTo(420, 0)`.
 **It pins a value `spec/sidebar-footer.md` §6.4 states is not part of that contract**, inside the
 suite whose job is to hold that contract. It is not a stale number; it is an assertion with no
 owner. The relational checks on the neighbouring lines — the controls fitting inside the column,

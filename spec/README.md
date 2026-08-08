@@ -3,12 +3,19 @@
 Each file here defines one UI element or behaviour that MyCal, MyMail and MyNotes are
 required to render identically. A contract is binding on all three apps or on none of them.
 
+**"Binding on all three" is about what the contract *requires*, not about what has *shipped*
+yet.** A contract being adopted can be binding while one app is still implementing it — that is
+the state `app-logo.md` is in below, and it is transient by construction. What it must never
+become is a standing per-app exemption, which is the thing the sentence above forbids. A status
+of *"implementation in progress"* is a claim with a deadline; if you find one that has not moved,
+that is the defect.
+
 ## Contracts
 
 | Contract                                 | Covers                                                                                                                                           | Status                            |
 |------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------|
 | [`sidebar-footer.md`](sidebar-footer.md) | The light/dark theme toggle and Settings button at the bottom of the left sidebar — geometry, colours, interaction, and their position on screen | Binding, implemented in all three |
-| [`app-logo.md`](app-logo.md)             | The app logo badge at the top left — its box, fill, glyph size and extent, placement, and accessibility. **The app-name label beside it is deliberately out of scope** (§2) | Binding. Implemented in MyCal and MyMail; **MyNotes implementation in progress** |
+| [`app-logo.md`](app-logo.md)             | The app logo badge at the top left — its box, fill, glyph size and extent, placement, and accessibility. **The app-name label beside it is deliberately out of scope** (`app-logo.md` §2) | Binding. Implemented in MyCal and MyMail; **MyNotes implementation in progress** |
 
 ## Cross-cutting
 

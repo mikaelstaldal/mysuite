@@ -491,6 +491,18 @@ So when you record that something now runs, now gates, now blocks, or now checks
 previously getting away with something.** A guard that starts running does not only start
 catching real defects. It starts charging for the ones that were already there.
 
+**And the sweep has a second axis that four diligent sweeps still missed.** When the stale claim
+was *"MyMail's and MyNotes' suites have never run in CI"*, each repository swept itself: MyMail
+found five places, MyNotes seven, this repo eight. The union still had a hole — **MyCal carried
+the claim too**, in `web/AGENTS.md`, and nobody looked. The claim was *about* MyMail and MyNotes,
+so neither of those was watching MyCal, and MyCal had no reason to watch itself.
+
+> **A claim has two sets of repositories: the ones it is *about*, and the ones that *make* it.
+> They are different sets, and only the first is obvious.** Sweep both.
+
+That is the sharper form of §3.2's *"what unit does this claim range over"*, on the axis that
+looks already covered because everyone swept diligently — in parallel, and past each other.
+
 The value was right every time. The *justification* was written from whichever
 implementations the author had in mind, and it fails the moment a reader checks it against
 the app it does not describe — who then reasonably concludes that app has drifted.
@@ -739,15 +751,35 @@ Two things it adds to the section above:
   `web/static/app.css`. The root file is one level further from the edit. All three repos now
   place it that way:
 
-  | | Where the warning lives |
-  |---|---|
-  | MyNotes | `web/AGENTS.md` §"The sidebar footer is governed from outside this repo" — **the model**: a distinctly titled section a reader can find and cite |
-  | MyCal | `web/AGENTS.md`, as a bullet in a list — no title of its own, but the richest content of the three: it names each tidy-up alongside the assertion that catches it |
-  | MyMail | split between the repo-root preamble and `web/AGENTS.md` |
+  | | Sidebar footer | App logo |
+  |---|---|---|
+  | MyNotes | `web/AGENTS.md`, titled section | `web/AGENTS.md`, titled section |
+  | MyMail | `web/AGENTS.md`, titled section | `web/AGENTS.md`, titled section |
+  | MyCal | `web/AGENTS.md`, **a bullet in a list** — no title of its own, but the richest content of the three: it names each tidy-up alongside the assertion that catches it | `web/AGENTS.md`, titled section |
 
-  So "MyNotes is the model" is a claim about **findability, not coverage** — all three carry a
-  form of this, and MyCal's says more. What MyNotes has that the others do not is a heading,
-  which is what makes it citable from here at all.
+  **Verified by reading all six locations**, not from any repo's report of itself.
+
+  > **This table used to say something else, and how it went wrong is §3.5 landing on §4.**
+  > It read: MyNotes' titled section is *"the model"*, MyCal's is a bullet, and **MyMail's is
+  > "split between the repo-root preamble and `web/AGENTS.md`"** — with a paragraph explaining
+  > that *"what MyNotes has that the others do not is a heading."*
+  >
+  > **All of that has been overtaken by the work this section prompted**, and no edit to it was
+  > ever made. MyMail consolidated both warnings into `web/AGENTS.md` as titled sections, one per
+  > contract, leaving its root file a pointer. MyCal added a titled section for the logo. So the
+  > justification for naming any one repo the model has simply expired: **five of the six
+  > locations are now titled sections**, and the odd one out is MyCal's *footer* bullet, which
+  > this table already described accurately and which is the one with the most content.
+  >
+  > The lesson is not "keep the table current". It is that **a comparison between repositories is
+  > the most perishable thing this document can contain**, because every repo is being improved
+  > by somebody who is not reading it. State what each has, and avoid crowning a winner — a
+  > superlative is a claim about the other two that they can falsify without touching this file.
+
+  Note that MyMail **retitled** its footer section when the second contract arrived: *"Edits that
+  silently break that contract"* became *"The sidebar footer is governed from outside this repo"*,
+  because *"that contract"* stopped being unambiguous the moment there were two. Worth copying —
+  and it checked that nothing cited the old heading before changing it.
 
   > **The citation above was stale from the day §4 was written**, naming MyNotes' root
   > `AGENTS.md` for a section that had moved to `web/AGENTS.md` in an earlier commit. That is

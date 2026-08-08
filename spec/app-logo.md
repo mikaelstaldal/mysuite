@@ -601,7 +601,33 @@ CSS-reading check can defend the badge box, radius and fill in all three, and th
 MyCal only**, because MyMail sizes its glyph in a TSX prop no CSS reader can see. That limit must
 be **printed on every terminating path**, verified by running each, not by reading it.
 
-### 9.5 Smaller things worth knowing
+### 9.5 An empty badge satisfies every rule in §3 — MyMail only, with its condition
+
+**Not a §3.3 amendment.** A rule of the form *"the mark must exist"* would be unfalsifiable
+prose in a document whose other rules are measurements, and the extent floor already fails an
+absent mark the moment anything measures ink. This is a **mechanism failure in one app with a
+cross-app consequence**, which is a known gap, and one repo's prose is the wrong home for it.
+
+MyMail's `<Icon>` **returns `null` for a name absent from the vendored bundle**
+(`if (!nodes) return null`). So if `gen-lucide.mjs`'s `ICONS` list ever loses `'mail'`, the badge
+becomes **an empty blue square and `./build.sh` stays green** — no error, no warning, nothing red.
+An empty badge satisfies §3.1's box, radius and fill, §3.2's centring, and §4's placement. It
+fails only §3.3, and only if something measures ink.
+
+**The condition that makes it harmless today, written down because that is the whole point**
+(`AGENTS.md` §3.3 — that file's, not this one's):
+
+> `'mail'` is in `gen-lucide.mjs`'s `ICONS` list, and MyMail is the only app that reaches its
+> mark through a bundle at all. MyCal and MyNotes hand-write their SVGs, so there is no lookup
+> to miss.
+
+So it is armed by exactly one edit — pruning that list, which is a routine size optimisation on
+a vendored bundle — and it is invisible to every other guard. **If MyMail ever asserts anything
+about this badge, assert that the glyph renders non-empty**, which is the cheapest form of §3.3's
+floor and the only one that catches this. *(Found by mymail-dev; escalated here rather than left
+in its repo, because the consequence is that the three stop matching.)*
+
+### 9.6 Smaller things worth knowing
 
 - **`getByText('8')` matches MyCal's logo.** Its mark draws a real `<text>8</text>`, so
   `.brand-logo`'s `textContent` is `"8"` and an exact-text locator matches three elements on the

@@ -1,10 +1,10 @@
 # App logo — the badge in the top left
 
-**Status:** binding. **§4's placement rule is newly added and no app conforms to it yet as
-shipped** — MyCal and MyNotes are both being corrected to it, MyMail already satisfies it and is
-the reference. Every other section is implemented and shipping in MyCal and MyMail, and
-implemented and measured in MyNotes on an unmerged branch (§10). §4.4 is empty until the two
-fixes are measured; it is not filled from either being written.
+**Status:** binding, and **all three apps now conform on every value in it, measured** (§4.4,
+§10). Two caveats on what "conform" means here: MyCal's and MyMail's work is committed on their
+`main` branches and MyNotes' on an unmerged branch, and **none of it is pushed** — so this
+describes four local checkouts, not what is published. And §4's placement rule is newly added:
+MyCal and MyNotes were both corrected to it during this work, MyMail was already on it.
 
 **Scope: the logo only.** The app-name label beside it is **out of scope** — §2 states that as a
 ruling, with the human's words and the condition attached. Read §2 before concluding the labels
@@ -302,7 +302,7 @@ the distinction this section had wrong until the owner looked at the shipped res
 |---|---|---|
 | badge hidden entirely below 600px | MyCal | §9.3 |
 | badge scrolls off under content overflow — `y` = −2206 / −1008 measured | MyCal, MyMail | §9.1 |
-| the **demo build** — the artefact GitHub Pages serves — moved `y` **non-monotonically** with width: 14 at 1920, 27.609 at 1440, back to 14 at 1439 | MyCal | §9.5, and §4.2 is why |
+| ~~the **demo build** moved `y` non-monotonically with width: 14 at 1920, 27.609 at 1440, back to 14 at 1439~~ | MyCal | **resolved** — the demo build now measures (16, 14) too, verified rather than assumed, as does MyNotes' |
 | offsets diverge above a 16px root, because the three reach them through different units | MyNotes | §4.4 |
 
 ### 4.4 Conformance
@@ -316,14 +316,25 @@ rule.
 |---|---|---|---|
 | MyMail | **(16, 14)** | `.sidebar-header { padding: 14px 16px 12px }` | the same declaration |
 | MyNotes | **(16, 14)** | `.sidebar-header { margin: 0 16px 0.75rem }` | `.sidebar { padding: 14px 0 0 }`, load-bearing via `.sidebar-brand { align-self: flex-start }` |
-| MyCal | *awaiting mycal-dev's measured reading* — landed as `880ce01` | `--app-padding-x: 16px` | `.brand { align-self: flex-start }` + 6px, on `.app`'s 8px `padding-top` |
+| MyCal | **(16, 14)** | `--app-padding-x: 16px`, via `.app`'s padding | `.brand { align-self: flex-start; margin-top: 6px }` **and** `.brand-logo { align-self: flex-start }`, on `.app`'s 8px `padding-top` |
 
-**The MyCal row is deliberately not filled from the commit.** §10 sets the rule that this table is
-filled from a measured reading and not from a fix being written, and it applies to me.
+**All three rows are measured readings, not source reads.** §10's rule — that this table is filled
+from a measurement and never from a fix being written — was applied to MyCal's row, which stayed
+empty for a while after its commit landed.
 
-*(Its declarations above are a source read, and they are recorded because §4.2 makes **which
-declaration authors the offset** a contract term in its own right — separate from, and not
-evidence of, what the offset measures.)*
+**MyCal needs *two* declarations, and the second one is the interesting half.** `.brand`'s pair
+severs the block from `.top-bar`'s centring, which is what disconnects the badge from the
+heading's line count, the view, the date and the locale. But `.brand-logo` must *also* opt out of
+`.brand`'s own centring — **without it the remainder does not disappear, it moves into a smaller
+box.** A fix that removed only the outer centring would have measured 14 at the stated conditions
+and still failed §4.2.
+
+**MyCal's `y` is invariant across every root font size from 16 to 32px**, where MyNotes' acquires
+a bounded term above 18.67px (below). That is a difference in degree between two conforming apps,
+not a defect in either — recorded so nobody reads MyNotes' departure as the suite's behaviour.
+
+**The bar still grows for a wrapped heading** — measured at 40 / 67.2 / 100.8 / 151.2 / 268.8px
+across widths and roots, badge at 14 in all of them. Nothing was made rigid; a coupling was cut.
 
 **Both fixes removed a remainder rather than adjusting one.** MyCal's `min-height: 40px` still
 grows for a wrapped heading; it just no longer decides where the badge sits. MyNotes'

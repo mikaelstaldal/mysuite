@@ -50,7 +50,9 @@ The divergence is found by a person noticing a button move when they switch brow
 The qualifier is exact and is not a softening. `tools/check-contract.py` *can* see cross-repo
 drift and is the only thing that can — but nobody's CI runs it, so it guards nothing until
 somebody chooses to run it (`spec/sidebar-footer.md` §10.7). Each app's own e2e suite is blind
-to the other two by construction, and two of the three do not run anywhere either.
+to the other two by construction, and **all three of those suites now run in CI**, which changes
+nothing here: three pipelines that each see one app still leave the comparison between apps
+performed by nothing.
 
 Treat any change to a specified value as touching three repositories from the start.
 
@@ -114,10 +116,14 @@ than no comment: it is confidently wrong, and nothing checks it.
 So:
 
 - If a number matters, **put it in a test.** All three repos now have an
-  `e2e/tests/sidebar-footer.spec.ts` holding their own half of the contract. **Only MyCal's
-  runs anywhere** — it gates publication on push to `main`; MyMail's and MyNotes' are
-  committed on unpushed branches whose CI steps have never executed. See
-  `spec/sidebar-footer.md` §9.1, which is exact about which claim belongs to which app.
+  `e2e/tests/sidebar-footer.spec.ts` holding their own half of the contract, and **all three
+  now run in CI**, each gating publication on push to `main`. See `spec/sidebar-footer.md`
+  §9.1, which records the step-level verification and the date it was taken.
+
+  *(This bullet said "**Only MyCal's** runs anywhere" until 2026-08-08, and it was falsified by
+  two pushes rather than by any edit — `spec/sidebar-footer.md` §9.1's annotation has the
+  mechanism. Note what it means for the rule this bullet states: putting a number in a test is
+  now worth more than it was, because in all three repos something actually runs the test.)*
 
   **Three per-app suites are still not a cross-repo check**, and adding more cannot make one:
   each is blind to the other two by construction, so all three stay green through a
@@ -649,8 +655,9 @@ Two things it adds to the section above:
   > move the section back to the root to match it.
 
   This is the highest-value thing an app repo can add, because it is the only guard that fires
-  **before** the change rather than after — and in two of the three repos nothing fires
-  automatically at all: their suites exist but sit on unpushed branches whose CI has never run
-  them (`spec/sidebar-footer.md` §9.1). A suite somebody has to remember to run is not what
-  catches an edit made for a good reason by someone who did not know the rule existed. The
-  prose is.
+  **before** the change rather than after. All three repos' suites now run in CI
+  (`spec/sidebar-footer.md` §9.1), which raises the floor but does not change that: a pipeline
+  fires *after* the edit is written and pushed, and it catches only what it asserts. Neither it
+  nor anything else catches an edit made for a good reason by someone who did not know the rule
+  existed — `0.80rem` → `0.8rem` is uncatchable by any of the three (§9.2), and no suite sees
+  between the repos at all. The prose is what fires first.

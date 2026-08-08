@@ -1253,25 +1253,55 @@ its own rendering, and none can see the other two — so all three stay green th
 divergence between them. That is §10.7, and closing two thirds of the coverage gap has not
 touched it.
 
-**Only MyCal's runs in CI.** The other two are wired but have never executed. §9.1 is exact
-about which claim belongs to which app, because the difference is the difference between a
-guard and a file.
+**All three now run in CI.** Until recently only MyCal's did; §9.1 records what changed, when,
+and why nothing in this repository noticed.
 
-### 9.1 What each suite's status actually is — one runs, three were accepted
+### 9.1 What each suite's status actually is — all three run
 
-**The three are not in the same state, and the difference is not cosmetic.** MyCal's suite is
-executed by a pipeline on every push to `main`. The other two have never run anywhere except
-the machine that wrote them.
+**The three are now in the same state, and until 2026-08-08 they were not.** Each suite is
+executed by its repo's own pipeline on every push to `main`, after `./build.sh` and before the
+Pages upload and the release.
 
 | | Landed on | Runs in CI | Shown red for the right reason |
 |---|---|---|---|
 | MyCal | `main`, `7e65102` | **yes** — gates Pages and the release | yes, **in the pipeline** |
-| MyMail | `e2e-sidebar-footer`, **unpushed** | **no** — the step is committed and has never executed | yes, **locally** |
-| MyNotes | `e2e-sidebar-footer`, **unpushed** | **no** — same | yes, **locally** |
+| MyMail | `main`, `6e5c33c` | **yes** — same placement | yes, **locally** (see below) |
+| MyNotes | `main`, `afec291` | **yes** — same placement | yes, **locally** (see below) |
 
-Deliberately no commit hashes for the two unpushed branches: both were still being amended
-while this was written, so a hash recorded here would name a commit that no longer exists. See
-§11's closing note — this document has already cited one such commit.
+Verified 2026-08-08 against each repo's public workflow-run API, **at the step level rather than
+the run level** — a green run does not establish that the e2e step ran, which is this section's
+own distinction. Latest run on `main` at the time of checking, all three with step 9
+*"End-to-end tests"* `success`:
+
+| | Run | Head | e2e step |
+|---|---|---|---|
+| MyCal | #10 | `2e68ef3` | success |
+| MyMail | #12 | `07d14cf` | success |
+| MyNotes | #8 | `d9f8ff1` | success |
+
+**Commit hashes are given now because they can be.** This table deliberately withheld them while
+the two branches were unpushed and being amended, per §11's rule that a hash from an unpushed
+branch pays the cost of perishability without buying anyone the ability to resolve it. Both are
+now on `main` and pushed, so the rule points the other way and the hashes are recorded.
+
+> **This section went stale without a single edit to it, and it is the section this document
+> nominates as the authority on live suite status.** Nothing was ever committed that made it
+> wrong. What made it wrong was a **push** — an act that produces no commit, no diff and no
+> changeset in any repository, so no review had anything to review and no `grep` had an event to
+> search for. That is `AGENTS.md` §3.5 exactly, landing on the file that is supposed to be
+> authoritative about the thing that changed.
+>
+> **How it was actually caught, since none of it was procedural.** Two app agents were asked to
+> confirm their own repo's status rather than assume it, and each corrected its own row — MyMail's
+> from the public workflow API, MyNotes' from `git`. **Neither checked the other**, and each said
+> so explicitly. The third row and the sweep of everything else this falsified came from the one
+> place that reads all three repositories, which is the whole reason this repository exists.
+>
+> The durable form, because the next status claim here will rot the same way: **a claim about
+> another repository's live state has no owner in this one.** It cannot be defended by review,
+> because nothing here changes when it goes false. Write such claims with the date they were
+> verified and the command that verifies them, so the next reader can re-run rather than re-derive
+> — which is what the table above now does.
 
 #### MyCal — runs in CI, and **gates publication**
 
@@ -1298,21 +1328,39 @@ Operational notes worth keeping: retries stay at **0** deliberately; traces and 
 upload on failure. (The config previously paired `trace: 'on-first-retry'` with `retries: 0`,
 so it had been capturing nothing at all.)
 
-#### MyMail and MyNotes — accepted locally, CI wiring committed but unexercised
+#### MyMail and MyNotes — accepted locally first, and their pipelines have now run
 
-Both workflows trigger on push to `main`. **Both branches are unpushed, so neither step has
-ever run.** The YAML was validated by parsing it with `yq`, which establishes that it is
+Both workflows trigger on push to `main`. **Both have since been pushed and both have run
+green**, at the step level, per §9.1's table. Before that they were accepted locally only, and
+the way they earned the upgrade is worth keeping straight.
+
+The wiring was originally validated by parsing the YAML with `yq`, which establishes that it is
 well-formed and nothing whatever about whether it works. Neither author could run `npm ci`
 either — npm is unusable in that sandbox, and both copied MyCal's `node_modules` — so the
-committed lockfiles are verified by parsing and internal consistency, not by an install.
+committed lockfiles were verified by parsing and internal consistency, not by an install.
+**Both of those reservations are now discharged by the pipeline itself**: `npm ci` and
+`playwright install --with-deps chromium` have executed in CI in both repos, which is the only
+thing that could have discharged them.
 
-**Do not write that these two run in CI, and do not let "wired into CI" stand in for it.**
-`measurement-protocol.md` is explicit that the honest description of a new guard is "added"
-until it has been shown red, and it adds a second requirement these two have not met: *wire it
-in suspiciously* — a pipeline step is evidence only once the pipeline has run it. The first
-push to `main` is the event that converts these rows, and nothing before it does.
+> **What this section used to say, and why it is left visible rather than amended away.** It
+> read: *"Do not write that these two run in CI, and do not let 'wired into CI' stand in for it
+> … The first push to `main` is the event that converts these rows, and nothing before it
+> does."*
+>
+> **That was right, and it is exactly why the correction was late.** The rule named its own
+> successor event precisely — and the event then arrived with no diff, no notification and
+> nobody assigned to notice, which is `AGENTS.md` §3.5's second specimen arriving on schedule:
+> *a conditional written into the claim it will invalidate is still only as good as somebody
+> noticing the condition fired.* The prohibition was sound; what was missing was anything that
+> watches.
+>
+> The rule itself is **not** withdrawn and is not in §11. *"Wired into CI" still does not mean
+> "has run"* — that is what made the step-level check in §9.1 necessary rather than a green run
+> being enough. What changed is only that these two apps now satisfy it.
 
-What each *has* earned, in full, is the local half:
+What each earned locally, before any pipeline ran, and which the pipeline does not supersede —
+a mutation shown red is evidence about the *assertions*, and a green pipeline is evidence about
+the *plumbing*:
 
 **MyMail — 33 tests.** Three mutations, each failing on its own assertion:
 
@@ -1507,13 +1555,12 @@ documented limit. Then a change broke that layout badly enough to be obvious on 
 scope. A documented blind spot is still a blind spot; writing it down makes it honest, not
 covered.
 
-**The app that runs in CI is now the app with the least complete suite**, and that is worth
+**The reference implementation has the least complete suite of the three**, and that is worth
 stating plainly rather than leaving to be inferred from §9's table. Three gaps, all in MyCal:
 
 - **§8.5, the full-bleed separator**, was asserted by nothing at all until the two new suites
   landed, and **it is still asserted by nothing in MyCal**.
-- **§8.4's 4px floor** — same. Both are now held in MyMail and MyNotes, in the two repos where
-  no pipeline will run them.
+- **§8.4's 4px floor** — same. Both are held in MyMail and MyNotes.
 - **§8.3 requires mechanism B to be measured at *both* scroll extremes**, because a sticky
   element behaves differently at each end of its range. MyCal's two page-scroll tests scroll to
   the bottom only. MyMail's sidebar-overflow tests do visit both ends; MyCal's do not.
@@ -1522,16 +1569,23 @@ None of these is a claim that MyCal is wrong — its numbers were measured by ha
 §8.3 records them. It is a claim about what would still be true *tomorrow* if someone changed
 it, which is the only thing a suite is for.
 
-The resulting shape is worth holding in mind before quoting any of this as coverage:
+> **This paragraph used to close on a sharper formulation, and it has been overtaken:**
+> *"What runs is not what is most thorough, and what is most thorough does not run."* That was
+> true while MyCal's was the only pipeline. **All three now run** (§9.1), so the second half is
+> simply false, and the gap it named has changed character rather than closed: the three gaps
+> above are still real and still MyCal's, but they are now gaps in a suite that runs beside two
+> more complete suites that also run.
+>
+> Recorded rather than deleted because the sentence was quotable and will have been quoted. It
+> is the kind of line that outlives the condition that made it true — which is `AGENTS.md` §2.5's
+> complaint, and the reason §11 exists.
 
-> **What runs is not what is most thorough, and what is most thorough does not run.**
-
-§8.5 is a good example of why that matters rather than being merely untidy. The prohibited
-alternative — insetting the buttons with a horizontal margin instead of the footer's padding —
-puts the buttons in exactly the right place and the separator in the wrong one. **No position
-assertion can see it**, which is why §8.5 exists as a separate rule; and in the one app whose
-assertions actually execute, nothing looks at it. The habit here is to record where the
-reference implementation is behind rather than to flatter it, and this is where it is behind.
+§8.5 is a good example of why the remaining gap matters rather than being merely untidy. The
+prohibited alternative — insetting the buttons with a horizontal margin instead of the footer's
+padding — puts the buttons in exactly the right place and the separator in the wrong one. **No
+position assertion can see it**, which is why §8.5 exists as a separate rule; and in the
+reference implementation, nothing looks at it. The habit here is to record where that
+implementation is behind rather than to flatter it, and this is where it is behind.
 
 ---
 
@@ -1632,13 +1686,21 @@ be surprised.
    thing missing is not coverage of each app but a comparison between them. That is a
    difference in kind, not in degree, and it is the reason this item keeps the weight it had.
 
-   Two further reasons the closed half is worth less than it looks:
+   One further reason the closed half is worth less than it looks:
 
-   - **Two of the three suites do not run** (§9.1). They are committed on unpushed branches
-     with CI steps that have never executed, so what exists today is one pipeline and two
-     files. A file that would go red is not a guard until something runs it.
    - **`0.80rem` is uncatchable even within a single app** (§9.2), so per-app coverage has a
      floor it cannot reach by construction.
+
+   > **A second reason stood here and has expired:** *"Two of the three suites do not run …
+   > what exists today is one pipeline and two files. A file that would go red is not a guard
+   > until something runs it."* **All three now run in CI** (§9.1), so that is three pipelines.
+   >
+   > **This changes nothing about the item it sits under**, which is the point worth taking. The
+   > open half was never about how many suites run — it is that no suite of any kind can see
+   > between the repositories. Three running pipelines are three one-sided guards where there
+   > were one pipeline and two files, and the comparison between apps is still performed by
+   > nothing that runs. The heading's claim is intact and is now the *only* thing this item
+   > claims.
 
    **A partial cross-repo guard now exists: [`tools/check-contract.py`](../tools/check-contract.py).**
    The human lifted this repo's Markdown-only rule for it. It reads the three sibling

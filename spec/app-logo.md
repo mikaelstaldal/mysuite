@@ -137,11 +137,17 @@ Measured **stroke/ink-inclusive**, not as a bare `getBBox()`. Shipped readings:
 | MyMail | **91.67%** (pixel ink 92.65%) | **stroke-only**, vendored Lucide 1.25.0 | mymail-dev |
 | MyNotes | **34.4%** — fails, and is being built to the rule | fill-only | mynotes-dev |
 
-**Why this rule exists.** Without it the contract cannot see a 3× difference in apparent size:
-MyNotes' favicon mark fills 31% of its viewBox where MyCal's fills 87.5%, so reusing it unchanged
-would put a ~5.3px mark inside the same 17px box as MyCal's ~15px one — passing every box
-measurement while visibly failing "the three look like one product". *(Found by mynotes-dev
-before implementing, which is the only reason it is a rule rather than a defect.)*
+**Why this rule exists.** Without it the contract cannot see a difference of roughly 3× in
+apparent size. Reusing MyNotes' favicon mark unchanged would put a **5.26 × 5.84px** mark inside
+the same 17 × 17 box that holds MyCal's **~15px** one — passing every box measurement in §3.1 and
+§3.2 while visibly failing "the three look like one product". *(Found by mynotes-dev before
+implementing, which is the only reason it is a rule rather than a defect.)*
+
+> **Those are rendered-ink figures, named as such deliberately.** The raw `getBBox()` widths for
+> the same two marks are 30.9% and 87.5%, and quoting *those* beside the table above would mix
+> two statistics that differ by 8.3 points for MyMail — which is the qualifier below, violated in
+> the paragraph that explains it. **Every figure reported against this rule must say which box it
+> is.**
 
 **Three qualifiers, each corroborated by the agent whose mark it applies to:**
 

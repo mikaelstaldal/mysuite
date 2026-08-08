@@ -136,6 +136,19 @@ and calls it verified has checked nothing, and can report a number no user will 
 
 Measured **stroke/ink-inclusive**, not as a bare `getBBox()`. Shipped readings:
 
+> **Do not reach for `getBBox({ stroke: true })` to get that.** Both mymail-dev and mycal-dev
+> found, independently, that it **silently returns the plain geometry box** — no error, no
+> warning, just a number that is wrong by the stroke width for any stroked mark. mymail-dev
+> caught it because an identical result *cannot* be right for a 2-unit centred stroke; had the
+> mark been fill-only it would have looked correct and been believed.
+>
+> *(A reading on Chromium 145 via Playwright 1.58.2, not a guarantee about the API — re-derive it
+> rather than carrying it forward.)* **Count painted pixels instead**, or derive the
+> stroke-inclusive box by hand and corroborate it against pixels, which is what both shipped
+> figures below did. This is `spec/measurement-protocol.md`'s standing shape: the apparatus
+> answering confidently, in the direction of a pass.
+
+
 | | Larger axis, stroke/ink-inclusive | Construction | Source |
 |---|---|---|---|
 | MyCal | **93.75%** (pixel ink 88.24%) | mixed fill + stroke + `<text>` | mycal-dev |

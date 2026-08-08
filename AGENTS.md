@@ -417,6 +417,40 @@ So:
 - Expect the discovery to arrive as an unrelated-looking bug. The phone breakage looked like a
   regression in the backdrop change; it was a dormant defect waking up.
 
+#### The condition can live in another repository, and the waking commit can be in a third
+
+The specimen above is contained: MyCal's dead rule was woken by a change in MyCal. **This section
+was written around that shape, and it is not the only one.**
+
+MyNotes' `e2e/tests/sidebar-footer.spec.ts` asserts `expect(column.width).toBeCloseTo(420, 0)` —
+pinning a sidebar width that `spec/sidebar-footer.md` §6.4 states in as many words is **not part
+of that contract**. It had been wrong the whole time and it had cost nothing, because **the suite
+sat on a branch nothing executed.** That was the condition, and nobody had written it down,
+because nobody had noticed there was one.
+
+Then the branch was pushed, and this repository recorded the fact in `ac77d55`. Between
+mynotes-dev's feasibility report and the human's ruling to widen that very column, the assertion
+stopped being a file and became a **publication gate**.
+
+> **Nobody changed that line. What changed is what it costs.**
+
+Three things generalise, and the third is the one that has no owner:
+
+- **The harmlessness condition was in another repository** — "nothing runs this suite" is a fact
+  about MyNotes' CI, not about the file holding the defect.
+- **The commit that fired it is in a third place.** `ac77d55` is in *this* repository and touches
+  no app repo at all. It only wrote down that a capability had become real.
+- **Recording a capability has a blast radius.** §3.5 says a commit that builds an X must sweep
+  every document that ever said there was no X. **The sibling rule: a commit that records a
+  capability becoming real must sweep everything that was safe only while it was not.** Those are
+  different sweeps. The first looks for stale *claims*; the second looks for dormant *defects* —
+  and the second is harder, because nothing in the affected repositories mentions the capability
+  by name.
+
+So when you record that something now runs, now gates, now blocks, or now checks: **ask what was
+previously getting away with something.** A guard that starts running does not only start
+catching real defects. It starts charging for the ones that were already there.
+
 The value was right every time. The *justification* was written from whichever
 implementations the author had in mind, and it fails the moment a reader checks it against
 the app it does not describe — who then reasonably concludes that app has drifted.

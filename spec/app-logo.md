@@ -470,7 +470,7 @@ Stated honestly. None is a reason to hold up work; all are reasons not to be sur
 
 **This violates nothing in this contract**, which pins appearance and placement rather than
 coordinates (§4). It is recorded because of the shape:
-`spec/sidebar-footer.md` §8.2 and §8.3 identify this exact failure, and rescued the footer from
+`spec/sidebar-footer.md` §8.2 and that contract's §8.3 identify this exact failure, and rescued the footer from
 it with `position: sticky` and an opaque background. **Nothing ever specified the header, so
 nothing rescued it.** The footer's rescue makes the header's exposure look deliberate, and it is
 not.
@@ -586,16 +586,66 @@ that the containing column is not part of *that* contract either, that the three
 never unified — 200 / 220 / 420 are deliberately different". So widening is an **app-local
 change**, not a contract amendment.
 
-### 10.2 A pre-existing defect in the same pixels, not caused by this work
+**Widen for the logo only** — about +20.4px against the ~15.63px shortfall, not the ~+168px that
+would also absorb §10.2's pre-existing overflow. **And not at the measured minimum:** a column
+sitting exactly where the tabs stop overlapping is one label change, one font tweak or one
+translated string from failing again, in the invisible mode above. Take the minimum, add
+headroom, round to MyNotes' own spacing rhythm.
+
+> **Nothing in `spec/sidebar-footer.md` is disturbed by this, and it was checked rather than
+> assumed.** That contract pins its controls at (L, B) = (8, 8) from the **window** (its §8), and
+> MyNotes' sidebar is flush to the window's left edge — so widening moves the right edge only and
+> neither coordinate has a width term. That contract's full-bleed separator rule (its §8.5) is relational and
+> MyNotes implements it by reading the sidebar's content width live. And that contract's §6.4 slack figure
+> **grows** with the width, so the exemption it grants gets stronger, never weaker.
+>
+> The one thing that *does* break is a test, not a rule — see §10.3.
+
+### 10.2 A pre-existing defect in the same pixels — out of scope, reported, still open
 
 **MyNotes' header row already overflows at a 20px root with no badge present** — the tab strip
 paints over the action buttons at +58px, and at 24px at +131.58px. 20px is Chrome's own "Large"
-setting, so this is a **shipped WCAG 1.4.4 Resize Text failure**.
+setting, so this is a **shipped WCAG 1.4.4 Resize Text failure**. *(Measured by mynotes-dev; its
+report carries the full table, and nobody should re-derive it.)*
 
-Recorded because any work here inherits it, and because "make the badge fit" and "fix the 20px
-overflow" may be the same edit. It is not this contract's to fix.
+**It stays open, deliberately.** The human was offered fixing it as one of four options and
+declined, choosing the widening instead. Buying it through width would cost about **+168px**
+(420 → ~588) against the ~+20px the logo needs — and a `px` widen costs the main pane at *every*
+root size, where the `rem` conversion `spec/sidebar-footer.md` §6.4 already rejected cost it only
+at large ones. 588px permanently is a worse trade than the 630px-at-150%-text that its §6.4 turned
+down.
 
-### 10.3 What MyNotes will implement
+So: **pre-existing, not caused by this work, not fixed by it, and reported to the human as a
+standing item with its numbers.**
+
+### 10.3 One assertion must go before the widening — and why it was harmless until it wasn't
+
+`mynotes/e2e/tests/sidebar-footer.spec.ts` asserts `expect(column.width).toBeCloseTo(420, 0)`.
+**It pins a value `spec/sidebar-footer.md` §6.4 states is not part of that contract**, inside the
+suite whose job is to hold that contract. It is not a stale number; it is an assertion with no
+owner. The relational checks on the neighbouring lines — the controls fitting inside the column,
+and (8, 8) — are what the contract actually requires, and they survive any width.
+
+**Delete it rather than update it to the new number.** Re-pinning re-arms the same trap at a
+different value. The right shape was already known in that same file, which reads the sidebar's
+content width live rather than hard-coding it.
+
+> **This had been wrong the whole time and had cost nothing, because nothing executed that
+> suite.** That was the condition, and nobody had written it down. Then the branch was pushed and
+> this repository recorded it — and between mynotes-dev's report and the human's ruling to widen
+> that very column, **a wrong assertion in a file nobody ran became a publication gate.**
+>
+> **Nobody changed that line. What changed is what it costs.**
+>
+> The full statement of the pattern, including why the waking commit was in a *third* repository,
+> is `AGENTS.md` §3.3. It is the first cross-repo specimen of it.
+
+**Verify by running, not by reading.** The prediction that this is 2 of 18 tests came from
+reading the file. mynotes-dev should widen, run the suite through `./test-e2e.sh`, and report
+what actually goes red. Watch the `documentElement.scrollWidth` check at 20px and 24px roots in
+the same test — at a much wider column that is a real question, not a formality.
+
+### 10.4 What MyNotes will implement
 
 Settled and available to build against:
 

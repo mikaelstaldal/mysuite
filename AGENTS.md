@@ -761,6 +761,73 @@ Two things it adds to the section above:
   conditional written into the claim it will invalidate is still only as good as somebody
   noticing the condition fired.
 
+### 3.6 The *form* of an answer, not only its content
+
+§3.1 to §3.5 are about claims that are **wrong**. This section is about claims that are **right
+and shaped badly** — where the values are correct and the form of the answer decides whether
+anyone can act on it. Three instances, all from the app-logo work, all of which changed an
+outcome.
+
+#### Two independent errors agreeing is not corroboration
+
+While the badge's vertical offset was being diagnosed, **a derivation and a measurement report
+landed on the same wrong answer.** This document's author derived from CSS that MyNotes' badge had
+no deliberate top offset — reading one element's declaration and asserting a property of the whole
+ancestor chain. Independently, mynotes-dev's prose described its own correct measurement backwards,
+writing *"3.3px too high"* for a badge that was 3.3px **low**.
+
+Two methods, two authors, no conferring, **one wrong conclusion that then looked confirmed.** The
+measurement had already falsified the derivation; only the sentence attached to it hid that. What
+caught it was the owner opening three browser tabs.
+
+> **Agreement between two methods is what everyone treats as confirmation, so mutual corroboration
+> of independent errors is more dangerous than either error alone** — it converts *"check this"*
+> into *"settled"*.
+
+The defence is cheap and this repository already runs on it: **the number, not the sentence about
+the number.** `17.30 > 14` was unambiguous throughout and needed no interpretation. When a
+derivation and a measurement agree, check that the *measurement* says what its prose says.
+
+#### A bound can refute the reasoning that accepted the thing it bounds
+
+MyNotes' badge drifted vertically at large root sizes. It was recorded as a departure and
+**accepted** — top-aligning the badge against its own label read as a visual change bought to
+serve a rare case.
+
+Then mynotes-dev replaced the two sample readings with a closed form:
+`max(0, (1.5 × root − 28) / 2)`, **exactly zero for any root up to 18.67px**, because a 28px badge
+out-measures a 24px line box. So **there was no default-root rendering for the ruling to protect.**
+The owner reversed, and the term was removed with a one-line declaration.
+
+The earlier wording — *"drifts to 15 at a 20px root and 18 at 24px"* — is entirely consistent with
+the term being small-but-nonzero at 16px, which would have made the original ruling correct.
+
+> **It was the form of the answer that falsified the premise, not its values.** A bound can refute
+> the reasoning that accepted the thing it bounds. **A sample cannot** — a sample describes where
+> you looked, and the case for accepting a departure usually rests on where you did not.
+
+So when recording a departure, prefer the expression to the readings, and state where it goes to
+zero. That is also what tells the next reader which edit moves it.
+
+#### A count is not a check
+
+`grep -c` answers *"how many lines matched"*, which is not *"is the thing there"*.
+
+Checking that MyNotes had removed a `toBeCloseTo(420, 0)` assertion, a count returned **1** after
+the removal — because what remained at that line was **a comment recording that it had been
+removed.** The count was accurate and the answer it implied was wrong; only opening the file
+settled it.
+
+> **A non-zero count is a prompt to look, not a result.**
+
+Note *which* shapes survive a count, because they are not random: **a comment explaining an
+absence, and a comment recording a deletion.** Both are things a careful author leaves behind, so
+the better the codebase is documented, the more often a count misleads. That is the opposite of
+the intuition, and it is why the count is worth distrusting most in exactly the repositories where
+it feels safest.
+
+---
+
 ## 4. Working in one of the app repos
 
 - Read the relevant contract in `spec/` **before** editing a rule it covers, and read the

@@ -331,20 +331,41 @@ grows for a wrapped heading; it just no longer decides where the badge sits. MyN
 tuned a number until it matched — which is the distinction §4.2 exists to make, and the reason a
 future reading of either app can be trusted.
 
-#### The 24px-root departure, with numbers
+#### The departure above a 18.67px root — a bound, not two sample points
 
-MyNotes' **x holds 16 at every root size** — the inset is now `px`, so the sign-changing error
-(12 at a 16px root, 18 at 24px) is gone outright.
+MyNotes' **x holds 16 at every root size.** The inset is now `px`, so the divergence that used to
+*change sign* — 12 at a 16px root, 18 at 24px — is gone outright.
 
-Its **y still drifts**: **15 at a 20px root, 18 at 24px**, against the pinned 14. The remainder is
-the badge centring inside the brand anchor, whose height is the *label's* line box — `(36 − 28)/2`
-at 24px.
+Its **y** carries one remaining content-dependent term, and mynotes-dev bounded it rather than
+sampling it:
+
+> `y = 14 + max(0, (1.5 × root − 28) / 2)`
+>
+> The badge is `align-items: center` inside the brand anchor, whose height is
+> `max(28, label line box)` = `max(28, 1.5 × root)`. **So the term is exactly zero for any root
+> font size up to 18.67px**, and grows only above it.
+
+| Root | Term | `y` |
+|---|---|---|
+| 16px (default) | 0 | **14** ✓ |
+| up to **18.67px** | 0 | **14** ✓ |
+| 20px | 1 | 15 |
+| 24px | 4 | 18 |
+
+**A bound is worth more than the two readings it explains.** "It drifts at 24px" invites someone
+to check 24px; `28 / 1.5 = 18.67` tells them where the edge is, that the default is not near it,
+and exactly which change moves it — the label's `font-size` or `line-height`, or the badge's
+height.
 
 **Accepted, not fixed** (owner's ruling). The alternatives — top-aligning the badge against its
 own label, or fixing the brand's height — contort the common case to buy the rare one, and §9.2
-already drew this boundary the same way for the badge's *box*. So the suite now has **two recorded
-`px`/`rem` seams**, and they are the same seam: the badge is authored in absolute units inside
-chrome that scales.
+already drew this boundary the same way for the badge's *box*. So the suite has **two recorded
+`px`/`rem` seams, and they are the same seam**: the badge authored in absolute units inside chrome
+that scales.
+
+*(The term is the badge's own centring, not the tab strip's — the tab-typography remainder that
+produced the original defect is **absent from the computation**, not merely small. Mutation-tested:
+reverting `align-self: flex-start` to `center` returns `y = 19.297` and one red assertion.)*
 
 ---
 

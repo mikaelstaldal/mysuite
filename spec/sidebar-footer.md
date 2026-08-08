@@ -164,6 +164,14 @@ binding constraint is MyCal's 26px; MyMail's 29px is second; MyNotes' 229px neve
 (§6.4). Re-measured against all three servers while this was written, and the table above still
 holds to the pixel: pair 174px in 200 / 203 / 403px of content box.
 
+> **MyNotes' row has a pending change that is not reflected above, deliberately.** Its column
+> widens to **456px** (content box 439, slack ~265) to make room for the app-logo badge — see
+> `spec/app-logo.md` §10.1. **That work is on an unmerged branch; MyNotes' `main` still ships
+> `420px`**, so the row above is correct for shipped code and stays as it is until the branch
+> lands. §6.4 carries the same note beside the same figures. Update both on the merge, not
+> before — and none of it disturbs this section's conclusion, since MyNotes' slack only grows and
+> it was never the binding constraint.
+
 That budget sized the font. At the original `0.85rem` the row measured 182px against
 MyCal's then-164px — an 18px overflow that clipped Settings — and the fix was `0.80rem`
 together with widening MyCal's sidebar from 180px to 200px. Separately, in MyMail a

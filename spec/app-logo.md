@@ -183,9 +183,21 @@ implementing, which is the only reason it is a rule rather than a defect.)*
 > written nowhere. 85% still fails MyNotes' 34.4% by fifty points, and nothing between 85 and
 > 91.67 is a difference anyone can see next to a 93.75. *(Ruling: mysuite-manager, #517.)*
 >
-> **This floor has never been tested against a third independent mark.** It is derived from two
-> shipped apps and applied to three, which is `AGENTS.md` §3.2's shape. It is the defensible
-> direction only because MyNotes is being *built to* it rather than described by it.
+> **This floor has now been tested against a third independent mark, and it held.** It was
+> derived from two apps and applied to a third — `AGENTS.md` §3.2's shape, and the caveat that
+> stood here while the outcome was unknown. MyNotes reached **91.67%** by cropping its viewBox
+> to `10 10 12 12`: the same path data as its favicon, character for character, **with no
+> distortion of the letterform**. So the floor did not force an ugly glyph, and it was cleared by
+> the cheapest available means rather than by redrawing.
+>
+> The rule is now tested against three marks of three **different constructions** — mixed
+> fill+stroke+text, stroke-only and vendored, and fill-only — which is a materially stronger
+> position than one derived from two.
+>
+> **And there is evidence it does real work, which is rarer than a rule that merely holds.**
+> mynotes-dev mutated its mark back to the uncropped `0 0 32 32` viewBox: the extent assertion
+> went red at 34.4% **while every badge-box and glyph-box assertion stayed green.** That is
+> precisely the blindness this section was invented for, demonstrated rather than argued.
 
 ### 3.4 The gap to the app-name label
 
@@ -565,6 +577,22 @@ One of MyNotes' mutations is the one to keep, because it is this contract's own 
 the act: reverting its mark to the uncropped `0 0 32 32` viewBox **failed 2 tests on the extent
 assertion while every badge-box and glyph-box assertion stayed green.** That is exactly the
 blindness §3.3 exists for, demonstrated rather than argued.
+
+> **If a fit assertion is ever written, the instrument matters more than the threshold.**
+> mynotes-dev swept MyNotes' column 380→760px in 1px steps and found the three candidates
+> disagree *systematically*:
+>
+> | Instrument | Fires at | What it measures |
+> |---|---|---|
+> | last item vs the next element (**overlap**) | 441px | **whether it is visually broken** |
+> | `scrollWidth > clientWidth` on the strip | 450px | stricter early warning, red one container-gap sooner |
+> | right edge vs container | **never** | nothing — it reads clean zero in every broken case |
+>
+> The 9px gap between the first two is the header's own `gap`, and it scales with the root font
+> (9 / 12 / 14px at 16 / 20 / 24px roots), because a strip can overflow into that gap before it
+> reaches anything. **Use the overlap check for "is it broken"**; the strip check will report red
+> on layouts a reader would call fine. **Never the right-edge check** — it is the one a person
+> writes first and it cannot fail (§10.1).
 
 **A check is deliberately deferred** until MyNotes lands, because a three-repo guard can only
 report `CANNOT CHECK` before then, and an artefact whose one reachable path nobody has exercised

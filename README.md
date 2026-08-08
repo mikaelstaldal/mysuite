@@ -1,6 +1,7 @@
 # MySuite
 
-Shared UI contracts for the MySuite apps: **MyCal**, **MyMail** and **MyNotes**.
+Shared UI contracts for the MySuite apps: [MyCal](https://github.com/mikaelstaldal/mycal), 
+[MyMail](https://github.com/mikaelstaldal/mymail) and [MyNotes](https://github.com/mikaelstaldal/mynotes).
 
 Three separate applications, three separate repositories, three separate binaries — but one
 product as far as anyone using them is concerned. Somebody with all three open in browser
@@ -30,9 +31,7 @@ rule looks redundant.
 **Does not belong:**
 
 - Anything true of only one app. That belongs in that app's own `AGENTS.md`, or in its own
-  requirements document where it has one — MyMail and MyNotes carry `spec/REQUIREMENTS.md`;
-  **MyCal has no `spec/` directory at all.** (Those paths are inside the *app* repos, not
-  this one.)
+  requirements document where it has one.
 - CSS class names, token names, or file layout. Those are deliberately per-project. What is
   shared is the *value*, never the name it is reached by.
 - Application code. There is no shared stylesheet and no shared component library — the
@@ -49,11 +48,11 @@ rule looks redundant.
 
 ## Who consumes it
 
-| Repository | Path |
-|---|---|
-| MyCal | `../mycal` |
-| MyMail | `../mymail` |
-| MyNotes | `../mynotes` |
+| Repository | Path         |
+|------------|--------------|
+| MyCal      | `../mycal`   |
+| MyMail     | `../mymail`  |
+| MyNotes    | `../mynotes` |
 
 Each references the relevant contract from its own agent instructions and requirements
 documents rather than restating its values.
@@ -121,7 +120,16 @@ exists, those references should be updated to point at it.
 
 ## Licence
 
-Apache 2.0, the same licence and the same `LICENSE` file the three app repos ship, so that
-specification text and the code implementing it are under consistent terms. (A content
-licence such as CC-BY is the more usual choice for prose; matching the apps was judged more
-useful here than being conventional.)
+Copyright 2026 Mikael Ståldal.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.

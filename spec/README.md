@@ -5,14 +5,14 @@ required to render identically. A contract is binding on all three apps or on no
 
 ## Contracts
 
-| Contract | Covers | Status |
-|---|---|---|
+| Contract                                 | Covers                                                                                                                                           | Status                            |
+|------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------|
 | [`sidebar-footer.md`](sidebar-footer.md) | The light/dark theme toggle and Settings button at the bottom of the left sidebar — geometry, colours, interaction, and their position on screen | Binding, implemented in all three |
 
 ## Cross-cutting
 
-| Document | Applies to |
-|---|---|
+| Document                                             | Applies to                                                                                                |
+|------------------------------------------------------|-----------------------------------------------------------------------------------------------------------|
 | [`measurement-protocol.md`](measurement-protocol.md) | Every contract. How to verify a change to shared UI, and why a green build proves nothing about geometry. |
 
 ## How a contract is written

@@ -809,6 +809,25 @@ differently — correctly:
 174px row it has ~229px of slack — at a 24px root the row reaches only 217px, still leaving
 ~186px spare, so the resize case never binds.
 
+> **Three annotations on that figure, because it is being read by people it does not describe.**
+>
+> **1. It is the sidebar *footer* row, and it is false of the *header* row in the same app.**
+> MyNotes' header — brand, tab strip, action buttons — has **6.02px** of slack at a 16px root and
+> goes **negative at 20px** (+58px of overlap) and at 24px (+131.58px), which is a shipped WCAG
+> 1.4.4 failure with no badge present. Same app, same sidebar, opposite conclusion. **Do not carry
+> "the resize case never binds" across to the header** — it is a claim about this row only.
+> `AGENTS.md` §3.2's pattern arriving *inside* one app rather than across three.
+> *(Measured by mynotes-dev; recorded in `spec/app-logo.md` §10.2.)*
+>
+> **2. "Do not 'fix' MyNotes' `420px`" below is about the *unit*, not the *value*.** Every
+> sentence around it argues against converting `px` to `rem`, and that conversion is the "fix"
+> being prohibited. It does **not** prohibit changing the number — which the human has now ruled
+> should happen, to make room for the logo (`spec/app-logo.md` §10.1).
+>
+> **3. The slack figure is a function of a width that is changing.** It is content-box minus the
+> ~174px row: 403 − 174 today. At a 441px sidebar it is ~266px, at 514px ~339px, at 588px ~413px.
+> **The exemption gets stronger, never weaker** — widening cannot put this section at risk.
+
 And converting would not have been merely unnecessary — it would have been **a regression**:
 `420px` becomes `26.25rem`, which at a 24px root is a **630px** sidebar, eating the note list
 for no benefit. That is the reason the exemption was granted rather than merely tolerated.

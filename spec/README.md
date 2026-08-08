@@ -8,6 +8,7 @@ required to render identically. A contract is binding on all three apps or on no
 | Contract                                 | Covers                                                                                                                                           | Status                            |
 |------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------|
 | [`sidebar-footer.md`](sidebar-footer.md) | The light/dark theme toggle and Settings button at the bottom of the left sidebar — geometry, colours, interaction, and their position on screen | Binding, implemented in all three |
+| [`app-logo.md`](app-logo.md)             | The app logo badge at the top left — its box, fill, glyph size and extent, placement, and accessibility. **The app-name label beside it is deliberately out of scope** (§2) | Binding. Implemented in MyCal and MyMail; **MyNotes implementation in progress** |
 
 ## Cross-cutting
 

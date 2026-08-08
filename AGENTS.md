@@ -813,18 +813,44 @@ zero. That is also what tells the next reader which edit moves it.
 
 `grep -c` answers *"how many lines matched"*, which is not *"is the thing there"*.
 
-Checking that MyNotes had removed a `toBeCloseTo(420, 0)` assertion, a count returned **1** after
-the removal — because what remained at that line was **a comment recording that it had been
-removed.** The count was accurate and the answer it implied was wrong; only opening the file
-settled it.
-
 > **A non-zero count is a prompt to look, not a result.**
 
 Note *which* shapes survive a count, because they are not random: **a comment explaining an
 absence, and a comment recording a deletion.** Both are things a careful author leaves behind, so
 the better the codebase is documented, the more often a count misleads. That is the opposite of
 the intuition, and it is why the count is worth distrusting most in exactly the repositories where
-it feels safest.
+it feels safest. One specimen of each:
+
+- **A comment recording a deletion.** Checking that MyNotes had removed a `toBeCloseTo(420, 0)`
+  assertion, a count returned **1** after the removal — what remained at that line was a comment
+  saying it had been removed.
+- **A comment asserting an absence.** `grep -c '@media'` over MyNotes' `app.css` returns **1**,
+  and the single hit is the line *"there is no @media anywhere in `web/static/*.css`"*. The count
+  contradicts the claim; the file confirms it.
+
+#### And a negative is scoped to the **ref**, not only to the pattern
+
+The second specimen above was reported to this document's author, who ran it, **got `0`, and
+excluded it as unverifiable.** The count, the file and the vocabulary were all right. **The
+revision was not** — the comment lives on an unmerged branch, and the check was run against
+`main`.
+
+> **`grep` over a working tree or a default branch answers a question about *that* state, and
+> reports it in a form indistinguishable from an answer about the state you meant.** Nothing in
+> the output names the commit it came from.
+
+**The same discipline produces opposite answers depending on the claim**, which is why the rule
+cannot be "always read `main`". Sweeping the repositories for stale CI claims, the right move was
+explicitly `git show main:<file>` — because that claim was about **what ships**, and the working
+tree was on a feature branch. Here the claim was about **work in flight**, and reading `main` gave
+a confident zero.
+
+> **Say which ref, and check it is the one the claim is about.**
+
+*(The exclusion was still the right call on the evidence available: an unverified specimen, inside
+the section arguing that shape decides trustworthiness, would have been the section failing at
+itself. Being wrong about the fact and right about the discipline is the better of the two ways to
+be half wrong.)*
 
 ---
 

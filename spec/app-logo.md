@@ -1,7 +1,9 @@
 # App logo — the badge in the top left
 
-**Status:** binding, and **all three apps now conform on every value in it, measured** (§4.4,
-§10). Two caveats on what "conform" means here: MyCal's and MyMail's work is committed on their
+**Status:** binding, and **all three apps conform on every value in it, measured** — including
+`y = 14` from a 16px root to a 32px root, with no per-app departures left (§4.4, §10).
+
+Two caveats on what "conform" means here: MyCal's and MyMail's work is committed on their
 `main` branches and MyNotes' on an unmerged branch, and **none of it is pushed** — so this
 describes four local checkouts, not what is published. And §4's placement rule is newly added:
 MyCal and MyNotes were both corrected to it during this work, MyMail was already on it.
@@ -243,10 +245,12 @@ exclusion is about the label's **size**, and 8px of gap makes no label bigger (�
 Measured to the badge's border box with `getBoundingClientRect()` against the viewport — the same
 frame `spec/sidebar-footer.md` §8 uses for the footer controls.
 
-**The root size is named in the rule rather than assumed**, following that contract's §2.2, which
-pins its acceptance height *"at the default 16px root font size"* for the same reason: the three
-apps reach these offsets through different units, so they hold together at 16px and diverge above
-it. §4.3 records that divergence with numbers rather than leaving it unstated.
+**The root size is named in the rule rather than assumed**, following that contract's §2.2,
+which pins its acceptance height *"at the default 16px root font size"*. Here the qualifier is
+**precision, not protection**: all three apps hold (16, 14) from a 16px root to a 32px root
+(§4.4), so it is not currently carrying a divergence. Keep it anyway — a stated root costs
+nothing, and the moment one of these offsets is reached through a relative unit it starts doing
+real work again.
 
 **(16, 14) is not a new number.** It is what MyCal and MyMail already agreed on — see §4.1, which
 is the reason this section exists at all.
@@ -303,7 +307,6 @@ the distinction this section had wrong until the owner looked at the shipped res
 | badge hidden entirely below 600px | MyCal | §9.3 |
 | badge scrolls off under content overflow — `y` = −2206 / −1008 measured | MyCal, MyMail | §9.1 |
 | ~~the **demo build** moved `y` non-monotonically with width: 14 at 1920, 27.609 at 1440, back to 14 at 1439~~ | MyCal | **resolved** — the demo build now measures (16, 14) too, verified rather than assumed, as does MyNotes' |
-| offsets diverge above a 16px root, because the three reach them through different units | MyNotes | §4.4 |
 
 ### 4.4 Conformance
 
@@ -315,7 +318,7 @@ rule.
 | | (x, y) at 1280×720, 16px root | x authored by | y authored by |
 |---|---|---|---|
 | MyMail | **(16, 14)** | `.sidebar-header { padding: 14px 16px 12px }` | the same declaration |
-| MyNotes | **(16, 14)** | `.sidebar-header { margin: 0 16px 0.75rem }` | `.sidebar { padding: 14px 0 0 }`, load-bearing via `.sidebar-brand { align-self: flex-start }` |
+| MyNotes | **(16, 14)** | `.sidebar-header { margin: 0 16px 0.75rem }` | `.sidebar { padding: 14px 0 0 }`, load-bearing via **two** `align-self: flex-start` — on `.sidebar-brand` and on `.brand-logo` |
 | MyCal | **(16, 14)** | `--app-padding-x: 16px`, via `.app`'s padding | `.brand { align-self: flex-start; margin-top: 6px }` **and** `.brand-logo { align-self: flex-start }`, on `.app`'s 8px `padding-top` |
 
 **All three rows are measured readings, not source reads.** §10's rule — that this table is filled
@@ -329,9 +332,9 @@ heading's line count, the view, the date and the locale. But `.brand-logo` must 
 box.** A fix that removed only the outer centring would have measured 14 at the stated conditions
 and still failed §4.2.
 
-**MyCal's `y` is invariant across every root font size from 16 to 32px**, where MyNotes' acquires
-a bounded term above 18.67px (below). That is a difference in degree between two conforming apps,
-not a defect in either — recorded so nobody reads MyNotes' departure as the suite's behaviour.
+**All three hold `y = 14` from a 16px root to a 32px root**, and MyCal and MyNotes each need
+**two** `align-self: flex-start` declarations to do it — one to leave the container's centring,
+one to leave the *brand block's* own. Neither app's remainder was removed by the first alone.
 
 **The bar still grows for a wrapped heading** — measured at 40 / 67.2 / 100.8 / 151.2 / 268.8px
 across widths and roots, badge at 14 in all of them. Nothing was made rigid; a coupling was cut.
@@ -342,41 +345,40 @@ grows for a wrapped heading; it just no longer decides where the badge sits. MyN
 tuned a number until it matched — which is the distinction §4.2 exists to make, and the reason a
 future reading of either app can be trusted.
 
-#### The departure above a 18.67px root — a bound, not two sample points
+#### The root-size departure that was recorded and then removed
 
-MyNotes' **x holds 16 at every root size.** The inset is now `px`, so the divergence that used to
-*change sign* — 12 at a 16px root, 18 at 24px — is gone outright.
+**There is no departure here now**, and the way it went away is worth more than the entry it
+replaces.
 
-Its **y** carries one remaining content-dependent term, and mynotes-dev bounded it rather than
-sampling it:
+MyNotes' `y` used to carry `max(0, (1.5 × root − 28) / 2)` — the badge centring inside the brand
+anchor, whose height is the *label's* line box. It measured 14 at the default root, 15 at 20px and
+18 at 24px, and it was **accepted rather than fixed**: top-aligning the badge against its own
+label looked like a visual change bought to serve a rare case.
 
-> `y = 14 + max(0, (1.5 × root − 28) / 2)`
->
-> The badge is `align-items: center` inside the brand anchor, whose height is
-> `max(28, label line box)` = `max(28, 1.5 × root)`. **So the term is exactly zero for any root
-> font size up to 18.67px**, and grows only above it.
+**The bound is what disproved that.** `(1.5 × root − 28) / 2` is **exactly zero for any root up to
+18.67px**, because a 28px badge out-measures a 24px line box. So there was **no default-root
+rendering for the ruling to protect** — the change was a no-op everywhere it was supposed to cost
+something, and a fix everywhere the badge was drifting. The owner reversed, and MyNotes removed
+the term with the same one-line declaration MyCal had already needed.
 
-| Root | Term | `y` |
-|---|---|---|
-| 16px (default) | 0 | **14** ✓ |
-| up to **18.67px** | 0 | **14** ✓ |
-| 20px | 1 | 15 |
-| 24px | 4 | 18 |
+> **A bound can refute the reasoning that accepted the thing it bounds. A sample cannot.** The
+> earlier wording here — *"drifts to 15 at a 20px root and 18 at 24px"* — is entirely consistent
+> with the term being small-but-nonzero at 16px, which would have made the original ruling right.
+> **It was the *form* of the answer that falsified the premise, not its values.**
 
-**A bound is worth more than the two readings it explains.** "It drifts at 24px" invites someone
-to check 24px; `28 / 1.5 = 18.67` tells them where the edge is, that the default is not near it,
-and exactly which change moves it — the label's `font-size` or `line-height`, or the badge's
-height.
+**And "gone" is not "zero", which was demonstrated rather than argued.** Growing the label's
+`line-height` — something neither `.sidebar` nor `.sidebar-header` mentions — takes the brand block
+to **64px** with the badge still at **14.000**:
 
-**Accepted, not fixed** (owner's ruling). The alternatives — top-aligning the badge against its
-own label, or fixing the brand's height — contort the common case to buy the rare one, and §9.2
-already drew this boundary the same way for the badge's *box*. So the suite has **two recorded
-`px`/`rem` seams, and they are the same seam**: the badge authored in absolute units inside chrome
-that scales.
+| Condition | brand height | badge `y` | what a remainder would have given |
+|---|---|---|---|
+| 16px root | 28.000 | **14.000** | 0 |
+| 24px root | 36.000 | **14.000** | +4.000 |
+| 32px root | 48.000 | **14.000** | +10.000 |
+| 16px root, label `line-height: 4` | 64.000 | **14.000** | +18.000 |
 
-*(The term is the badge's own centring, not the tab strip's — the tab-typography remainder that
-produced the original defect is **absent from the computation**, not merely small. Mutation-tested:
-reverting `align-self: flex-start` to `center` returns `y = 19.297` and one red assertion.)*
+That is §4.2's distinction in its cleanest form: the term is **absent from the computation**, not
+small within it. A test at any single root could not tell the two apart.
 
 ---
 

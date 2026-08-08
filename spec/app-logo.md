@@ -1,8 +1,10 @@
 # App logo — the badge in the top left
 
-**Status:** binding. Implemented and shipping in **MyCal** and **MyMail**. **MyNotes has
-implemented it and measured it against every value below, on an unmerged branch** — see §10.
-It is not on MyNotes' `main`, so it is not yet shipping, and this document does not say it is.
+**Status:** binding. **§4's placement rule is newly added and no app conforms to it yet as
+shipped** — MyCal and MyNotes are both being corrected to it, MyMail already satisfies it and is
+the reference. Every other section is implemented and shipping in MyCal and MyMail, and
+implemented and measured in MyNotes on an unmerged branch (§10). §4.4 is empty until the two
+fixes are measured; it is not filled from either being written.
 
 **Scope: the logo only.** The app-name label beside it is **out of scope** — §2 states that as a
 ruling, with the human's words and the condition attached. Read §2 before concluding the labels
@@ -45,8 +47,9 @@ One element per app: a rounded square holding an app-specific mark, at the top l
 because a blank cell reads as "not looked up" (`AGENTS.md` §3.5).
 
 The three sit in **structurally different containers** — MyCal's in a top bar spanning the
-window, MyMail's and MyNotes' in a sidebar header. That difference is why §4 pins placement and
-not coordinates, and it is not a defect in any of them.
+window, MyMail's and MyNotes' in a sidebar header. **That difference is not a defect and does not
+excuse a difference in position**: §4 pins the same resting offsets in all three, reached by
+whatever mechanism each container needs.
 
 ---
 
@@ -229,57 +232,94 @@ exclusion is about the label's **size**, and 8px of gap makes no label bigger (�
 
 ---
 
-## 4. Placement: top left, in reading order — and **not** window coordinates
+## 4. Placement: (16, 14) from the window, at rest
 
-> **The badge sits at the top left of the app's own chrome, ahead of the app-name label in
-> reading order.**
+> **At rest, the badge's top-left corner sits 16px from the window's left edge and 14px from its
+> top, in all three apps, at the default 16px root font size.**
 >
-> **Its distance from the window's edges is deliberately not pinned.** Coordinates recorded
-> below are **readings, not pins.**
+> **At rest** means: default route, unscrolled, and no documented narrow-layout exemption in
+> force (§4.2).
 
-This is the one place this contract is weaker than `spec/sidebar-footer.md` §8, which pins
-(L, B) = (8, 8) from the *window*. That contract can do so because its two controls sit in the
-same structure in all three apps. **These badges do not**: MyCal's is in a top bar, MyMail's and
-MyNotes' are in a sidebar header. A coordinate rule would order a layout change in at least one
-app, which a contract may not do (`AGENTS.md` §2.2, and `spec/sidebar-footer.md` §6.4's precedent
-of declining exactly this for the sidebar column).
+Measured to the badge's border box with `getBoundingClientRect()` against the viewport — the same
+frame `spec/sidebar-footer.md` §8 uses for the footer controls.
 
-**The human's instruction specifies a placement** — *"the app logo **in top left**"* (§2) — so
-silence would say less than was asked for. A contract that cannot be violated by a logo in the
-bottom right is not this contract.
+**The root size is named in the rule rather than assumed**, following that contract's §2.2, which
+pins its acceptance height *"at the default 16px root font size"* for the same reason: the three
+apps reach these offsets through different units, so they hold together at 16px and diverge above
+it. §4.3 records that divergence with numbers rather than leaving it unstated.
 
-**Reading order, not geometry**, because that survives MyMail's label being a bare text node with
-no selector, and it is checkable in the markup by anyone without a rendered page or a stated root
-font size. All three satisfy it today: each brand block is the first child of its header or bar,
-and the badge is first within it.
+**(16, 14) is not a new number.** It is what MyCal and MyMail already agreed on — see §4.1, which
+is the reason this section exists at all.
 
-### 4.1 Why a coordinate rule is not merely unavailable but **false**
+### 4.1 The agreement was deliberate, and it lived in a CSS comment
 
-Recorded so nobody proposes one later believing it was an oversight. All three reports found
-this independently:
+`mycal/web/static/app.css`, verbatim, beside `.top-bar { min-height: 40px }`:
 
-| | Finding |
+> *"40px puts the 28px badge's top edge at 8px (`.app` padding) + 6px = 14px — **the same offset
+> MyMail's sidebar header gives its own badge via `padding-top: 14px`.** Without this the bar
+> collapses to ~34px and the mark rides 3px higher than MyMail's."*
+
+So 14 was **chosen**, with its arithmetic and its failure mode written down — and written down in
+one repository's stylesheet, where the other two could not see it.
+
+> **This is the defect this repository exists to prevent, arriving inside the contract meant to
+> prevent it.** The two apps that knew about each other agreed. **The third had nothing to aim
+> at**, because the agreement was a comment rather than a contract. MyNotes' offsets were not
+> careless; they were unaimed.
+
+**And this section previously made it worse.** It asserted that the agreement was *"a coincidence
+of two unrelated rules … not a shared mechanism and must not be written up as one"* — which is
+false, and which told anyone who noticed the misalignment that the question was malformed. That
+paragraph is withdrawn (§11).
+
+### 4.2 The position must be **authored**, not arrived at
+
+> **An app satisfies §4 by declaring the offsets, not by happening to compute them.**
+
+Both apps that missed (16, 14) missed it the same way, by different routes: **the badge's
+position was a remainder of something unrelated.**
+
+| | What produced the offset before the fix |
 |---|---|
-| **MyCal** | badge `y` is **not a constant**. `.top-bar` is `align-items: center` with `min-height: 40px`, and its height is set by the `<h1>` date heading **wrapping**. Measured `y` = 14 / 27.609 / 44.406 / **61.219** across viewport widths; it differs **per view** (Year and Month 14; Week, Day and Schedule 27.609) and therefore **per date and per locale**. At a 24px root it is 19.188 |
-| **MyCal** | the **demo build** — the artefact GitHub Pages serves — moves it **non-monotonically**: `y` = 14 at 1920, 27.609 at 1440, back to 14 at 1439 |
-| **MyCal** | badge is `display: none` below 600px (§9.3) |
-| **MyCal** | Month view at 600 events, scrolled to the bottom: badge `y` = **−2206** |
-| **MyMail** | 40 folders, scrolled to the bottom: badge `y` = **−1008** |
+| **MyCal** | `y = 8 + (bar height − 28) / 2`, where the bar's height is `max(40px, tallest child)` — so the badge tracked the **date heading's wrapping**, and moved with viewport width, view, date and locale |
+| **MyNotes** | `y` = 12px of `.sidebar` padding + `(38.61 − 28) / 2`, where 38.61 is set by **the tab strip's typography** — so the badge moved with `.sidebar-tab`'s font size and padding |
+| **MyMail** | authored directly, as `padding: 14px 16px 12px`. **The only one that never moved.** |
 
-*"Any contract clause of the form 'the badge sits at (16, 14)' is false in MyCal today"* —
-mycal-dev, for most widths, three of five views, a 24px root, and any scrolled page.
+Neither remainder was visible, neither had any assertion against it, and both moved the badge
+when something with no relationship to the logo changed.
 
-**Recorded readings at rest**, 16px root, either theme, at a wide viewport — **not pins**:
+**This is why the rule is about authorship and not only about the number.** A position that is
+computed satisfies the contract on the day it is measured and drifts afterwards with nothing red
+— which is `spec/sidebar-footer.md` §3.1's class of defect (a value correct today for a reason
+nothing defends) arriving on geometry instead of on a declaration.
 
-| | Badge top-left, viewport coordinates |
-|---|---|
-| MyCal | (16, 14) — and only while the heading fits on one line |
-| MyMail | (16, 14) — invariant across all 17 widths tested, 1920 down to 280 |
-| MyNotes | **not recorded** — mynotes-dev measured the badge's box, glyph, extent and gap but not a viewport coordinate, and none is pinned here, so nothing depends on it |
+### 4.3 Departures, recorded
 
-That the two shipped apps agree at rest is a coincidence of two unrelated rules — MyCal's `.app`
-padding plus a 40px bar, MyMail's `.sidebar-header { padding: 14px 16px 12px }`. **It is not a
-shared mechanism and must not be written up as one.**
+Each of these is a **recorded exemption from §4, not evidence that §4 cannot exist** — which is
+the distinction this section had wrong until the owner looked at the shipped result.
+
+| Departure | App | Recorded |
+|---|---|---|
+| badge hidden entirely below 600px | MyCal | §9.3 |
+| badge scrolls off under content overflow — `y` = −2206 / −1008 measured | MyCal, MyMail | §9.1 |
+| the **demo build** — the artefact GitHub Pages serves — moved `y` **non-monotonically** with width: 14 at 1920, 27.609 at 1440, back to 14 at 1439 | MyCal | §9.5, and §4.2 is why |
+| offsets diverge above a 16px root, because the three reach them through different units | MyNotes | §4.4 |
+
+### 4.4 Conformance — **pending re-measurement**
+
+> **The human has ruled that both outliers are fixed** rather than recorded as departures: MyCal's
+> `y` becomes 14 unconditionally, and MyNotes' inset moves to 16px with its column widened to buy
+> back the tab clearance that spends.
+>
+> **Both fixes are in flight, so this table is deliberately empty.** It is filled from measured
+> readings when mycal-dev and mynotes-dev report, and not from either fix being written. The
+> 24px-root figures land here too — MyNotes' `x` is fixed across roots by that change, and a small
+> vertical remainder from the label's line box is **accepted** rather than fixed, on the same
+> boundary §9.2 already drew for the badge's box.
+
+The pre-fix readings, so the change is checkable against something: **MyMail (16, 14)** invariant
+across 17 widths; **MyCal (16, 14)** at ≥1305px and **(16, 27.609)** at 1280 in three of five
+views; **MyNotes (12, 17.297)**, invariant across width and scaling with the root font.
 
 ---
 
@@ -518,8 +558,8 @@ Stated honestly. None is a reason to hold up work; all are reasons not to be sur
 | MyCal | Month view, 600 events, scrolled to bottom | **−2206** | holds 8 |
 | MyMail | 40 folders, scrolled to bottom | **−1008** | holds 8.23 |
 
-**This violates nothing in this contract**, which pins appearance and placement rather than
-coordinates (§4). It is recorded because of the shape:
+**This is a recorded departure from §4, not a violation of it** (§4.3) — the resting rule binds
+at rest, and this is what happens outside it. It is recorded because of the shape:
 `spec/sidebar-footer.md` §8.2 and that contract's §8.3 identify this exact failure, and rescued
 the footer from it with `position: sticky` and an opaque background. **Nothing ever specified
 the header, so nothing rescued it.** The footer's rescue makes the header's exposure look
@@ -646,8 +686,10 @@ in its repo, because the consequence is that the three stop matching.)*
   `.brand-logo`'s `textContent` is `"8"` and an exact-text locator matches three elements on the
   default page, one being the logo. It is hidden from the accessibility tree but not from the
   DOM. *(mycal-dev.)*
-- **MyCal's demo build is a second shipped surface** with different badge geometry (§4.1), and it
-  is what GitHub Pages publishes.
+- **MyCal's demo build is a second shipped surface** with different badge geometry, and it is what
+  GitHub Pages publishes. Its badge moved *non-monotonically* with viewport width (§4.3) — a
+  second symptom of the same computed-position defect §4.2 names, and the fix pinning `y = 14`
+  unconditionally should resolve it. **Verify it there too**, since it is a different build.
 - **`--app-padding-x` moves MyCal's badge and cannot move its footer**, which cancels that exact
   token with a negative margin. A token the footer contract is immune to and the logo is not.
 - **`spec/sidebar-footer.md` §6.4's "~229px of slack" is the sidebar *footer* row**, and is false
@@ -795,7 +837,8 @@ Listed so nobody re-derives them from a message or an old draft
 
 | Considered | Replaced by | Why |
 |---|---|---|
-| Same window coordinates for the badge, as `spec/sidebar-footer.md` §8 does for the footer | §4's placement rule | Not merely unavailable — **false in MyCal today** at most widths, three of five views, a 24px root and any scrolled page (§4.1) |
+| **"The badge's distance from the window's edges is deliberately not pinned"** | **§4's (16, 14) at rest** | **Withdrawn on the owner's observation of the shipped result.** It answered *"can a coordinate be pinned that always holds?"* — thoroughly, and correctly. The question that mattered was *"do the three look alike when you open them?"*, and the two are not the same. A rule can be unavailable in general while the **resting** positions agree in the case every user sees |
+| **"The two shipped apps agree at rest by coincidence … not a shared mechanism and must not be written up as one"** | **§4.1** | **False.** MyCal chose `min-height: 40px` specifically to land on MyMail's 14px and recorded the 3px it would otherwise miss by, in a comment in its own stylesheet. The second half of the sentence was right and the first was wrong — and together they told anyone who noticed the misalignment that the question was malformed. **A reader who finds that comment must not conclude the contract is confused: the comment is right and this document was wrong** |
 | "Position deliberately unspecified" | §4's placement rule | Says less than the human's instruction, which specifies *"in top left"*. Approved once and reversed on reading the primary (§12) |
 | A mandated glyph mechanism — CSS sizing, or the Lucide bundle, for all three | §5, mechanism local | Would create a second source of truth in MyMail, or break MyCal's favicon parity, and buys no observable difference |
 | A rule of the form "a 17×17 glyph, stroke-width 2, centred" | §3.2 plus §6.1 | Reads as a shared drawing convention. There is none — the two "stroke-width: 2"s render at 1.0625px and 1.4167px |
@@ -810,6 +853,13 @@ Listed so nobody re-derives them from a message or an old draft
 Two conclusions in it were **changed by reading a primary source rather than a relay**, and both
 were conclusions held confidently:
 
+- **The whole of §4 was rewritten a second time**, after the owner looked at the shipped result
+  and reported that MyNotes' badge sat differently from the other two. The section had answered
+  *"can a coordinate be pinned that always holds?"* so thoroughly that nobody asked *"do the
+  three look alike when you open them?"* — and the evidence for the first answer actively
+  discouraged the second question. **A rationale can be true in the general case and wrong about
+  the common one**, and no amount of correct measurement inside the wrong question finds that.
+  What found it was the owner opening three tabs.
 - **"Position deliberately unspecified"** was approved and then reversed on reading the human's
   actual sentence, which says *"in top left"* (§4).
 - **The label exclusion's condition** — *"since space there is crowded"* — was in the same

@@ -43,6 +43,33 @@ that was withdrawn tends to survive in a comment somewhere long after the code h
 
 ## Adding a contract
 
-Add the file, add a row to the table above, and say in the file which repos implement it and
-which do not yet. A contract nothing implements is a proposal — mark it as such in its
-status line rather than writing it as though it were binding.
+Say in the file which repos implement it and which do not yet. A contract nothing implements is
+a proposal — mark it as such in its status line rather than writing it as though it were
+binding.
+
+**Then register it in every place that enumerates contracts. There are four, and this file is
+only one of them:**
+
+| Where | What to add |
+|---|---|
+| **`spec/README.md`** (here) | a row in the table above |
+| **`AGENTS.md` §1**, *"Currently binding"* | a bullet — this is where an agent is told to start |
+| **`README.md`**, *Contents* | a bullet under `spec/` — this is where a person starts |
+| **`tools/check-contract.py`**'s caveat block | whether the new contract is checked. If it is not, **say so** — the block prints on every run and a green run otherwise implies coverage that does not exist |
+
+And in the app repos, per `AGENTS.md` §4: each needs a short titled section in its
+`web/AGENTS.md` saying the new element is governed from outside the repo, naming the routine
+tidying that would break it silently. That is the only guard that fires *before* the change.
+
+> **Why this list exists, and it is not bookkeeping.** This section used to read, in full:
+> *"Add the file, add a row to the table above."* Someone followed it exactly — and produced a
+> repository whose newest binding contract was reachable from **neither** `AGENTS.md` nor
+> `README.md`, the two files every reader is pointed at first. Nothing dangled, no link broke,
+> no check failed, and there was no event to grep for. It was found by a reviewer, not by any
+> rule.
+>
+> **A checklist that is correct and incomplete is worse than no checklist, because following it
+> feels like sufficiency.** The old sentence was accurate about this file and silent about the
+> other three, and silence in an instruction reads as *"that is all there is"*. So when you add
+> a step here, ask what else would have to change and name it — or say explicitly that nothing
+> else does.

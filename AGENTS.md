@@ -197,8 +197,11 @@ So:
   those come apart as soon as the copies drift. Before consolidating or moving any of them,
   read §3.4: a move between files silently picks a winner among statements that disagree, and
   it does so without breaking a single reference.
-- **One contract per file** in `spec/`, indexed in [`spec/README.md`](spec/README.md). Add a
-  row to that table when you add a file.
+- **One contract per file** in `spec/`, indexed in [`spec/README.md`](spec/README.md).
+  **Adding one means registering it in four places, not one** — that file's *"Adding a
+  contract"* section is the list, and it is the list because *"add a row to that table"* is
+  what this bullet used to say, and following it left the newest contract unreachable from §1
+  above and from `README.md`. Do not re-derive the set from memory; go and read it.
 - **Always name the file when citing a section number across files.** `AGENTS.md` and
   `spec/sidebar-footer.md` both have a §2.2, a §2.5 and a §3.1, and they are about entirely
   different things — this file's §2.2 is *never fix a shared value in one app*, the contract's

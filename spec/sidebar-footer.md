@@ -165,7 +165,7 @@ binding constraint is MyCal's 26px; MyMail's 29px is second; MyNotes' 229px neve
 holds to the pixel: pair 174px in 200 / 203 / 403px of content box.
 
 > **MyNotes' row has a pending change that is not reflected above, deliberately.** Its column
-> widens to **456px** (content box 439, slack ~265) to make room for the app-logo badge — see
+> widens to **464px** (content box 447, slack ~273) to make room for the app-logo badge — see
 > `spec/app-logo.md` §10.1. **That work is on an unmerged branch; MyNotes' `main` still ships
 > `420px`**, so the row above is correct for shipped code and stays as it is until the branch
 > lands. §6.4 carries the same note beside the same figures. Update both on the merge, not
@@ -845,10 +845,10 @@ differently — correctly:
 >
 > **The exemption gets stronger, never weaker** — widening cannot put this section at risk.
 >
-> **Status: MyNotes has widened to 456px, on an unmerged branch.** Its `main` still ships
+> **Status: MyNotes has widened to 464px, on an unmerged branch.** Its `main` still ships
 > `420px`, so the table above and the `403` / `~229` figures elsewhere in this section remain
 > correct **for what MyNotes ships today**, and are deliberately left as they are. On that branch
-> the values are **456 / 439 / ~265**. The `26.25rem` → 630px argument below is about the *unit*
+> the values are **464 / 447 / ~273**. The `26.25rem` → 630px argument below is about the *unit*
 > and is unaffected either way.
 >
 > **Update this section when the branch lands on `main`, not before** — this document describes

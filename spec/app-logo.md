@@ -305,21 +305,46 @@ the distinction this section had wrong until the owner looked at the shipped res
 | the **demo build** — the artefact GitHub Pages serves — moved `y` **non-monotonically** with width: 14 at 1920, 27.609 at 1440, back to 14 at 1439 | MyCal | §9.5, and §4.2 is why |
 | offsets diverge above a 16px root, because the three reach them through different units | MyNotes | §4.4 |
 
-### 4.4 Conformance — **pending re-measurement**
+### 4.4 Conformance
 
-> **The human has ruled that both outliers are fixed** rather than recorded as departures: MyCal's
-> `y` becomes 14 unconditionally, and MyNotes' inset moves to 16px with its column widened to buy
-> back the tab clearance that spends.
->
-> **Both fixes are in flight, so this table is deliberately empty.** It is filled from measured
-> readings when mycal-dev and mynotes-dev report, and not from either fix being written. The
-> 24px-root figures land here too — MyNotes' `x` is fixed across roots by that change, and a small
-> vertical remainder from the label's line box is **accepted** rather than fixed, on the same
-> boundary §9.2 already drew for the badge's box.
+**MyMail** is the reference and has not moved. **MyCal and MyNotes have both been corrected**, and
+both took the same shape without conferring: **take the badge out of its container's centring and
+author the offset directly.** That is §4.2 arriving as two independent implementations of one
+rule.
 
-The pre-fix readings, so the change is checkable against something: **MyMail (16, 14)** invariant
-across 17 widths; **MyCal (16, 14)** at ≥1305px and **(16, 27.609)** at 1280 in three of five
-views; **MyNotes (12, 17.297)**, invariant across width and scaling with the root font.
+| | (x, y) at 1280×720, 16px root | x authored by | y authored by |
+|---|---|---|---|
+| MyMail | **(16, 14)** | `.sidebar-header { padding: 14px 16px 12px }` | the same declaration |
+| MyNotes | **(16, 14)** | `.sidebar-header { margin: 0 16px 0.75rem }` | `.sidebar { padding: 14px 0 0 }`, load-bearing via `.sidebar-brand { align-self: flex-start }` |
+| MyCal | *awaiting mycal-dev's measured reading* — landed as `880ce01` | `--app-padding-x: 16px` | `.brand { align-self: flex-start }` + 6px, on `.app`'s 8px `padding-top` |
+
+**The MyCal row is deliberately not filled from the commit.** §10 sets the rule that this table is
+filled from a measured reading and not from a fix being written, and it applies to me.
+
+*(Its declarations above are a source read, and they are recorded because §4.2 makes **which
+declaration authors the offset** a contract term in its own right — separate from, and not
+evidence of, what the offset measures.)*
+
+**Both fixes removed a remainder rather than adjusting one.** MyCal's `min-height: 40px` still
+grows for a wrapped heading; it just no longer decides where the badge sits. MyNotes'
+`.sidebar-brand` moved from `align-self: center` to `flex-start` for the same reason. Neither app
+tuned a number until it matched — which is the distinction §4.2 exists to make, and the reason a
+future reading of either app can be trusted.
+
+#### The 24px-root departure, with numbers
+
+MyNotes' **x holds 16 at every root size** — the inset is now `px`, so the sign-changing error
+(12 at a 16px root, 18 at 24px) is gone outright.
+
+Its **y still drifts**: **15 at a 20px root, 18 at 24px**, against the pinned 14. The remainder is
+the badge centring inside the brand anchor, whose height is the *label's* line box — `(36 − 28)/2`
+at 24px.
+
+**Accepted, not fixed** (owner's ruling). The alternatives — top-aligning the badge against its
+own label, or fixing the brand's height — contort the common case to buy the rare one, and §9.2
+already drew this boundary the same way for the badge's *box*. So the suite now has **two recorded
+`px`/`rem` seams**, and they are the same seam: the badge is authored in absolute units inside
+chrome that scales.
 
 ---
 

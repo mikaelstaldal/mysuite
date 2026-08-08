@@ -655,6 +655,34 @@ only one that owns cross-repo tooling.
 Both of those were caught by an agent fixing something else, noticing the shape and thinking to
 check its siblings. That is not a process, and it is the reason this is written down.
 
+#### The mirror case: a claim can go *true* without an edit, and that is worse
+
+*(Owed to mycal-dev, from its own repo.)*
+
+Everything above is about a sentence that quietly becomes **false**. The same mechanism runs the
+other way, and the other direction is the one that never gets caught.
+
+`mycal/web/AGENTS.md` carried, for a long time, *"keep the path — the relative links resolve in a
+checkout."* **They did not.** Every `](../mysuite/…` target in that file was dead, because
+`web/AGENTS.md` sits one directory deeper than the path assumed. Fixing the targets to
+`../../mysuite/…` made the sentence honest — and **nobody edited the sentence.** It was false when
+written and became true as a side effect of an unrelated repair.
+
+The consequence generalises past links:
+
+> **A document agreeing with the code is not evidence that anyone ever checked it.** The agreement
+> can be an accident of a later, unrelated fix. *"This line is currently true"* and *"this line was
+> verified"* are different claims, and only one of them survives being re-derived.
+
+**And the asymmetry is the part to keep.** A claim that goes false is eventually found, because
+something breaks and somebody reads the line. **A claim that goes true is never revisited at
+all** — it leaves no trace that it was ever wrong, and the file looks well maintained. That line
+read as a carefully-kept note for however long it was dead, and the only reason anyone found out
+is that the links were measured for a different job.
+
+So a green re-read is weaker evidence than it feels. **Prefer re-deriving a claim to confirming
+it**, and treat *"still true"* as a fact about today rather than a report on the claim's history.
+
 #### A second specimen, in this repository, and a purer one
 
 §3 said *"No remote is configured. Commit locally; do not attempt to push … there is no URL to

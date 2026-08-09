@@ -528,10 +528,24 @@ assumption breaks loudly if an app later wraps the text in a `<span>`).
 > come from" flag never fires at all.** The descendant search finds the node, reports the new
 > parent, and fails on the flag with a message telling the reader what to re-derive.
 >
-> **Measured, not reasoned:** mymail-dev ran the wrap both ways — direct-children gives 12
-> failures, all of them "no label text node"; the descendant search gives 6, the first being the
-> flag with its re-derive message. *(Found by mymail-dev while implementing this section; it is
-> what §6.1 says, and the obvious implementation defeats it.)*
+> **What the descendant search actually buys is a CAPABILITY, not a better error message** —
+> and that is the argument for the requirement. Wrap the label in
+> `<span style="font-size: 1.4rem">` and, with a descendant search, **`labelFontSize` itself
+> fails: 22.4px against an expected 17.6px**, because the wrapper becomes the host and its size
+> is what gets read. **With a direct-children search that assertion is blind** — the host falls
+> back to the row and reads a correct 17.6px.
+>
+> **So the descendant requirement converts the size assertion from blind to sighted for exactly
+> the divergence §7.1 cannot see in MyMail and MyNotes**, whose labels have no element for the
+> static check to inspect. It closes most of the gap the false green left those two apps with.
+> *(Measured by mynotes-dev-b.)*
+>
+> **The diagnostics improve too**, which is how this was first noticed rather than why it
+> matters: mymail-dev ran the wrap both ways and got 12 failures (all *"no label text node"*)
+> against 6 (the first being the flag, with its re-derive message); mynotes-dev-b got 7 against
+> 2. **Those two pairs are not comparable and only their shape is** — different suites,
+> different mutations, different assertion counts. Quoted as two observations of one *direction*,
+> never as two measurements of one quantity.
 
 > **And the parent flag must be capable of being false — which is a SEPARATE property from the
 > descendant search, and a suite can have the first without the second.**
@@ -885,12 +899,12 @@ requirement, and `spec/sidebar-footer.md` §11's habit).
   §2's exclusion (§2.1). The owner ruled on §4.3 (record the vertical remainder, do not
   mandate authorship) and §4.4 (MyCal's ≤600px hide is a sanctioned exemption).
 
-- **Adoption, and the refs are stated because they differ.** MyCal's assertions and its
-  `web/AGENTS.md` section are on its `main` at **`9dbcd10`**. **MyMail's and MyNotes' are
-  on feature branches**, not on `main`, at the time of writing — so §7.2's coverage is one
-  app shipped and two pending. **Re-read each repo's `HEAD` rather than trusting these**;
-  two of the three are expected to move, and a hash quoted from a message is the thing
-  `spec/sidebar-footer.md` §11 warns about.
+- **Adoption, and the refs are stated because they differ.** MyCal is on its `main` at
+  **`9dbcd10`** and MyNotes at **`cac7cf4`**; **MyMail's half is still on a feature branch**
+  at the time of writing, so §7.2's coverage is two apps shipped and one pending. **Re-read
+  each repo's `HEAD` rather than trusting these** — one of the three is expected to move, and a
+  hash quoted from a message is the thing `spec/sidebar-footer.md` §11 warns about. Each of
+  these was read off the repository at the moment it was written here.
 - **Found while writing:** `spec/app-logo.md` §4.4's claim that *"all three hold `y = 14`
   from a 16px root to a 32px root"* was **false for MyMail** above a ~16.97px root, and its
   *"the only one that never moved"* was false in the same range. Predicted from a source
@@ -943,6 +957,24 @@ requirement, and `spec/sidebar-footer.md` §11's habit).
   > as §8.2's *"almost none"* is — put it in the past tense and name the commit that ended it.
   > All three of these were caught by app agents reporting the contradiction rather than
   > working around it, which is the only reason they were cheap.
+
+- **A correctly-scoped finding losing its scope in a relay — a different mechanism from the
+  three above, and it went wrong in one hop.** mycal-dev established that `em` and `rem` coincide
+  at *every* root in MyCal, so **no number of root sizes separates them** — a statement about
+  *rendered* assertions, and true. It was relayed as *"uncatchable by anything, in any repo"*,
+  which is a different claim and false: `tools/check-contract.py` compares declaration text and
+  catches it immediately, demonstrated by mutating MyNotes to `1.1em`.
+
+  > **The three specimens above are claims that went stale over time. This one was wrong on
+  > arrival, while the original was still on file and correct.** No amount of re-reading the
+  > repository would have found it, because the repository was never what changed — the scope
+  > qualifier was dropped between one agent and the next.
+  >
+  > **What caught it was the recipient testing an instruction rather than acting on it.** Told
+  > that a substitution was uncatchable, they ran it and watched the checker catch it. That is
+  > the cheap half of `AGENTS.md` §3.1's *"a citation to a document you were never given is a
+  > gap"*, in its most ordinary form: **when a relay tells you something cannot be detected, the
+  > detector is usually one command away.**
 
 - **A torn read, observed live, of the mirror case `AGENTS.md` §3.5 says nobody ever catches.**
   mynotes-dev-b reported §7.1 as describing a check that did not exist: their grep found no

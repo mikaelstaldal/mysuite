@@ -765,13 +765,32 @@ failing one covers less ground than the count suggests.
     three apps today and required by nothing. A failure there may be this check's
     limitation rather than a real violation; confirm in a browser, by walking up
     from the button to the first ancestor with a non-transparent background.
-  · WHICH REPOSITORY STATE this read is not reported, because it cannot be: it
-    reads files on disk, so a commit, an uncommitted edit and a half-written file
-    all look the same, and across three repos there is no atomic snapshot. A run
+  · WHICH REPOSITORY STATE this read is, THIS SCRIPT DOES NOT REPORT: it reads
+    files on disk, so a commit, an uncommitted edit and a half-written file all
+    look the same, and across three repos there is no atomic snapshot. A run
     against a tree somebody is editing has already produced a red result that
-    three runs seconds later did not reproduce. Re-run before reporting a
-    failure, and say "green against an uncommitted tree" when that is what it
-    was — see measurement-protocol.md.
+    three runs seconds later did not reproduce -- three times in one afternoon,
+    every one of them another agent mid-mutation testing their own guard. Re-run
+    before reporting a failure, and say "green against an uncommitted tree" when
+    that is what it was -- see measurement-protocol.md.
+
+    BUT THE RED IS NOT ALWAYS SOMEBODY ELSE'S MUTATION, and you cannot tell by
+    re-running. To get an answer scoped to a REF rather than to whatever is on
+    disk right now, materialise the refs first and point --repos at them:
+
+        for r in mycal mymail mynotes; do
+          mkdir -p /tmp/refs/$r/web/static/render
+          git -C ../$r show main:web/static/app.css > /tmp/refs/$r/web/static/app.css
+        done
+        git -C ../mynotes show main:web/static/render/note.css \
+            > /tmp/refs/mynotes/web/static/render/note.css
+        tools/check-contract.py --repos /tmp/refs
+
+    Then say which ref you ran against, because the output still will not.
+    "PASSED against three working trees" and "PASSED against three mains" are
+    different claims and only one of them is reproducible (app-name-label.md
+    §3.6's rule, and AGENTS.md §3.6: say which ref, and check it is the one the
+    claim is about).
   · Values inside @media blocks are deliberately skipped: a conditional override
     is a different value under different conditions, not a disagreement.
   · It reads ONE NAMED RULE per app (see APPS). A reordered selector list or a

@@ -147,6 +147,22 @@ So:
   exactly one computed value in the whole suite can. And a few pins are uncatchable by any test
   (`0.80rem` vs `0.8rem` is identical computed *and* serialised); those are held by review,
   and saying which are which is part of describing coverage honestly.
+- **When you cite another document's figure, quote it — do not paraphrase it — and put the
+  durable claim above the quotation.** These do different jobs and the instinct to "future-proof"
+  by paraphrasing gets it backwards:
+
+  > **A stale quotation announces itself to a grep. A paraphrase survives the change and is worth
+  > less.** *(mynotes-dev-b's formulation, from correcting a comment of its own that quoted a
+  > sidebar width three rungs out of date.)*
+
+  So: state the rule in your own words — *"§6.4 records this width, it does not pin it"* — and
+  then quote the figure beneath it, **annotated as expected to perish**. The rule survives the
+  next change; the quotation is what a sweep can find when it does not. A paraphrase of the
+  figure gives you neither.
+
+  This is the same trade as the bullet above it. An assertion beats prose because something runs
+  it; a quotation beats a paraphrase because something can *search* it. Both prefer the form that
+  a machine can catch being wrong.
 - If it cannot be tested, **say in the comment that it is a reading rather than a contract**,
   and say what it was read on. Text measurements are per-platform and per-font.
 - When you write a number down, write its conditions with it. "29.2px" is a claim that stops

@@ -4,18 +4,26 @@ Each file here defines one UI element or behaviour that MyCal, MyMail and MyNote
 required to render identically. A contract is binding on all three apps or on none of them.
 
 **"Binding on all three" is about what the contract *requires*, not about what has *shipped*
-yet.** A contract being adopted can be binding while one app is still implementing it — that is
-the state `app-logo.md` is in below, and it is transient by construction. What it must never
-become is a standing per-app exemption, which is the thing the sentence above forbids. A status
-A status naming an app as still adopting is a claim with a deadline; if you find one that has not
-moved, that is the defect.
+yet.** A contract being adopted can be binding while one app is still implementing it, and that
+state is transient by construction. What it must never become is a standing per-app exemption,
+which is the thing the sentence above forbids. **A status naming an app as still adopting is a
+claim with a deadline; if you find one that has not moved, that is the defect.**
+
+> That rule has now been tested once and it worked, which is worth recording because the failure
+> mode is the interesting one. `app-logo.md` carried *"MyNotes implemented on an unmerged
+> branch"* in this table, in `README.md` and in `AGENTS.md` §1. The branch merged — **an event
+> that produces no commit in this repository** — and all three went stale with nothing to review
+> and no diff to grep. They were corrected when somebody read the app repo, not when anything
+> fired. `AGENTS.md` §3.5 is the general statement; the deadline above is what makes the claim
+> *checkable* rather than merely wrong.
 
 ## Contracts
 
 | Contract                                 | Covers                                                                                                                                           | Status                            |
 |------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------|
 | [`sidebar-footer.md`](sidebar-footer.md) | The light/dark theme toggle and Settings button at the bottom of the left sidebar — geometry, colours, interaction, and their position on screen | Binding, implemented in all three |
-| [`app-logo.md`](app-logo.md)             | The app logo badge at the top left — its box, fill, glyph size and extent, placement, and accessibility. **The app-name label beside it is deliberately out of scope** (`app-logo.md` §2) | Binding. Shipping in MyCal and MyMail; **MyNotes implemented and measured on an unmerged branch** |
+| [`app-logo.md`](app-logo.md)             | The app logo badge at the top left — its box, fill, glyph size and extent, placement, and accessibility. The app-name label beside it is covered separately, by [`app-name-label.md`](app-name-label.md) | Binding, implemented in all three |
+| [`app-name-label.md`](app-name-label.md) | The app-name text beside the logo badge — its font, font size and placement. Supersedes `app-logo.md` §2's exclusion (`app-name-label.md` §2.1) | Binding, implemented in all three |
 
 ## Cross-cutting
 
@@ -47,19 +55,29 @@ Say in the file which repos implement it and which do not yet. A contract nothin
 a proposal — mark it as such in its status line rather than writing it as though it were
 binding.
 
-**Then register it in every place that enumerates contracts. There are four, and this file is
-only one of them:**
+**Then register it in every place that enumerates contracts. There are four here, and this file
+is only one of them:**
 
 | Where | What to add |
 |---|---|
 | **`spec/README.md`** (here) | a row in the table above |
 | **`AGENTS.md` §1**, *"Currently binding"* | a bullet — this is where an agent is told to start |
-| **`README.md`**, *Contents* | a bullet under `spec/` — this is where a person starts |
-| **`tools/check-contract.py`**'s caveat block | whether the new contract is checked. If it is not, **say so** — the block prints on every run and a green run otherwise implies coverage that does not exist |
+| **`README.md`**, *Contents* | a bullet under `spec/` — **and the prose count above it.** `README.md` says *"Currently two:"* / *"three:"* immediately before the list |
+| **`tools/check-contract.py`**'s caveat block | whether the new contract is checked. If it is not, **say so** — the block prints on every run and a green run otherwise implies coverage that does not exist. **And the count in it**: its first bullet states how many binding contracts `spec/` holds |
 
-And in the app repos, per `AGENTS.md` §4: each needs a short titled section in its
+**Two of those four carry a count in prose as well as an entry in a list**, and the counts are
+the part a careful reader misses, because the instruction is satisfied the moment the entry is
+added. Both are named above rather than left to be noticed. *(`AGENTS.md` §3.2: a number in
+prose describing a list directly below it is stale within one changeset — that section deleted
+such a count from itself for this reason.)*
+
+**Plus one per app repo**, per `AGENTS.md` §4: each needs a short titled section in its
 `web/AGENTS.md` saying the new element is governed from outside the repo, naming the routine
 tidying that would break it silently. That is the only guard that fires *before* the change.
+
+**So the honest total is four here and three more across the app repos, not four.** The app-repo
+sections are outside the count above only because they are outside this repository, and that is
+not a reason for them to read as an afterthought — they are the highest-value item on the list.
 
 > **Why this list exists, and it is not bookkeeping.** This section used to read, in full:
 > *"Add the file, add a row to the table above."* Someone followed it exactly — and produced a

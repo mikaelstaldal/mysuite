@@ -29,10 +29,16 @@ Currently binding:
 - **[`spec/sidebar-footer.md`](spec/sidebar-footer.md)** — the light/dark theme toggle and
   Settings button in the left sidebar's footer.
 - **[`spec/app-logo.md`](spec/app-logo.md)** — the app logo badge at the top left: its box, fill,
-  glyph size and extent, placement and accessibility. Shipping in MyCal and MyMail; **MyNotes
-  implemented and measured on an unmerged branch, not yet on its `main`.** The app-name label
-  beside the badge is deliberately **out of scope** — that contract's §2 records the ruling and
-  its condition, so do not read the labels as an oversight.
+  glyph size and extent, placement and accessibility. Implemented in all three.
+- **[`spec/app-name-label.md`](spec/app-name-label.md)** — the app-name text beside the badge:
+  its **font, font size and placement**, those three and not the neighbouring values.
+  Implemented in all three.
+
+  *(This contract **supersedes `spec/app-logo.md` §2**, which put the label out of scope while
+  MyNotes' top-left was crowded. The deferral was conditional, the condition was written down
+  with it, MyNotes widened its column, and the owner reopened it — `spec/app-name-label.md`
+  §2.1. The original ruling stays readable in `app-logo.md` §2 as history. If you find a comment
+  saying the label's typography is unspecified, that is what it is quoting.)*
 
 Cross-cutting:
 

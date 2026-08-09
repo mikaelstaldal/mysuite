@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
-"""Cross-repo check for the MySuite sidebar-footer contract.
+"""Cross-repo check for two of the three MySuite contracts.
 
 Reads the three sibling apps' stylesheets and fails if they disagree on a value
-that spec/sidebar-footer.md pins. It never renders anything: it compares source
-text and resolved custom properties, which is what lets it catch the one class of
-breakage no browser test can see.
+that spec/sidebar-footer.md or spec/app-name-label.md pins. It never renders
+anything: it compares source text and resolved custom properties, which is what
+lets it catch the one class of breakage no browser test can see.
 
     ../mycal    ../mymail    ../mynotes
 
-See spec/sidebar-footer.md. What this cannot check is printed on every run —
-read it, because a green run means less than it looks like it does.
+spec/app-logo.md is NOT checked here, at all. Neither is the app-name-label
+contract's PLACEMENT, which is not a declared value in any of the three apps and
+cannot be read statically by anything. Both are stated in the caveat block, which
+prints on every terminating path — read it, because a green run means less than
+it looks like it does.
 
 Python 3, standard library only: no package manager, no network, no build step.
 The app repos have a standing rule against npm/npx and this must not become a
@@ -27,6 +30,8 @@ import re
 import sys
 
 SPEC = "spec/sidebar-footer.md"
+SPEC_LABEL = "spec/app-name-label.md"
+SPECS = (SPEC, SPEC_LABEL)
 
 # ─── Which rules hold the contract in each app ──────────────────────────────
 #
@@ -38,6 +43,8 @@ APPS = {
     "mycal": {
         "css": ["web/static/app.css"],
         "tokens": ["web/static/app.css"],
+        "brandrow": ".brand",
+        "bodytext": "body",
         "button": ".sidebar-footer-btn",
         "hover": ".sidebar-footer-btn:hover",
         "focus": ".sidebar-footer-btn:focus-visible",
@@ -48,6 +55,8 @@ APPS = {
     "mymail": {
         "css": ["web/static/app.css"],
         "tokens": ["web/static/app.css"],
+        "brandrow": ".sidebar-header",   # MyMail's brand row — NOT MyNotes' .sidebar-header
+        "bodytext": "html, body",
         "button": ".sidebar-theme-toggle, .sidebar-settings-link",
         "hover": ".sidebar-theme-toggle:hover, .sidebar-settings-link:hover",
         "focus": ".sidebar-theme-toggle:focus-visible, .sidebar-settings-link:focus-visible",
@@ -67,8 +76,31 @@ APPS = {
         "row": ".sidebar-footer-actions",
         "footer": ".sidebar-footer",
         "panel": ".sidebar",
+        "brandrow": ".brand",
+        "bodytext": "body",
     },
 }
+
+# ─── app-name-label roles ───────────────────────────────────────────────────
+#
+# "brandrow" is the flex row holding the badge and the app-name label. In all
+# three apps the label's typography is declared THERE and inherited, and not one
+# of the three declares it on the label itself (two of them have no element for
+# the label at all — spec/app-name-label.md §1). So this is the rule to read.
+#
+# That the three do it the same way is a fact about today's implementations, not
+# a requirement: an app declaring the size on the label would conform and would
+# report "rule not found" here. Loud, not silent, and the caveat block says so.
+#
+# NOTE the collision hazard: `.sidebar-header` is MyMail's brand row and MyNotes'
+# OUTER header (brand + tab strip + actions) — the same class name for different
+# elements. The table above is what keeps them apart; do not "simplify" it by
+# matching on the class.
+#
+# "bodytext" is where the font stack is declared in each app — `body` in MyCal and
+# MyNotes, `html, body` in MyMail. Nothing nearer the label declares a family in
+# any of the three (spec/app-name-label.md §3.1), which is exactly why this reads
+# a whole-application rule and why that check is the weaker of the two.
 
 LIGHT_SCOPES = (":root",)
 DARK_SCOPES = ('[data-theme="dark"]', ':root[data-theme="dark"]')
@@ -114,6 +146,37 @@ PINS = [
     ("row",    "gap",             "6px",                      "text",   "§2"),
 
     ("focus",  "outline-offset",  "2px",                      "text",   "§6.2"),
+]
+
+# ─── spec/app-name-label.md ─────────────────────────────────────────────────
+#
+# Two pins, and they are NOT of equal strength. The output says which is which on
+# the line itself, not in a footer, because a reader who sees two green lines will
+# otherwise assume they mean the same thing.
+#
+#   font-size   STRONG. `1.1rem` -> `1.10rem` or `-> 17.6px` is identical computed
+#               at the 16px root every e2e suite runs at, and `1.10rem` is
+#               identical serialised as well. NOTHING RENDERED CAN SEE EITHER
+#               EDIT, in any of the three apps. This line is the only guard that
+#               exists for it (§3.2, §7.1).
+#
+#   font stack  WEAK, and labelled WEAK in the output. It reads `body`'s
+#               declaration in each app. It does NOT check the cascade between
+#               `body` and the label, so a rule overriding the family for the
+#               brand row passes here. And it says nothing about which FACE
+#               renders: `system-ui` resolves per machine by definition, so no
+#               check anywhere can make that claim (§3.1).
+#
+# mode "stack" compares font-family lists with quote style and spacing
+# normalised. MyCal and MyMail write 'Segoe UI', MyNotes writes "Segoe UI" — a
+# difference no browser can see, and a `text` comparison would report it as drift.
+
+LABEL_PINS = [
+    ("brandrow", "font-size",   "1.1rem", "text",  "§3.2", "STRONG"),
+    ("bodytext", "font-family",
+     "system-ui, -apple-system, segoe ui, roboto, sans-serif", "stack", "§3.1",
+     "WEAK: body's stack, not the label's; the cascade between them is NOT "
+     "checked, and nothing here says which face renders"),
 ]
 
 # (rule, property, light, dark, section) — compared as resolved values.
@@ -266,6 +329,23 @@ def take(out: dict[str, str], chunk: str) -> None:
         out[prop] = " ".join(value.split())
 
 
+def font_stack(value: str) -> str:
+    """Normalise a font-family list: the families are the value, the quoting is not.
+
+    `'Segoe UI'` and `"Segoe UI"` are the same font and render identically; the
+    three apps happen to disagree on which quote to use (spec/app-name-label.md
+    §3.1). Comparing the source text would report that as a divergence, which is
+    the check being wrong rather than the repos.
+    """
+    out = []
+    for part in value.split(","):
+        part = " ".join(part.split())
+        if len(part) >= 2 and part[0] == part[-1] and part[0] in "\"'":
+            part = part[1:-1].strip()
+        out.append(part.lower())
+    return ", ".join(out)
+
+
 def custom_properties(css: str, scopes) -> dict[str, str]:
     props = {}
     for selector, body in top_level_rules(css):
@@ -369,6 +449,30 @@ def site(app: App, rule: str) -> str:
     """Where a reader should go to fix it: repo, file(s), selector."""
     files = " / ".join(app.cfg["css"])   # all of them: one entry would be a guess
     return f"{app.name:<8} {files}   in rule `{app.cfg[rule]}`"
+
+
+def check_label(apps: dict[str, App], report: Report) -> None:
+    """spec/app-name-label.md — font size and font stack. Placement is NOT here
+    and cannot be: it is a flex remainder, not a declared value in any app."""
+    for rule, prop, expected, mode, section, strength in LABEL_PINS:
+        label = f"label {section:<6} {rule}.{prop}"
+        bad = []
+        for app in apps.values():
+            raw, err = app.declared(rule, prop)
+            if err:
+                bad.append(f"{site(app, rule)}\n           {err}")
+                continue
+            actual = font_stack(raw) if mode == "stack" else raw
+            if actual != expected:
+                got = f"`{prop}: {raw}`"
+                if actual != raw:
+                    got += f" (normalises to `{actual}`)"
+                bad.append(f"{site(app, rule)}\n"
+                           f"           found {got}, expected `{expected}`")
+        if bad:
+            report.fail(label, bad + [f"[{strength}]"])
+        else:
+            report.ok(label, f"`{expected}` in all {len(apps)}   [{strength}]")
 
 
 def check(apps: dict[str, App], report: Report) -> None:
@@ -516,15 +620,35 @@ What this run does NOT tell you — on a pass OR a failure. It reads CSS source
 and never renders anything, so a clean result is narrower than it looks and a
 failing one covers less ground than the count suggests.
 
-  · IT CHECKS ONE CONTRACT. spec/ now holds TWO binding contracts and this script
-    knows only about spec/sidebar-footer.md. Nothing here looks at the app-logo
-    contract (spec/app-logo.md) — not the badge box, the fill, the glyph size,
-    the mark's extent, the placement, nor the accessibility rules. A green run
-    says nothing whatever about it. That contract has no checker of any kind, in
-    any repository, deliberately: see its own §9.4 for why one waits on MyNotes,
-    and for the asymmetry a future one must print — a CSS reader can defend the
-    badge box in all three apps but the GLYPH SIZE IN MYCAL ONLY, because MyMail
-    sizes its glyph in a TSX prop no stylesheet reader can see.
+  · IT CHECKS TWO CONTRACTS OF THREE. spec/ holds THREE binding contracts. This
+    script knows about spec/sidebar-footer.md (fully) and spec/app-name-label.md
+    (its font size and font stack, and NOTHING else it pins).
+    NOTHING HERE LOOKS AT spec/app-logo.md — not the badge box, the fill, the
+    glyph size, the mark's extent, the placement, nor the accessibility rules. A
+    green run says nothing whatever about it. Note the asymmetry a future checker
+    for it must print: a CSS reader can defend the badge box in all three apps
+    but the GLYPH SIZE IN MYCAL ONLY, because MyMail sizes its glyph in a TSX
+    prop no stylesheet reader can see (app-logo.md §9.4).
+
+  · PLACEMENT IS NOT CHECKED AND CANNOT BE. spec/app-name-label.md pins the
+    label's font, font size AND PLACEMENT. Only the first two are above. The
+    label's position is not a declared value in ANY of the three apps — it is a
+    flex remainder, centred in a row whose height is the row's tallest item — so
+    there is nothing for a static reader to read, and no better version of this
+    script would help. It is held by three per-app rendered suites, which are
+    blind to each other, and by review. See app-name-label.md §4.1 and §7.3.
+
+  · WHICH FONT RENDERS IS NOT CHECKED AND CANNOT BE. The font-stack line compares
+    the DECLARED stack — the request made of the platform. `system-ui` resolves
+    per machine by definition; all three measuring sandboxes resolved it to a
+    monospace face, and CI resolves it ~1.25x wider than a local run. No check
+    anywhere can assert the rendered face, and this one does not try.
+
+  · THE TWO app-name-label LINES ARE NOT OF EQUAL STRENGTH, and each says which
+    it is. font-size is STRONG: `1.1rem` -> `1.10rem` or `-> 17.6px` is invisible
+    to every rendering test in all three repos, so that line is the only guard
+    that exists for it. The font stack is WEAK: it reads `body`'s declaration, so
+    a rule overriding the family for the brand row passes here.
 
   · Geometry is unverified — the 29.2px height, the (8,8) viewport position, the
     4px outline clearance, overflow and clipping. All need a browser (§2.2, §8).
@@ -608,6 +732,23 @@ SELF_TEST = [
      lambda: [s for s, _ in top_level_rules("@media (x) { .a { color: red } }")] == []),
     ("a nested selector fragment is not recorded as a property",
      lambda: "&" not in declarations("gap: 6px; &:hover { color: red; }")),
+    # app-name-label §3.1: the three apps disagree on quote style and agree on the
+    # font. Normalising too little reports drift no browser can see; normalising
+    # too much would swallow a real change. Both directions are checked, because
+    # only the second one can fail silently.
+    ("font stack: quote style is normalised away",
+     lambda: font_stack("system-ui, 'Segoe UI', sans-serif")
+             == font_stack('system-ui, "Segoe UI", sans-serif')),
+    ("font stack: whitespace and case are normalised away",
+     lambda: font_stack("system-ui,   Roboto ,sans-serif")
+             == font_stack("System-UI, roboto, sans-serif")),
+    ("font stack: a DIFFERENT family is still a difference",
+     lambda: font_stack("system-ui, Roboto") != font_stack("system-ui, Helvetica")),
+    ("font stack: a dropped family is still a difference",
+     lambda: font_stack("system-ui, Roboto, sans-serif")
+             != font_stack("system-ui, sans-serif")),
+    ("font stack: reordering is still a difference",
+     lambda: font_stack("system-ui, Roboto") != font_stack("Roboto, system-ui")),
 ]
 
 
@@ -647,7 +788,7 @@ def main() -> int:
     here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     repos = args.repos or os.path.dirname(here)
 
-    print(f"MySuite contract check — {SPEC}")
+    print("MySuite contract check — " + " + ".join(SPECS))
     print(f"siblings: {repos}\n")
 
     # Degrade honestly: two of three agreeing is not a pass.
@@ -676,6 +817,7 @@ def main() -> int:
 
     report = Report()
     check(apps, report)
+    check_label(apps, report)
 
     for status, label, details in report.lines:
         failed = status.strip() == "FAIL"
@@ -693,7 +835,8 @@ def main() -> int:
         verdict = (f"FAILED — {len(report.failures)} pinned value(s) disagree "
                    f"across the three repos.")
         print(verdict)
-        print(f"Every value above is fixed by {SPEC}. Changing one is a change in all three")
+        print("Every value above is fixed by " + " or ".join(SPECS) + ". Changing one is a")
+        print("change in all three")
         print("repos, or in none — a local 'fix' is the defect this check exists to find.")
     else:
         verdict = f"PASSED — every pinned value agrees across {', '.join(sorted(apps))}."

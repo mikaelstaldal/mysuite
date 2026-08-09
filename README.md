@@ -60,15 +60,18 @@ documents rather than restating its values.
 ## Contents
 
 - **[`spec/`](spec/)** — the contracts, one file each, indexed in
-  [`spec/README.md`](spec/README.md). Currently two:
+  [`spec/README.md`](spec/README.md). Currently three:
   - **[`spec/sidebar-footer.md`](spec/sidebar-footer.md)** — the theme toggle and Settings
     button at the bottom of the left sidebar. Implemented in all three apps.
   - **[`spec/app-logo.md`](spec/app-logo.md)** — the app logo badge at the top left.
-    Shipping in MyCal and MyMail; **MyNotes implemented on an unmerged branch.** The app-name
-    label beside the badge is deliberately out of scope, per that contract's §2.
+    Implemented in all three apps.
+  - **[`spec/app-name-label.md`](spec/app-name-label.md)** — the app-name text beside the
+    badge: its font, font size and placement. Implemented in all three apps.
 - **[`tools/check-contract.py`](tools/check-contract.py)** — checks the three apps against
-  the **sidebar-footer** contract only; the app-logo contract has no checker yet. Run it from
-  a checkout with the app repos as siblings:
+  the **sidebar-footer** contract, and against the **app-name-label** contract's font size and
+  font stack. It does **not** check the app-logo contract at all, and it cannot check
+  placement or which font actually renders — every run prints what it did not check. Run it
+  from a checkout with the app repos as siblings:
 
   ```
   tools/check-contract.py            # 0 agree · 1 disagree · 2 cannot check

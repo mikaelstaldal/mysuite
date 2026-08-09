@@ -586,6 +586,26 @@ assumption breaks loudly if an app later wraps the text in a `<span>`).
 > badge subtree**, and **make the parent field falsifiable**. Each was found by a different agent
 > discovering that the obvious implementation passes while measuring the wrong thing.
 >
+> **Each of the three properties now has its own measured specimen, found in a different app by
+> a different agent — and no app's fix would have caught either of the others:**
+>
+> | Property | What passes without it | Where measured |
+> |---|---|---|
+> | search **descendants** | a wrapped label reads a correct size off the row; the size assertion is blind | MyMail, MyNotes |
+> | exclude the **badge subtree** | a deleted label falls through to the mark's own text and resolves a size off it | MyCal — its mark draws a real `<text>8</text>` |
+> | **`labelFound`**, separate from the size assertions | a deleted label falls back to the row, whose computed size **is still 17.6px**, so size and weight both pass **on a page with no label at all** | MyMail |
+>
+> **The last two are the same failure with two different causes.** MyCal's fallback found a
+> glyph's text; MyMail's found the row's own inherited size. Both produce a confident, correct-
+> looking measurement of something that is not the label — *absent* read as *present*, which is
+> the inverse of the failure `spec/measurement-protocol.md` usually warns about and just as quiet.
+>
+> **And MyMail's badge-subtree exclusion is inert today**: `.logo-icon.textContent` is `""`,
+> its Lucide mark being two stroke-only paths. **They kept it anyway**, on the grounds that
+> *"our mark contains no text"* is precisely the kind of condition that goes false without an edit
+> to their file. That is `AGENTS.md` §3.3 used as a **design argument** rather than as a
+> post-mortem, which is the rarer and better use of it.
+
 > **The test of "falsifiable" is that three states are distinguishable**, and MyCal's suite
 > demonstrates all three:
 >
@@ -1050,6 +1070,20 @@ requirement, and `spec/sidebar-footer.md` §11's habit).
   > as §8.2's *"almost none"* is — put it in the past tense and name the commit that ended it.
   > All three of these were caught by app agents reporting the contradiction rather than
   > working around it, which is the only reason they were cheap.
+
+- **A tool that destroyed the evidence and left the result intact.** mymail-dev's first re-run
+  of the mutation set used `sd` with a replacement containing `$tag`, which was read as a capture
+  reference, so every case wrote to one output file. **The pass/fail counts had been echoed live
+  and survived; the per-case read-backs did not.** They re-ran the whole set clean rather than
+  reporting from the surviving file.
+
+  > **The run looked completely normal, and what it destroyed was the evidence rather than the
+  > result.** *(mymail-dev's formulation, and it is this round's pattern in one sentence.)*
+  >
+  > Every instrument failure recorded here is a variant of it: an inert mutation, a pattern that
+  > cannot match, a stale server, a substring test, a red from someone else's scratch edit. **The
+  > answer survives; the thing that would let you check it does not.** Re-running is cheap and
+  > reporting from a damaged record is not — and the damaged record does not look damaged.
 
 - **Describing a guard's coverage from the one tool you happened to run — three agents, three
   routes, independently, in one round.** This is the strongest version of the pattern in this

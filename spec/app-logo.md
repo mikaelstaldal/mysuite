@@ -1,16 +1,17 @@
 # App logo — the badge in the top left
 
-**Status:** binding, and **all three apps conform on every value in it, measured** — including
-`y = 14` from a 16px root to a 32px root, with no per-app departures left (§4.4, §10).
+**Status:** binding, and implemented in all three apps, **which are now all on their `main`
+branches** — MyNotes' logo work merged in `d68c1c5`.
 
-Two caveats on what "conform" means here: MyCal's and MyMail's work is committed on their
-`main` branches and MyNotes' on an unmerged branch, and **none of it is pushed** — so this
-describes four local checkouts, not what is published. And §4's placement rule is newly added:
-MyCal and MyNotes were both corrected to it during this work, MyMail was already on it.
+**One conformance claim in this document was false and is corrected: §4.4's.** MyMail's badge
+`y` is a remainder above a ~16.97px root, not the authored constant this document said it was.
+Measured, not suspected — see §4.4. Everything else in §3, §4 and §6 was re-measured true by all
+three app agents during the app-name-label work.
 
-**Scope: the logo only.** The app-name label beside it is **out of scope** — §2 states that as a
-ruling, with the human's words and the condition attached. Read §2 before concluding the labels
-were forgotten.
+**Scope: the logo only.** The app-name label beside it has its own contract as of
+**[`app-name-label.md`](app-name-label.md)** — §2 records the ruling that put it out of scope
+here, the condition that ruling attached, and how that condition was met. Read §2 before
+concluding either that the labels were forgotten or that this document still governs them.
 
 **Written from** the three apps' shipped code, which is the ground truth wherever it and a
 document disagree (`AGENTS.md` §4), as measured and reported by the three app agents:
@@ -42,11 +43,14 @@ One element per app: a rounded square holding an app-specific mark, at the top l
 | Container | `.brand`, in `<header class="top-bar">` | `.sidebar-header`, in `<nav class="sidebar">` | `.sidebar-header`, in `<aside class="sidebar">` |
 | Stylesheet | `web/static/app.css` | `web/static/app.css` | `web/static/app.css` |
 | Markup | `web/ts/app.tsx` | `web/ts/layout/Sidebar.tsx` | `web/ts/app.tsx` |
-| App-name label **(out of scope, §2)** | `.brand-name` (`<span>`) | **no selector — a bare text node** | `.brand.sidebar-brand` (`<a href="/">`) |
+| App-name label **(its own contract — [`app-name-label.md`](app-name-label.md))** | `.brand-name` (`<span>`) | **no selector — a bare text node** | **no selector — a bare text node**, inside `.brand.sidebar-brand` (`<a href="/">`) |
 
-**MyMail's label cell is not an omission.** Its app name is a bare text node inside
-`.sidebar-header` with no element of its own, so there is nothing to name. Recorded explicitly
-because a blank cell reads as "not looked up" (`AGENTS.md` §3.5).
+**MyMail's and MyNotes' label cells are not omissions.** In both, the app name is a bare text
+node with no element and no class of its own, so there is nothing to name — MyMail's inside
+`.sidebar-header`, MyNotes' inside the brand anchor. Recorded explicitly because a blank cell
+reads as "not looked up" (`AGENTS.md` §3.5). **Only MyCal has an element**, and
+[`app-name-label.md`](app-name-label.md) §8.4 records why that contract does not require the
+other two to grow one.
 
 The three sit in **structurally different containers** — MyCal's in a top bar spanning the
 window, MyMail's and MyNotes' in a sidebar header. **That difference is not a defect and does not
@@ -55,7 +59,27 @@ whatever mechanism each container needs.
 
 ---
 
-## 2. The app-name label is out of scope — a ruling, and whose
+## 2. The app-name label was out of scope — the ruling, its condition, and how it ended
+
+> **SUPERSEDED, on the condition this ruling itself recorded.** The label's font, font size and
+> placement are now governed by **[`app-name-label.md`](app-name-label.md)**; see its §2.1. This
+> section is kept because the ruling is what made the supersession legitimate, and because a
+> comment somewhere still says the label's typography is unspecified — this is what it is
+> quoting (`spec/README.md`: *"withdrawn rules, so that nobody re-derives a superseded rule from
+> an old comment"*).
+>
+> **The mechanism is the part worth keeping.** The deferral below is not *"out of scope for
+> now"*. It is *"out of scope **while MyNotes' top-left is crowded**"* — a condition a reader
+> can go and check. MyNotes widened its column to carry the larger label, which spent the
+> condition, and the owner reopened the question. Nobody had to remember; the ruling said what
+> would end it. That is `AGENTS.md` §3.3 paying for itself, and it is the reason this document
+> insists on conditions elsewhere.
+>
+> **The measurements below are stale and are left as they stand**, because they are the evidence
+> the ruling rested on rather than a description of today. MyNotes now ships `1.1rem` / 17.6px
+> like its siblings (`mynotes` `d68c1c5`); the 1.6px gap this section exists to explain **no
+> longer exists in the code**. For what the three labels are now, read `app-name-label.md` §3,
+> not this table.
 
 **This is the human's ruling, quoted in full** from their instruction (relayed by
 mysuite-manager, message #498; typos in the original, corrections in brackets):
@@ -81,13 +105,18 @@ set a smaller one.** Worth knowing before anyone "restores" it.
 crowded"* — so the deferral is not open-ended: **the label stays smaller while MyNotes' top-left
 is crowded, and relieving the crowding is what puts the question back on the table.**
 (`AGENTS.md` §3.3 — a deferral recorded with the condition that makes it safe, rather than as a
-bare "for now".) Note that §10.1's widening relieves *some* crowding; it does not settle this,
-because the human ruled the label separately and only they can reopen it.
+bare "for now".)
 
-**What is in scope even though the label is not:** the 8px gap between badge and label (§3.4),
-and the badge's *ordering* relative to the label (§4). Both are properties of the row, not of the
-label's typography, and neither makes any label bigger. That reading is deliberate and is the one
-place this exclusion is read narrowly.
+> **That is exactly what happened.** MyNotes widened its column from 420 to 540px — the last
+> 76px of it bought specifically to carry a `1.1rem` label — and the owner then reopened the
+> question and ruled the three labels must match. The sentence above was written not knowing
+> whether the condition would ever be checked. It was.
+
+**What stayed in scope here even while the label was not:** the 8px gap between badge and label
+(§3.4), and the badge's *ordering* relative to the label (§4). Both are properties of the row
+rather than of the label's typography, and neither makes any label bigger — which is why they
+survived the exclusion and why they are still **this** contract's, cited rather than restated by
+[`app-name-label.md`](app-name-label.md) §3.3. One value, one owner.
 
 ---
 
@@ -222,10 +251,12 @@ implementing, which is the only reason it is a rule rather than a defect.)*
 **8px**, between the badge's trailing edge and the label's leading edge. Absolute `px`, invariant
 across viewport, theme, root font size and content volume in both shipped apps.
 
-**It is a property of the container in both**, reached by two independent rules — MyCal's
+**It is a property of the container in all three**, reached by two independent rules — MyCal's
 `.brand { gap: 8px }` and MyMail's `.sidebar-header { gap: 8px }`. Pinning it therefore
-constrains a rule that also positions the out-of-scope label. That is deliberate: the human's
-exclusion is about the label's **size**, and 8px of gap makes no label bigger (§2).
+constrains a rule that also positions the label. That was deliberate under §2's exclusion — the
+human's exclusion was about the label's **size**, and 8px of gap makes no label bigger. Since
+[`app-name-label.md`](app-name-label.md) the point is moot: that contract cites this value rather
+than restating it, so the gap has one owner and it is this section.
 
 > **The 8px is load-bearing in a second place, and this is the note for whoever next touches
 > it.** mynotes-dev's fit arithmetic — the 36px cost that drove the human's widening ruling
@@ -297,6 +328,34 @@ computed satisfies the contract on the day it is measured and drifts afterwards 
 — which is `spec/sidebar-footer.md` §3.1's class of defect (a value correct today for a reason
 nothing defends) arriving on geometry instead of on a declaration.
 
+#### The clause this section was missing, and which §4.4 was wrong for want of
+
+> **The badge's `y` is authored only if it is independent of the label's line box.**
+
+All three brand rows are `display: flex; align-items: center`, so the row's height is its
+tallest item and **whichever of the badge and the label is shorter is centred in the leftover**.
+The label's line box is `1.65 × root` (`app-name-label.md` §3.2's `1.1rem` × an inherited
+`line-height: 1.5`), which passes the 28px badge at a root of **28 ÷ 1.65 ≈ 16.97px**. Above
+that root, a badge that has not opted out of the centring **is a remainder of the label's
+typography** — and a 16px root is the last size at which it is not.
+
+**The mechanism is one declaration: `align-self: flex-start` on the badge.** MyCal
+(`web/static/app.css:289`) and MyNotes (`web/static/app.css:98`) carry it. MyMail did not, which
+is the whole of §4.4's defect.
+
+> **Why the original section could not see this.** §4.2 was written from the two ways the badge
+> had actually been observed to move — MyCal's date heading wrapping, MyNotes' tab-strip
+> typography — and both are *strangers to the brand row*. The label is not a stranger; it is the
+> other half of the row. So "the badge must not be a remainder of something unrelated" was
+> satisfied while "the badge must not be a remainder" was not. **The generalisation is that a
+> remainder of your own neighbour is still a remainder**, and it is the harder one to notice
+> precisely because the neighbour looks like it belongs there.
+>
+> This also makes the rule testable in a way a resting measurement is not: grow the label's
+> `line-height` and require the badge not to move. MyNotes' suite already does exactly that, and
+> it is the assertion that distinguishes a term that is *absent* from the computation from one
+> that merely happens to be zero (§4.4).
+
 ### 4.3 Departures, recorded
 
 Each of these is a **recorded exemption from §4, not evidence that §4 cannot exist** — which is
@@ -307,6 +366,7 @@ the distinction this section had wrong until the owner looked at the shipped res
 | badge hidden entirely below 600px | MyCal | §9.3 |
 | badge scrolls off under content overflow — `y` = −2206 / −1008 measured | MyCal, MyMail | §9.1 |
 | ~~the **demo build** moved `y` non-monotonically with width: 14 at 1920, 27.609 at 1440, back to 14 at 1439~~ | MyCal | **resolved** — the demo build now measures (16, 14) too, verified rather than assumed, as does MyNotes' |
+| badge `y` grows with the root font size above ~16.97px — 14.016 / 16.500 / 19.797 / 26.391 at 17 / 20 / 24 / 32px roots | MyMail | §4.4's correction. **Not a sanctioned departure — a defect**, listed here so it is not mistaken for one of the rows above, and **being fixed in the app** rather than granted an exemption |
 
 ### 4.4 Conformance
 
@@ -315,9 +375,47 @@ both took the same shape without conferring: **take the badge out of its contain
 author the offset directly.** That is §4.2 arriving as two independent implementations of one
 rule.
 
+> **This section stated a conformance claim that was false, and this is the correction.** It
+> read: *"All three hold `y = 14` from a 16px root to a 32px root"*, and of MyMail, *"authored
+> directly, as `padding: 14px 16px 12px`. **The only one that never moved**."* **Both are false
+> of MyMail above a ~16.97px root**, where the label's line box out-measures the badge and
+> MyMail's badge — which had no `align-self: flex-start` — is centred against it (§4.2).
+>
+> **Measured** by mymail-dev at `e024e1d`, five roots, two independent methods agreeing to the
+> last digit (CSS on `html`, and CDP `Page.setFontSizes`):
+>
+> | root | 16 | 17 | 20 | 24 | 32 |
+> |---|---|---|---|---|---|
+> | badge `y` | 14.000 | **14.016** | **16.500** | **19.797** | **26.391** |
+>
+> `x` was 16.000 at every root; only `y` moved. **Chrome's "Medium" is 16px and its next click
+> is 20px**, so this was one settings step from 16.5 — not an exotic root size.
+>
+> **What was done about it: the app was fixed, not the claim.** The cheaper edit was to amend
+> this section to say MyMail drifts. Instead MyMail is taking the `align-self: flex-start` its
+> two siblings already carry, so the claim becomes **true** rather than accurate-about-a-defect.
+> mymail-dev measured before and after — badge flat at 14.000 at all five roots, and the
+> app-name label, the 8px gap and the header's own height **unchanged at every root on both
+> boxes**, so the fix is free with respect to `app-name-label.md`.
+>
+> **Status, and it is written so you can check it rather than trust it:** at the time of writing,
+> the remedy is in MyMail's working tree and **not committed**, so `main` at `e024e1d` still
+> drifts. **If `mymail/web/static/app.css` declares `align-self: flex-start` on `.logo-icon` on
+> `main`, this note is stale and the row below is the current one.** That is deliberately a fact
+> about the code rather than a date: `AGENTS.md` §3.5's whole complaint is that *"update this
+> when X lands"* is addressed to a moment with no diff and no owner.
+>
+> **The irony is worth recording rather than enjoying.** MyMail's crossover (**16.97px**) is
+> *lower* — i.e. bites sooner — than the MyNotes departure this document recorded and then
+> deleted (**18.67px**), because MyMail's line box is `1.1rem × 1.5` where MyNotes' was
+> `1.5rem × 1`. **The document removed the smaller departure while carrying the larger one it
+> named as its exemplar**, in the very passage arguing that a bound beats a sample. The bound was
+> right. Nobody ran it against the other two apps — `AGENTS.md` §3.2's unit question, landing in
+> the place this document was most confident.
+
 | | (x, y) at 1280×720, 16px root | x authored by | y authored by |
 |---|---|---|---|
-| MyMail | **(16, 14)** | `.sidebar-header { padding: 14px 16px 12px }` | the same declaration |
+| MyMail | **(16, 14)** | `.sidebar-header { padding: 14px 16px 12px }` | that padding **plus `.logo-icon { align-self: flex-start }`** — see the correction above; the `align-self` is the part that makes it hold above a ~17px root, and it is the one declaration MyMail was missing |
 | MyNotes | **(16, 14)** | `.sidebar-header { margin: 0 16px 0.75rem }` | `.sidebar { padding: 14px 0 0 }`, load-bearing via **two** `align-self: flex-start` — on `.sidebar-brand` and on `.brand-logo` |
 | MyCal | **(16, 14)** | `--app-padding-x: 16px`, via `.app`'s padding | `.brand { align-self: flex-start; margin-top: 6px }` **and** `.brand-logo { align-self: flex-start }`, on `.app`'s 8px `padding-top` |
 
@@ -332,9 +430,15 @@ heading's line count, the view, the date and the locale. But `.brand-logo` must 
 box.** A fix that removed only the outer centring would have measured 14 at the stated conditions
 and still failed §4.2.
 
-**All three hold `y = 14` from a 16px root to a 32px root**, and MyCal and MyNotes each need
-**two** `align-self: flex-start` declarations to do it — one to leave the container's centring,
-one to leave the *brand block's* own. Neither app's remainder was removed by the first alone.
+**MyCal and MyNotes hold `y = 14` from a 16px root to a 32px root, and each needs *two*
+`align-self: flex-start` declarations to do it** — one to leave the container's centring, one to
+leave the *brand block's* own. Neither app's remainder was removed by the first alone.
+
+**MyMail needs only one**, and the asymmetry is structural rather than an oversight: its badge
+and its label are direct children of the same flex row, so there is no intermediate brand block
+with its own centring to escape. *(mymail-dev.)* Worth stating, because *"all three need two"* is
+the kind of tidy generalisation this document has been wrong with before (`AGENTS.md` §3.2), and
+because §4.4's false row is what a reader gets if they assume the three are structurally alike.
 
 **The bar still grows for a wrapped heading** — measured at 40 / 67.2 / 100.8 / 151.2 / 268.8px
 across widths and roots, badge at 14 in all of them. Nothing was made rigid; a coupling was cut.
@@ -579,7 +683,8 @@ Reload button; MyMail's is a `<div>`, not focusable, not inside a link or button
 
 > **The condition, which is the part that ages** (`AGENTS.md` §3.3). The badge is decorative
 > **because** an adjacent visible app-name text node carries the identity. **That element's
-> appearance is out of scope (§2), but this contract depends on its existence.** If an app ever
+> appearance is [`app-name-label.md`](app-name-label.md)'s, but this contract depends on its
+> existence** — and that dependency is now recorded in both documents rather than in neither. If an app ever
 > removes the visible label — the icon-only variant `spec/sidebar-footer.md` §7 considered and
 > rejected for the footer — **the badge acquires a naming obligation** and this ruling stops
 > holding.
@@ -636,16 +741,22 @@ The badge does not grow with the reader's browser font; the label does.
 |---|---|---|
 | MyCal | 1.061 | **0.707** |
 | MyMail | 1.061 | **0.707** |
+| MyNotes | 1.061 | **0.707** |
 
 mymail-dev rendered both and looked: at 16px the mark *"reads as a proper badge anchoring the
 row"*; at 24px it *"reads as undersized — the label dominates and the mark looks like an
 afterthought."*
 
-**Pinned as `px` deliberately**, for two reasons. Moving to `rem` would change two working apps'
-rendered appearance, which is outside "add a logo to MyNotes and write down the pattern" and is
-the human's call to open. And the two shipped apps degrade **identically** — 1.061 and 0.707 to
-three decimals — so this is a **suite-wide design property, not a divergence**; the contract's
-purpose is satisfied at every root size.
+**Pinned as `px` deliberately**, for two reasons. Moving to `rem` would change three working
+apps' rendered appearance, which is outside "add a logo to MyNotes and write down the pattern"
+and is the human's call to open. And all three degrade **identically** — 1.061 and 0.707 to three
+decimals — so this is a **suite-wide design property, not a divergence**; the contract's purpose
+is satisfied at every root size.
+
+*(MyNotes' row was added once its label became `1.1rem` like its siblings' — the ratio is
+`28 ÷ (1.1rem × 1.5)` and is now the same arithmetic in all three. The argument here got
+stronger, from two apps to three, which is the rare case of a two-of-three rationale being
+repaired rather than falsified — `AGENTS.md` §3.2.)*
 
 **Open design item, owner decision.** Recorded with its numbers so anyone who wants it revisited
 does not have to re-derive them. Note the tension: **the badge is the `px` island inside a `rem`
@@ -655,6 +766,10 @@ rejected *there* for WCAG 1.4.4 reasons.
 ### 9.3 MyCal hides the badge below 600px — a sanctioned exemption, not a licence
 
 `@media (max-width: 600px)` sets `.brand-logo, .brand-name { display: none }`.
+
+**It hides the label as well as the badge**, by one rule with two selectors that cannot be
+separated without splitting the list — sanctioned for the label too, by the same owner, in
+[`app-name-label.md`](app-name-label.md) §4.4.
 
 **Sanctioned, with MyCal's own stated reason:** there is no room for the mark and the label, and
 Reload rides in the same block and must stay reachable. Same shape as
@@ -672,18 +787,29 @@ Swept by all three agents across their own repos:
 - **MyCal:** exactly one assertion touches the badge —
   `e2e/tests/calendar-views.spec.ts:12`, `expect(page.locator('.brand-logo svg')).toBeVisible()`.
   It is satisfied by any non-empty box, so it cannot distinguish 12px from 17px from 22px.
-- **MyMail:** the entire repository contains **two** references to the logo — the markup line and
-  the CSS rule. Its e2e suite mentions neither `.logo-icon` nor `.sidebar-header`.
-- **MyNotes:** **12 tests in `e2e/tests/logo.spec.ts`**, plus a `Logo.tsx` ↔ `favicon.svg` drift
-  guard that runs on every build. Each accepted by a demonstrated red (§10.4). **On an unmerged
-  branch**, so nothing runs it yet.
+- **MyMail:** the repository contains **three** references to the logo — the markup line, the CSS
+  rule, and the `web/AGENTS.md` section added in `e024e1d`. Its e2e suite mentions neither
+  `.logo-icon` nor `.sidebar-header`, so the substance holds: **no test anywhere.**
+- **MyNotes:** `e2e/tests/logo.spec.ts` — **20 tests as the runner collects them** (11 `test(`
+  calls, five of them inside loops over roots and themes), plus a `Logo.tsx` ↔ `favicon.svg`
+  drift guard that runs on every build. Each accepted by a demonstrated red (§10.4). **On `main`
+  since `d68c1c5`, and CI runs it.**
+
+  *(This said "12 tests … nothing runs it yet". Both halves went false without an edit here: the
+  branch merged, which produces no commit in this repository. And 12 reproduces under neither
+  available method — `AGENTS.md` §3.6's "a count is not a check", and §10.3's own lesson that a
+  denominator read off a file is not one the runner would give.)*
 - **`tools/check-contract.py`** does not know the logo exists.
 
-> **So the only real coverage of this contract belongs to the app that adopted it last, and does
-> not execute anywhere.** The two apps this contract was *written from* have none. That is worth
-> stating in that direction: a contract derived from two implementations ended up guarded only by
-> the third, because the third is the only one that had a reason to write assertions while the
-> rules were fresh.
+> **So the only real coverage of this contract belongs to the app that adopted it last.** The two
+> apps this contract was *written from* have none. That is worth stating in that direction: a
+> contract derived from two implementations ended up guarded only by the third, because the third
+> is the only one that had a reason to write assertions while the rules were fresh.
+>
+> *(This used to end "and does not execute anywhere". That half went false when MyNotes' branch
+> merged and its CI began running the suite — no edit here, no diff in this repository. The
+> substance is unchanged and is the part that matters: **two of the three apps still have no
+> assertion about the badge at all**, and nothing compares the three.)*
 
 One of MyNotes' mutations is the one to keep, because it is this contract's own §3.3 caught in
 the act: reverting its mark to the uncropped `0 0 32 32` viewBox **failed 2 tests on the extent
@@ -760,10 +886,15 @@ in its repo, because the consequence is that the three stop matching.)*
 
 ## 10. MyNotes
 
-**Implemented and measured, on an unmerged branch.** MyNotes' `main` still ships no badge and a
-420px column; the work sits on a local `logo-badge` branch, unpushed. **No commit hash is
-recorded here** — `spec/sidebar-footer.md` §11's rule is that a hash from an unpushed branch pays
-the cost of perishability and buys nobody the ability to resolve it.
+**Implemented, measured, and merged**: MyNotes' logo work is on `main` in **`d68c1c5`**, and the
+column shipped at **540px** — not the 420 this section was written against, nor the 456 §10.3
+names, nor the 464 `spec/sidebar-footer.md` §6.4 was told to expect. Those were real rungs of one
+ladder, recorded in `mynotes/web/static/app.css:122-127`; each document froze at a different one.
+
+*(A hash is recorded now because there is one worth recording. While the work was on an unpushed
+branch this section deliberately gave none — `spec/sidebar-footer.md` §11's rule that a hash
+nobody can fetch pays the cost of perishability and buys nothing. The condition ended; the rule
+did not change.)*
 
 Every value in §3 was implemented and then **measured back** on a rendered page, and every one
 agreed. Nothing in this section is a report that code was written; §10.4 lists what was read off
@@ -884,8 +1015,10 @@ Settled and available to build against:
 - **The badge goes inside the brand anchor**, per §8, with the implementer's note there.
 - **`.sidebar-brand` will need its own flex context** (`display: flex; align-items: center;
   gap: 8px`) to sit a badge beside the text inside the anchor. That is a change to the label's
-  **rule** but not to its **typography** — font-size, weight and colour are untouched, measured
-  identical in both shapes — so it is consistent with §2's exclusion.
+  **rule** but not to its **typography** — font-size, weight and colour were untouched, measured
+  identical in both shapes — so it was consistent with §2's exclusion, which was still in force
+  when this was written. The label's typography has since moved to
+  [`app-name-label.md`](app-name-label.md).
 
 ---
 
@@ -896,6 +1029,8 @@ Listed so nobody re-derives them from a message or an old draft
 
 | Considered | Replaced by | Why |
 |---|---|---|
+| **"All three hold `y = 14` from a 16px root to a 32px root"** and **"MyMail … authored directly … the only one that never moved"** | **§4.4's correction, and §4.2's new clause** | **False of MyMail** above a ~16.97px root, where the label's line box out-measures the badge and MyMail's badge — lacking `align-self: flex-start` — is centred against it. Measured at five roots, two independent ways. **The app is being fixed rather than the claim rewritten**, so the sentence becomes true rather than accurate-about-a-defect. Listed here because a false conformance claim is the most dangerous thing this document can contain: it is what a reader checks *instead of* measuring |
+| **"The app-name label is out of scope"** | **[`app-name-label.md`](app-name-label.md)** | **Superseded by the owner, on the condition their own ruling attached** (§2). Not withdrawn as wrong — it was right, and it ended the way it said it would. The ruling, its condition and its 1.6px measurement stay in §2 as history |
 | **"The badge's distance from the window's edges is deliberately not pinned"** | **§4's (16, 14) at rest** | **Withdrawn on the owner's observation of the shipped result.** It answered *"can a coordinate be pinned that always holds?"* — thoroughly, and correctly. The question that mattered was *"do the three look alike when you open them?"*, and the two are not the same. A rule can be unavailable in general while the **resting** positions agree in the case every user sees |
 | **"The two shipped apps agree at rest by coincidence … not a shared mechanism and must not be written up as one"** | **§4.1** | **False.** MyCal chose `min-height: 40px` specifically to land on MyMail's 14px and recorded the 3px it would otherwise miss by, in a comment in its own stylesheet. The second half of the sentence was right and the first was wrong — and together they told anyone who noticed the misalignment that the question was malformed. **A reader who finds that comment must not conclude the contract is confused: the comment is right and this document was wrong** |
 | "Position deliberately unspecified" | §4's placement rule | Says less than the human's instruction, which specifies *"in top left"*. Approved once and reversed on reading the primary (§12) |

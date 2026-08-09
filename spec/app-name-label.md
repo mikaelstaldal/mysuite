@@ -533,6 +533,28 @@ assumption breaks loudly if an app later wraps the text in a `<span>`).
 > flag with its re-derive message. *(Found by mymail-dev while implementing this section; it is
 > what §6.1 says, and the obvious implementation defeats it.)*
 
+> **And the parent flag must be capable of being false — which is a SEPARATE property from the
+> descendant search, and a suite can have the first without the second.**
+>
+> mynotes-dev-b added the flag the review asked for, mutation-tested it, and found it **true in
+> every reachable state**: a node found by searching the row's direct children has the row as its
+> parent *by construction*, and a node not found fell back to the row anyway. **It read as a
+> guard and was a tautology.** What actually caught a wrap was `labelFound` — 7 red, four of them
+> *badge* tests, pointing a reader at an element that was fine.
+>
+> They fixed the field rather than asserting it: a `TreeWalker` over the whole row, which
+> separates *"there is no label"* from *"the label moved into a wrapper"*. Re-mutated: **2 red on
+> the right assertion, with a message naming the cause, and badge geometry green.**
+>
+> **This field is load-bearing in exactly the two apps that cannot be covered any other way.**
+> §7.1's static check reads the row, so in MyMail and MyNotes — whose labels have no element — a
+> `<span>` carrying its own `font-size` passes every line the cross-repo check has. **A tautology
+> here is the difference between a guard and the appearance of one.**
+>
+> So §6.1 requires three things, and they are independent: **search descendants**, **exclude the
+> badge subtree**, and **make the parent field falsifiable**. Each was found by a different agent
+> discovering that the obvious implementation passes while measuring the wrong thing.
+
 > **And EXCLUDE THE BADGE SUBTREE from that walk.** Also prescriptive, and it is the reason the
 > two requirements have to be stated together: a descendant walk that does not exclude the badge
 > will find the *mark's* text in at least one app. **MyCal's mark draws a real `<text>8</text>`,
@@ -667,9 +689,10 @@ includes **confirming the mutation took effect**, per `spec/measurement-protocol
 mutation here came back green not because the assertion was weak but because the mutation was
 inert, and **a mutation that does not mutate is indistinguishable from an assertion that does
 not fire**. *(mycal-dev.)*
-`mynotes/e2e/tests/logo.spec.ts:288-295` is the template — and note that it currently
-asserts `'17.6px'` at a 16px root **only**, which a `rem` → `px` conversion passes. A
-rendered suite cannot hold §3.2 on its own; that is §7.1's job.
+`mynotes/e2e/tests/logo.spec.ts:341-361` is the template. It asserts **at two roots** — the
+pairs `[16, '17.6px']` and `[32, '35.2px']`, written as pairs rather than computed, because
+`16 * 1.1` serialises as `17.600000000000001` in IEEE 754 and a computed expectation would fail
+on the default root for a reason that has nothing to do with the app. *(mynotes-dev-b.)*
 
 > **What a rendered suite can and cannot hold, narrowed after measurement.** This section used
 > to say a rendered suite *"cannot hold §3.2 on its own"*, flat. That is right about MyNotes'
@@ -775,7 +798,7 @@ moment `.brand`'s `color` is deleted as redundant (§8.3); `font-size` sits on `
   that it is hidden below 600px. **Nothing typographic or geometric.**
 - **MyMail:** nothing. Its e2e suite contains no brand, header or app-name locator at all.
 - **MyNotes:** one assertion, `17.6px` / `600` at a 16px root — the only typographic
-  assertion in the suite, and a `rem` → `px` change passes it.
+  assertion in the suite, and a `rem` → `px` change passed it.
 - **`tools/check-contract.py`** did not know the label existed.
 
 > **So the value the owner asked us to protect was, at the moment they asked, protected by
@@ -899,15 +922,38 @@ requirement, and `spec/sidebar-footer.md` §11's habit).
   > exists for exactly this and had not been applied to the new pin: it was accepted on a green
   > run plus four mutations that all happened to attack the row rather than the label.
 
-- **This document went stale against a commit made by its own changeset**, which is worth a
-  line because this is the file that collects those. §4.1 said *"in MyMail neither child opts
-  out"* — true when written, falsified within the hour by the very fix §6.3 describes, leaving
-  two sections of one document disagreeing. It was caught by mymail-dev reporting it rather
-  than assuming it would be noticed.
+- **This document went stale against work it caused — three times, which makes it a pattern
+  rather than three accidents.** Listed as one item deliberately:
 
-  > **`AGENTS.md` §3.5 at the shortest possible timescale.** The usual specimens age over
-  > weeks and are found by someone reading an unrelated file. This one aged over minutes, and
-  > the falsifying commit was one this changeset asked for. **Nothing about "there is no X"
-  > requires X to be far away** — it only requires the claim and the change to be in different
-  > files, and here they were in different repositories for about as long as it takes to run a
-  > build.
+  | The claim | Falsified by |
+  |---|---|
+  | §4.1: *"in MyMail neither child opts out"* | the `align-self` fix §6.3 asked for |
+  | §7.2: MyNotes *"asserts at a 16px root only, which a `rem` → `px` conversion passes"* | MyNotes taking §7.2's own two-root finding into its suite |
+  | §8.2: MyNotes has *"one assertion … a `rem` → `px` change passes it"* | the same commit |
+
+  > **`AGENTS.md` §3.5 at the shortest possible timescale, and with the causation reversed.**
+  > The usual specimen ages over weeks and is found by someone reading an unrelated file. These
+  > aged over minutes to hours, and **the falsifying commit was one this document asked for.**
+  > A contract that tells three suites to change is, by construction, describing a state it is
+  > in the act of ending.
+  >
+  > **So the general form: any sentence describing an app's current coverage is a claim with a
+  > deadline the moment the same document asks that app to improve it.** Prefer describing what
+  > the suite must do over what it presently does; where the present state is worth recording —
+  > as §8.2's *"almost none"* is — put it in the past tense and name the commit that ended it.
+  > All three of these were caught by app agents reporting the contradiction rather than
+  > working around it, which is the only reason they were cheap.
+
+- **A torn read, observed live, of the mirror case `AGENTS.md` §3.5 says nobody ever catches.**
+  mynotes-dev-b reported §7.1 as describing a check that did not exist: their grep found no
+  `app-name-label`, no `1.1rem` and no font-stack logic in `tools/check-contract.py`, and they
+  saw `spec/app-name-label.md` as **untracked**. **Both readings were correct when taken** —
+  they read between the drafting and the committing.
+
+  > **This is §3.5's mirror case — a claim going *true* without an edit to it — caught in the
+  > act**, which that section says is the harder direction precisely because nothing prompts a
+  > re-check. Here the re-check happened for one reason: **they reported the contradiction
+  > instead of resolving it.** `AGENTS.md` §4's *"report a contradiction rather than resolving
+  > it"* is usually justified by the risk of editing code to match a document; this is the other
+  > payoff, and the cheaper one. Had they quietly weakened their comments to match what they
+  > saw — they had begun to — the correction would have had no trigger at all.

@@ -927,6 +927,31 @@ be half wrong.)*
   > by somebody who is not reading it. State what each has, and avoid crowning a winner — a
   > superlative is a claim about the other two that they can falsify without touching this file.
 
+  **Citation depth is per-file, and getting it wrong is this repository's oldest recurring
+  defect.** A path to a contract must be written relative to whatever will resolve it, and that
+  differs *within one app repo*:
+
+  | Cited from | Resolves as |
+  |---|---|
+  | `web/AGENTS.md` — a markdown **link target** | `../../mysuite/spec/<file>.md` |
+  | prose or a comment anywhere, read against the repo root | `../mysuite/spec/<file>.md` |
+  | `web/static/*.css`, `e2e/tests/*.ts` — a comment two levels deep | **neither of the above
+    resolves**; write the repo-root form, `../mysuite/…`, and do not deepen it to match a
+    neighbouring markdown link |
+
+  **The failure is always the same one: copying a working path from a file at a different
+  depth.** §3.5's mirror-case specimen below is one instance — MyCal's `web/AGENTS.md` link
+  targets were dead for a long time and became correct as a side effect of an unrelated repair.
+  A later sweep found **five `../../mysuite/spec/app-logo.md` citations in MyCal's `app.css` and
+  `e2e/tests/`**, all resolving to a `mycal/mysuite` that does not exist, and one of them
+  attached to an assertion still citing a rule that had been superseded.
+
+  **This convention had been worked out once and written down only in MyCal's own
+  `web/AGENTS.md`** — so the two repos that needed it could not see it, and the file that tells
+  app repos how to cite contracts (this section) did not say it. That is `AGENTS.md` §3.4's
+  *"the canonical statement is the longest one"* failing in the other direction: there was only
+  one statement, and it was in the wrong repository.
+
   Note that MyMail **retitled** its footer section when the second contract arrived: *"Edits that
   silently break that contract"* became *"The sidebar footer is governed from outside this repo"*,
   because *"that contract"* stopped being unambiguous the moment there were two. Worth copying —

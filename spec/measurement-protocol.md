@@ -91,6 +91,18 @@ red for the right reason**:
 > **A mutation that does not mutate is indistinguishable from an assertion that does not fire,
 > and both produce a green run.** *(mycal-dev's formulation.)*
 >
+> **The same shape, one level up, in the check that verifies your citations.** mynotes-dev-b's
+> first citation sweep reported **all eleven sections MISSING** from a document that contained
+> every one of them. The pattern required a dot after the section number, and subsections do not
+> carry one. **A clean negative produced entirely by the pattern** — on the document that warns
+> about exactly that, while checking citations *to* it.
+>
+> Both belong here rather than in a contract, and they are one family with §*"the gap read as
+> the answer"*: **a check can fail in the reassuring direction, and it does not announce that it
+> has.** An inert mutation, a pattern that cannot match, a stale server — each returns a
+> well-formed result that is silent about what it could not see. **Before believing any negative
+> from a tool you wrote, make it produce a positive you already know the answer to.**
+>
 > This is the same failure this document is otherwise about, arriving on the guard instead of on
 > the page: the apparatus answering confidently **in the direction of a pass**. A stale server
 > makes a test pass against assets you did not edit; an inert mutation makes it pass against a

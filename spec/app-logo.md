@@ -3,10 +3,15 @@
 **Status:** binding, and implemented in all three apps, **which are now all on their `main`
 branches** — MyNotes' logo work merged in `d68c1c5`.
 
-**One conformance claim in this document was false and is corrected: §4.4's.** MyMail's badge
-`y` is a remainder above a ~16.97px root, not the authored constant this document said it was.
-Measured, not suspected — see §4.4. Everything else in §3, §4 and §6 was re-measured true by all
-three app agents during the app-name-label work.
+**One conformance claim in this document was false, and the app was fixed rather than the claim
+rewritten.** MyMail's badge `y` was a remainder above a ~16.97px root, not the authored constant
+this document said it was; it now carries the `align-self: flex-start` its two siblings already
+had, so §4.4's claim is true rather than accurate-about-a-defect. **§4.4 records that it was
+false in the interim.** Everything else in §3, §4 and §6 was re-measured true by all three app
+agents during the app-name-label work.
+
+**Nothing in this round is pushed.** All three apps' adoption commits, and this repository's, are
+local-only; no hashes are recorded (`spec/app-name-label.md` §10).
 
 **Scope: the logo only.** The app-name label beside it has its own contract as of
 **[`app-name-label.md`](app-name-label.md)** — §2 records the ruling that put it out of scope
@@ -398,19 +403,20 @@ rule.
 > app-name label, the 8px gap and the header's own height **unchanged at every root on both
 > boxes**, so the fix is free with respect to `app-name-label.md`.
 >
-> **Status, and it is written so you can check it rather than trust it:** the remedy is
-> **committed on a feature branch, not on `main`** — so `main` at `e024e1d` still drifts, and
-> **the row below therefore describes a declaration that is not yet shipped.** **If
-> `mymail/web/static/app.css` declares `align-self: flex-start` on `.logo-icon` on `main`, this
-> note is stale and the row below is simply current.** That is deliberately a fact about the code
-> rather than a date: `AGENTS.md` §3.5's whole complaint is that *"update this when X lands"* is
-> addressed to a moment with no diff and no owner.
+> **Status: the remedy is on MyMail's `main`, and this section's own staleness test is what
+> said so.** It read: *"if `mymail/web/static/app.css` declares `align-self: flex-start` on
+> `.logo-icon` on `main`, this note is stale."* It does. **The row below is now simply current**,
+> and MyMail reaches §4's offsets the same way its two siblings do.
 >
-> *(No hash is given for the branch, per `spec/sidebar-footer.md` §11: a hash nobody can fetch
-> pays the cost of perishability and buys nothing. This note first said the work was "in MyMail's
-> working tree and not committed", which was wrong — it was committed, on a branch. Corrected in
-> review. **The staleness test above was ref-scoped and stayed right while the prose beside it was
-> wrong**, which is the argument for writing the test that way.)*
+> **Not pushed** — MyMail's `main` is one commit ahead of a local `origin/main` cache, as are
+> MyCal's and MyNotes'. No hash is recorded for the same reason none was recorded while the work
+> was on a branch: a hash nobody can fetch pays the cost of perishability and buys nothing
+> (`spec/sidebar-footer.md` §11, and `spec/app-name-label.md` §10).
+>
+> *(This note previously said the work was "in MyMail's working tree and not committed" — wrong;
+> it was committed, on a branch. **The prose was wrong twice while the test beside it stayed
+> right both times**, which is the whole argument for writing the test as a fact about the code
+> rather than as a date or a promise to come back.)*
 >
 > **The irony is worth recording rather than enjoying.** MyMail's crossover (**16.97px**) is
 > *lower* — i.e. bites sooner — than the MyNotes departure this document recorded and then
@@ -422,7 +428,7 @@ rule.
 
 | | (x, y) at 1280×720, 16px root | x authored by | y authored by |
 |---|---|---|---|
-| MyMail | **(16, 14)** at a 16px root on `main`; **holds to a 32px root only with the branch's fix** | `.sidebar-header { padding: 14px 16px 12px }` | on `main`: that padding **alone**, and it is a remainder above ~17px. With the branch's `.logo-icon { align-self: flex-start }`: that padding, authored. **Not yet shipped — see the correction above** |
+| MyMail | **(16, 14)**, holding from a 16px root to a 32px root | `.sidebar-header { padding: 14px 16px 12px }` | that padding **plus `.logo-icon { align-self: flex-start }`** — the second is what makes it authored rather than a remainder above a ~17px root, and it is the one declaration MyMail was missing |
 | MyNotes | **(16, 14)** | `.sidebar-header { margin: 0 16px 0.75rem }` | `.sidebar { padding: 14px 0 0 }`, load-bearing via **two** `align-self: flex-start` — on `.sidebar-brand` and on `.brand-logo` |
 | MyCal | **(16, 14)** | `--app-padding-x: 16px`, via `.app`'s padding | `.brand { align-self: flex-start; margin-top: 6px }` **and** `.brand-logo { align-self: flex-start }`, on `.app`'s 8px `padding-top` |
 

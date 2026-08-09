@@ -408,6 +408,13 @@ while the other two hold.
 > unprotected element beside it inherited the hazard without the note.** The comment is
 > correct. Its neighbour is uncovered, and the correctness of the comment is part of why
 > nobody looked.
+>
+> **Both halves of that have since been corrected in MyCal, and the correction is the useful
+> part.** The comment also claimed deleting `.brand-logo`'s `align-self` *"moves the mark with
+> nothing red"* — **no longer true**, since the badge test's 20/24px root loop catches it,
+> verified by deleting the declaration and measuring `y = 16.5` at a 20px root. So one clause
+> went stale by being *fixed*, and the clause beside it was never written at all. It now records
+> both: the badge is guarded, **and the same two levers still move the label, unguarded, today.**
 
 ### 4.3 The ruling: constrain the observable, name the operands
 
@@ -528,6 +535,16 @@ assumption breaks loudly if an app later wraps the text in a `<span>`).
 > come from" flag never fires at all.** The descendant search finds the node, reports the new
 > parent, and fails on the flag with a message telling the reader what to re-derive.
 >
+> **§6.1 is the LOCAL HALF of the static guard, not a consolation for apps that lack one.**
+> §7.1's `LABEL_ELEMENT` check catches a `font-size` added to MyCal's label element — the false
+> green §10 records. **The rendered suite catches the same divergence, at 22.4px, and only
+> because it follows this section**: a suite reading the row instead of the element the text
+> actually inherits from would have reproduced the static check's blindness exactly.
+>
+> So in MyCal both halves independently catch one divergence by different means, and **neither is
+> redundant**; in MyMail and MyNotes, whose labels have no element, this is the *only* half that
+> exists. *(mycal-dev, whose per-tool table in §7 is what made the pairing visible.)*
+
 > **What the descendant search actually buys is a CAPABILITY, not a better error message** —
 > and that is the argument for the requirement. Wrap the label in
 > `<span style="font-size: 1.4rem">` and, with a descendant search, **`labelFontSize` itself
@@ -568,6 +585,20 @@ assumption breaks loudly if an app later wraps the text in a `<span>`).
 > So §6.1 requires three things, and they are independent: **search descendants**, **exclude the
 > badge subtree**, and **make the parent field falsifiable**. Each was found by a different agent
 > discovering that the obvious implementation passes while measuring the wrong thing.
+>
+> **The test of "falsifiable" is that three states are distinguishable**, and MyCal's suite
+> demonstrates all three:
+>
+> | State | What must fail | What must NOT be reported |
+> |---|---|---|
+> | shipped | nothing | — |
+> | label wrapped one level deeper | the parent field — *"label text now lives in `<SPAN>`"* | a disappearance; the node is still found |
+> | label element deleted | the count — *"expected exactly one label text node, found 0"* | a wrapper; there is no host to name |
+>
+> **The field's name is local and is not part of this contract.** MyCal keys on the element
+> (`hostIsBrandName`), MyNotes on the anchor (`labelParentIsAnchor`) — same property, two names,
+> because the two apps' rows are different elements (`AGENTS.md` §2.3). Do not read either name
+> as mandated.
 
 > **And EXCLUDE THE BADGE SUBTREE from that walk.** Also prescriptive, and it is the reason the
 > two requirements have to be stated together: a descendant walk that does not exclude the badge
@@ -675,6 +706,25 @@ any future claim that "all three need two".
 
 `AGENTS.md` §2.5: if a number matters, put it in a test. This contract is guarded three
 ways, and the third is *"by nothing, stated as such"*.
+
+**State coverage per edit and per mechanism, never as "caught" or "not caught".** Every cell
+below was run, not reasoned — which is the point of the table's existence as much as its
+contents (§10):
+
+| Edit | `check-contract.py` | The rendered suite |
+|---|---|---|
+| `1.1rem` → `1.10rem` | **FAIL** | pass |
+| `1.1rem` → `1.1em` | **FAIL** | pass |
+| `1.1rem` → `17.6px` | **FAIL** | **FAIL**, at the 24px root only |
+| `body` stack reordered | **FAIL** *(WEAK)* | **FAIL**, resolved on the label |
+| `font-size` added to the label element | **FAIL** *(§1, MyCal only)* | **FAIL** — 22.4px |
+| Reload `padding` 4 → 20px | pass | **FAIL** — label `y` 28.797 |
+| `min-width: 0` **and** `overflow` both deleted | pass | **FAIL** |
+| `min-width: 0` alone | pass | **FAIL**, declarations test only (§8.1 — it changes nothing rendered) |
+
+*(mycal-dev's table, run in MyCal. The two `pass` columns in the middle rows are not gaps to be
+closed — they are the division of labour §7.1 and §7.2 describe. The rows where **both** fail are
+the interesting ones: see §6.1.)*
 
 ### 7.1 Cross-repo, static — `tools/check-contract.py`
 
@@ -842,6 +892,30 @@ MyNotes — but it silently invalidates every assertion keyed to the row, which 
 what `labelParentIsAnchor` (§6.1) exists to detect. Mandating an element would order the
 edit the probe was built to catch. `AGENTS.md` §2.3: the value is mandated, never the name.
 
+### 8.4a Uncovered, named, and not being fixed here
+
+Recorded so the omissions read as decisions. None is a reason to hold up the contract.
+
+- **The label's `colour` is asserted by nothing**, in any app. It is recorded in §5 and not
+  mandated, so this is consistent — but MyNotes' `a { color: var(--link) }` hazard (§8.3) is real
+  and unguarded, and no sibling can catch it.
+- **Nothing anywhere reads paint.** MyCal's ellipsis is asserted through `scrollWidth` /
+  `clientWidth`, which establishes that the box truncates and **not that an ellipsis is
+  rendered**. §8.5's whole table is about declared behaviour, not painted pixels.
+- **MyCal's demo build is a second shipped surface** and is what GitHub Pages publishes. Its
+  label figures were measured identical to the real build (mycal-dev, phase 1) and **nothing
+  asserts them there**. Same open item `spec/app-logo.md` §9.6 records for the badge.
+- **MyCal does not type-check its e2e suite.** Nothing runs `tsc -p e2e/tsconfig.json` — not
+  `build.sh`, not CI — and Playwright transpiles without checking, so a type regression in the
+  suite is invisible at runtime. It is clean when run by hand.
+
+  > **Known and deliberately not done**, on the reviewer's own reasoning: wiring a type-check
+  > into the build and CI changes the workflow for every contributor and does not belong in a
+  > commit about a label contract. **Flagged rather than fixed**, and with the human as an open
+  > item — the shape `spec/app-logo.md` §9.1 uses. Worth knowing that this commit adds the
+  > suite's most type-dependent code, a discriminated union whose narrowing is the only thing
+  > keeping its field accesses legal.
+
 ### 8.5 Degradation under a long name differs, and is not mandated
 
 Outside the owner's three words, so not specified — but recorded, because *"the same
@@ -899,12 +973,31 @@ requirement, and `spec/sidebar-footer.md` §11's habit).
   §2's exclusion (§2.1). The owner ruled on §4.3 (record the vertical remainder, do not
   mandate authorship) and §4.4 (MyCal's ≤600px hide is a sanctioned exemption).
 
-- **Adoption, and the refs are stated because they differ.** MyCal is on its `main` at
-  **`9dbcd10`** and MyNotes at **`cac7cf4`**; **MyMail's half is still on a feature branch**
-  at the time of writing, so §7.2's coverage is two apps shipped and one pending. **Re-read
-  each repo's `HEAD` rather than trusting these** — one of the three is expected to move, and a
-  hash quoted from a message is the thing `spec/sidebar-footer.md` §11 warns about. Each of
-  these was read off the repository at the moment it was written here.
+- **Adoption: measured and conforming in all three apps, at named local commits on their
+  `main` branches. NOTHING IN THIS ROUND IS PUSHED — including this
+  repository.** No hashes are recorded here, and that is the point rather than an omission.
+
+  > **A hash pays the full cost of perishability and buys a reader nothing unless they can
+  > resolve it.** Measured at the time of writing: **every one of the four repositories' `main`
+  > is ahead of its `origin/main`**, this one included. Every adoption commit exists in one
+  > working checkout and nowhere else; clone any of these repos and you get the state *before*
+  > this contract.
+  >
+  > *(No count is given, deliberately. "N ahead" is a figure this very commit would falsify for
+  > at least one repository — `AGENTS.md` §3.2's number-in-prose-beside-the-thing-it-describes,
+  > and the check is one `git status -sb` away.)*
+  >
+  > `spec/app-logo.md` §10 is the precedent and it faced exactly this, recording no hash while
+  > MyNotes' work sat on an unpushed branch. **It is also the counter-example**: a hash was added
+  > there later, once `d68c1c5` was on a `main` — and *that* has since become unresolvable again,
+  > because MyNotes is now two commits past it and none of them are pushed. **The lesson is not
+  > "never record a hash"; it is that a hash is only worth its cost once someone other than its
+  > author can fetch it.**
+  >
+  > **Add them in a later commit, against verified refs**, when this round is published. The
+  > sentence above is true now and stays true; a hash written today would need writing twice.
+  > *(Correction owed to mycal-dev, who caught that the instruction to record hashes would have
+  > produced a line nobody could act on.)*
 - **Found while writing:** `spec/app-logo.md` §4.4's claim that *"all three hold `y = 14`
   from a 16px root to a 32px root"* was **false for MyMail** above a ~16.97px root, and its
   *"the only one that never moved"* was false in the same range. Predicted from a source
@@ -957,6 +1050,56 @@ requirement, and `spec/sidebar-footer.md` §11's habit).
   > as §8.2's *"almost none"* is — put it in the past tense and name the commit that ended it.
   > All three of these were caught by app agents reporting the contradiction rather than
   > working around it, which is the only reason they were cheap.
+
+- **Describing a guard's coverage from the one tool you happened to run — three agents, three
+  routes, independently, in one round.** This is the strongest version of the pattern in this
+  document and it is the reason §7 states coverage per edit and per mechanism.
+
+  | Who | The claim | Why it was wrong |
+  |---|---|---|
+  | this document | *"§7.1 is the only thing that can see a `1.1rem` edit"* | never ran a rendered suite at a second root |
+  | the manager, in relay | *"`1.1em` is uncatchable by anything"* | never ran the static check against it |
+  | mycal-dev | three *"caught by nothing"* rows, plus a fourth *"caught by neither"* | had run only Playwright |
+
+  > **All three had measured something. None had measured the other mechanism.** The error is not
+  > carelessness — every one of these was written by someone holding a real result in their hand
+  > — it is **generalising from the instrument you happen to be holding to the set of instruments
+  > that exist.** `AGENTS.md` §3.2's unit question, where the unit is the *tool*: the axis fully
+  > swept was the one that did not vary.
+  >
+  > **So never write "caught" or "not caught".** Write a cell per mechanism, and run every cell.
+  > mycal-dev's table in §7 is that, and three of its rows were wrong before they ran it.
+
+- **A plausible rationalisation, offered and not acted on — which is why the question stayed
+  open long enough to be settled.** mynotes-dev-b saw two `FAIL` blocks and a verdict reading
+  `FAILED — 1 pinned value(s) disagree`, and offered a guess: *the count probably excludes the
+  WEAK pin deliberately.* **They did not act on it.** They flagged it as possibly intended, said
+  they had not read the counting code, and declined to raise it as a defect in a repository that
+  was not theirs.
+
+  **Reproduced against three materialised `main`s with both pins mutated: two `FAIL` blocks,
+  verdict `2`.** So the counting code does not undercount, and the reported pairing was a
+  reporting slip rather than a defect.
+
+  > **The guess was reasonable, specific, and would have closed the question wrongly.** It has
+  > the grammar of a finding — a mechanism, a motive, a design intent — and nothing in it is
+  > checkable without opening the code. That is `AGENTS.md` §3.2's *"the number you explain away
+  > is the finding"*, in the one variant that ends well: **the explanation was composed and then
+  > not believed.** Composing it cost a sentence; the measurement that refuted it cost one
+  > command.
+  >
+  > **What made this cheap was refusing to resolve someone else's contradiction** (`AGENTS.md`
+  > §4). Had they silently accepted their own explanation, nothing would have prompted a check —
+  > and the undercount hypothesis, had it been true, would have sat on **the verdict line**, which
+  > this script's own caveat block identifies as the one line a hurried reader trusts.
+
+  **And reproducing it nearly went wrong in the way this round keeps finding.** The first attempt
+  mutated only one of the two pins — the second `sd` invocation rejected a replacement string
+  beginning with `-` and did nothing — so the run showed one `FAIL` and a verdict of `1`, which
+  is *internally consistent and answers a different question than the one being asked*. It was
+  caught by printing the `FAIL` blocks and counting them rather than reading the verdict alone.
+  `spec/measurement-protocol.md`'s **confirm the break actually took effect** — a step added
+  earlier in this same changeset — catching its own author two commits later.
 
 - **A correctly-scoped finding losing its scope in a relay — a different mechanism from the
   three above, and it went wrong in one hop.** mycal-dev established that `em` and `rem` coincide

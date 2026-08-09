@@ -103,6 +103,47 @@ red for the right reason**:
 > well-formed result that is silent about what it could not see. **Before believing any negative
 > from a tool you wrote, make it produce a positive you already know the answer to.**
 >
+> **And note which direction the instrument failed in, because only one of the two is
+> self-correcting.** A sweep for dead cross-repo links classified a path as a markdown link
+> target with a substring test — and a correctly written prose path `../mysuite/…` is a substring
+> of the link target `../../mysuite/…`, so every correct prose path was resolved from the wrong
+> anchor and reported **dead**. Exact set membership fixed it: 12 DEADs became 6. *(mycal-dev,
+> who had already self-tested the section-number pattern against four known-existing citations
+> before trusting a zero — the rule above worked, and a different mechanism got them anyway.)*
+>
+> **That one failed in the *alarming* direction, and that is the only reason it was looked at
+> twice.** A tool that cries wolf gets investigated; a tool that reports all-clear does not. Both
+> are the instrument answering confidently, and the rule above protects you from exactly one of
+> them. **Distrust a clean negative on principle; distrust an alarming positive on inspection.**
+
+#### Say which ref — and know that one class of ref is itself a stale local artefact
+
+Naming the ref a measurement was taken at is necessary and is not sufficient, because refs are
+not all the same kind of thing:
+
+> **`origin/…` is not the remote. It is a local cache of what this checkout last heard from the
+> remote, and without a successful fetch it is an unverified claim with no timestamp.**
+> *(mycal-dev's formulation.)*
+
+`main` names a commit that exists in the checkout in front of you. `origin/main` names whatever
+that checkout last recorded, which may be minutes or weeks old, and **a sandbox that cannot reach
+the remote will report it with no indication that it could not check.** In this round every
+`origin/main` was a cache written by a fetch earlier the same day — knowable only by reading the
+mtime of `.git/FETCH_HEAD`, which no git command volunteers.
+
+The consequences are practical:
+
+- **"N commits ahead of `origin/main`" is a claim about the cache**, not about the remote. It is
+  the right figure for *"is this published?"* only if the cache is fresh.
+- **A commit hash is worth its perishability only when a reader can resolve it.** A hash for a
+  local-only commit costs the reader a failed lookup and tells them nothing they could not have
+  been told in words. Prefer *"measured at a named local commit, unpushed"* and add hashes later,
+  against refs somebody has verified.
+
+This is the filesystem-versus-repository distinction the rest of this document draws for *files*,
+arriving on *refs*: in both cases the tool answers confidently about the state it can see, and
+says nothing about the state you meant.
+>
 > This is the same failure this document is otherwise about, arriving on the guard instead of on
 > the page: the apparatus answering confidently **in the direction of a pass**. A stale server
 > makes a test pass against assets you did not edit; an inert mutation makes it pass against a
@@ -111,6 +152,28 @@ red for the right reason**:
 
 Until that cycle has been run, the honest description of a new guard is "added", not
 "covering". **Do not upgrade a claim of protection on the strength of a first green run.**
+
+#### Announce a mutation harness before you run it, if anyone else reads the same tree
+
+The cycle above deliberately breaks a value and restores it. That is correct in isolation and
+has a cost the moment a second reader exists:
+
+> **When several agents share a checkout tree, one agent's mutation testing is indistinguishable
+> from another agent's defect.** *(mycal-dev's formulation.)*
+
+Those reds are **correct, reproducible in the moment, and about nothing.** In one afternoon this
+produced three separate red cross-repo runs that were investigated as possible drift, and a
+fourth that a reader guessed at and, reasonably, declined to raise. Every one was somebody
+testing their own guard. A harness that reverts cleanly via a `trap` on exit is *invisible from
+outside*, which makes it worse rather than better: the evidence is gone by the time anyone asks.
+
+So: **announce it where the other readers are, before it starts** — not afterwards, and not only
+in your own report. This is cheaper than scheduling discipline and it composes with the
+ref-scoped run rather than replacing it: **the ref-scoped run tells a reader what they measured;
+the announcement tells them why the working tree disagrees.** Do both.
+
+*(`tools/check-contract.py`'s caveat block carries the reader's half — how to materialise each
+repo's ref with `git show` and run against that instead of against whatever is on disk.)*
 
 **This applies to the freshness checks themselves.** A reviewer pointed out that another
 process squatting on the test port would defeat the served-vs-disk check, so a process-liveness

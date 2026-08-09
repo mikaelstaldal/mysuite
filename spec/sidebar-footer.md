@@ -154,23 +154,30 @@ Against the width each app has for it, at the default root size:
 |---|---|---|---|
 | MyCal | 200px (`12.5rem`) | 200px — the footer reclaims `.app`'s 16px of horizontal padding (§8.3), so this is *not* 200 − 16 | 26px |
 | MyMail | 220px (`13.75rem`) | 203px (220 − 1px border − 16px padding) | 29px |
-| MyNotes | 420px | 403px (420 − 1px border − 16px padding) | 229px |
+| MyNotes | 540px | 523px (540 − 1px border − 16px padding) | 349px |
 
 **MyCal has the tightest budget of the three, at 26px.** Stated explicitly because the rest of
 this section is mostly about MyMail — it is where the font size was forced and where the
 two-word label overflows — and a reader who takes "the app this section keeps naming" for "the
 app with the least room" gets it backwards. One author did, and corrected themselves. The
-binding constraint is MyCal's 26px; MyMail's 29px is second; MyNotes' 229px never binds
+binding constraint is MyCal's 26px; MyMail's 29px is second; MyNotes' 349px never binds
 (§6.4). Re-measured against all three servers while this was written, and the table above still
-holds to the pixel: pair 174px in 200 / 203 / 403px of content box.
+holds to the pixel: pair 174px in 200 / 203 / 523px of content box.
 
-> **MyNotes' row has a pending change that is not reflected above, deliberately.** Its column
-> widens to **464px** (content box 447, slack ~273) to make room for the app-logo badge — see
-> `spec/app-logo.md` §10.1. **That work is on an unmerged branch; MyNotes' `main` still ships
-> `420px`**, so the row above is correct for shipped code and stays as it is until the branch
-> lands. §6.4 carries the same note beside the same figures. Update both on the merge, not
-> before — and none of it disturbs this section's conclusion, since MyNotes' slack only grows and
-> it was never the binding constraint.
+> **MyNotes' column moved, and the row above is the shipped figure.** It went `420 → 456 → 464 →
+> 540px` to make room for the app-logo badge and then for a `1.1rem` app-name label — the ladder
+> is in `mynotes/web/static/app.css:122-127`. **540 / 523 / 349 are measured** on the shipped app
+> at `d68c1c5` by mynotes-dev-b, each read off the element and cross-checked against this
+> section's own arithmetic with every term also read off the page. None of it disturbs this
+> section's conclusion: MyNotes' slack only grew, and it was never the binding constraint.
+>
+> **This row said `420 / 403 / ~229` for longer than it was true, and how that happened is the
+> part to keep.** The note here used to read *"update both on the merge, not before"*, naming
+> **464** as the value to update to. The branch merged — **an event with no commit in this
+> repository** — so nothing fired, nobody was assigned, and by the time anyone looked the number
+> the instruction named was itself two rungs stale. **Executing that instruction literally would
+> have installed a second wrong figure.** `AGENTS.md` §3.5: a conditional written into the claim
+> it will invalidate is only as good as somebody noticing the condition fired.
 
 That budget sized the font. At the original `0.85rem` the row measured 182px against
 MyCal's then-164px — an 18px overflow that clipped Settings — and the fix was `0.80rem`
@@ -288,7 +295,7 @@ do not change at all, so no movement follows without needing its own measurement
 
 **`flex-shrink` is the one that does not follow that way**, because its computed value *does*
 move — `0` → `1`, in every app. It is invisible only while the row has slack, which all three
-have at rest (26 / 29 / 229px, §2.4). MyMail's authors saw the same thing from the other side:
+have at rest (26 / 29 / 349px, §2.4). MyMail's authors saw the same thing from the other side:
 deleting it failed their assertions **with nothing rendering differently**. So this row says
 nothing whatever about the overflow case, which is §2.3's subject and the entire reason that
 pin exists.
@@ -811,11 +818,11 @@ differently — correctly:
 |---|---|---|
 | MyCal | `--sidebar-width: 12.5rem` | converted to `rem`; ~26px of slack, so a `px` column would push Settings out |
 | MyMail | `grid-template-columns: 13.75rem 1fr` | converted to `rem`; ~29px of slack, same reason |
-| MyNotes | `.sidebar { width: 420px }` | **deliberately left in `px`** |
+| MyNotes | `.sidebar { width: 540px }` | **deliberately left in `px`** |
 
-**MyNotes' `px` column is a sanctioned exemption, not drift.** With 403px available against a
-174px row it has ~229px of slack — at a 24px root the row reaches only 217px, still leaving
-~186px spare, so the resize case never binds.
+**MyNotes' `px` column is a sanctioned exemption, not drift.** With 523px available against a
+174px row it has **349px** of slack — at a 24px root the row reaches only 217px, still leaving
+**~306px** spare, so the resize case never binds.
 
 > **Three annotations on that figure, because it is being read by people it does not describe.**
 >
@@ -827,34 +834,40 @@ differently — correctly:
 > `AGENTS.md` §3.2's pattern arriving *inside* one app rather than across three.
 > *(Measured by mynotes-dev; recorded in `spec/app-logo.md` §10.2.)*
 >
-> **2. "Do not 'fix' MyNotes' `420px`" below is about the *unit*, not the *value*.** Every
+> **2. "Do not 'fix' MyNotes' column" below is about the *unit*, not the *value*.** Every
 > sentence around it argues against converting `px` to `rem`, and that conversion is the "fix"
-> being prohibited. It does **not** prohibit changing the number — which the human has now ruled
-> should happen, to make room for the logo (`spec/app-logo.md` §10.1).
+> being prohibited. It does **not** prohibit changing the number — and the number has since
+> changed three times, on the owner's ruling, to make room for the logo and then for the label
+> (`spec/app-logo.md` §10.1, `spec/app-name-label.md` §8.6). The unit is still `px`.
 >
 > **3. The slack figure is a function of a width that is changing.** The available width is the
-> sidebar **less its 1px border and the footer's 16px of horizontal padding** — 420 − 17 = 403
-> today — and the slack is that minus the ~174px row. So:
+> sidebar **less its 1px border and the footer's 16px of horizontal padding** — 540 − 17 = 523
+> today, measured on the element and cross-checked against this formula with every term read off
+> the page — and the slack is that minus the ~174px row. So:
 >
 > | Sidebar | Available | Slack vs a 174px row |
 > |---|---|---|
-> | 420 (today) | 403 | ~229 |
+> | 420 (was) | 403 | ~229 |
 > | 441 | 424 | ~250 |
 > | 514 | 497 | ~323 |
+> | **540 (today, measured)** | **523** | **349** |
 > | 588 | 571 | ~397 |
 >
-> **The exemption gets stronger, never weaker** — widening cannot put this section at risk.
+> **The exemption gets stronger, never weaker** — widening cannot put this section at risk, and
+> the widening that happened is the proof rather than the prediction.
 >
-> **Status: MyNotes has widened to 464px, on an unmerged branch.** Its `main` still ships
-> `420px`, so the table above and the `403` / `~229` figures elsewhere in this section remain
-> correct **for what MyNotes ships today**, and are deliberately left as they are. On that branch
-> the values are **464 / 447 / ~273**. The `26.25rem` → 630px argument below is about the *unit*
-> and is unaffected either way.
+> **And the slack grows with the root font size too, which is the case that was actually at
+> issue:** 174 / 523 / **349** at a 16px root, 193 / 523 / 330 at 20px, 217 / 523 / **306** at
+> 24px. The `~186px spare` this section used to quote for the 24px case was against the old 403px
+> content box; it is now ~306. **A reader looking for that figure will not find it by searching
+> for the column width** — it names neither 420 nor 540.
 >
-> **Update this section when the branch lands on `main`, not before** — this document describes
-> shipped code, and a figure changed ahead of the merge would describe a state no branch anyone
-> can fetch is in. That is `AGENTS.md` §2.5's complaint about describing history nobody can see,
-> arriving as a temptation rather than as a mistake.
+> **The `~174px` row is a per-platform reading and this sweep did not upgrade it.** It reproduced
+> to the pixel on the measuring machine — but §2.4 says 174 is a reading of rendered text, §4 says
+> `system-ui` resolves per platform, and that machine's `system-ui` is a **monospace** face. So
+> the original Chromium-on-Linux figure was reproduced on a box whose font is not the one it was
+> read on. **That is agreement, not confirmation of platform-independence** *(mynotes-dev-b's
+> distinction, and it is the right one)*.
 >
 > *(The first version of this annotation gave 266 / 339 / 413 — each 16px too high, from
 > subtracting the border but not the footer's padding, while the 403 it was derived from
@@ -863,13 +876,15 @@ differently — correctly:
 > constant nobody re-checked.)*
 
 And converting would not have been merely unnecessary — it would have been **a regression**:
-`420px` becomes `26.25rem`, which at a 24px root is a **630px** sidebar, eating the note list
-for no benefit. That is the reason the exemption was granted rather than merely tolerated.
+`540px` becomes `33.75rem`, which at a 24px root is an **810px** sidebar, eating the note list
+for no benefit. *(The argument was first written against `420px` → `26.25rem` → 630px. Same
+argument, and the widening made it stronger — which is why the unit exemption survived a value
+changing three times.)* That is the reason the exemption was granted rather than merely tolerated.
 
-Sidebar widths were never unified — 200 / 220 / 420 are deliberately different — so the
+Sidebar widths were never unified — 200 / 220 / 540 are deliberately different — so the
 *unit* is not a consistency requirement either. Only the buttons must match.
 
-So: do not "fix" MyNotes' `420px`, and do not infer from MyCal and MyMail that a `rem` column
+So: do not "fix" MyNotes' `540px`, and do not infer from MyCal and MyMail that a `rem` column
 is part of this contract. **It is not.** The contract covers the two controls; how a column
 accommodates them is local, and the right answer depends on a budget that differs by an order
 of magnitude across the three.

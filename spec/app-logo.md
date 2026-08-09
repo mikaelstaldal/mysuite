@@ -988,7 +988,8 @@ that same file, which reads the sidebar's content width live rather than hard-co
 > is `AGENTS.md` §3.3. It is the first cross-repo specimen of it.
 
 **And the prediction was checked by running, which is the point.** I predicted "2 of 18 tests"
-from reading the file. mynotes-dev restored the assertion against the 456px column and ran it:
+from reading the file. mynotes-dev restored the assertion against the then-456px column — the
+second rung of the ladder in §10, which ships at **540** now — and ran it:
 **exactly 2 failed, both on that assertion, nothing else** — so the blast radius was right. **The
 denominator was not: the suite is 27 tests, not 18.** I had counted `test(` occurrences in a file
 rather than running it, which counts what a pattern matches and not what a runner collects.

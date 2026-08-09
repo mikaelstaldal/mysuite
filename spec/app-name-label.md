@@ -38,9 +38,11 @@ a document disagree (`AGENTS.md` §4), as measured and reported by the three app
   thread — the task brief, the owner's instruction quoted in full (§2), and the owner's
   rulings on placement, the narrow-layout exemption and enforcement (§4.3, §4.4, §7).
 
-**I read the full text of #619, #621 and #622**, not summaries of them. Two conclusions
-in this document contradict what the relaying summary said, and both are noted where they
-occur (§4.1, and §0's note on the residue) — which is the reason the full text was read.
+**I read the full text of #619, #621 and #622**, not summaries of them. Two conclusions in
+this document contradict what the relaying summary of those reports said, and both are noted
+where they occur — the placement rule in §4.1, and the apparent 0.2px disagreement between two
+apps in §6.2, which turned out not to exist. **That is the reason the full text was read**, and
+it is `AGENTS.md` §3.1's argument arriving as a saving rather than as a cost.
 
 **If you find a ruling cited here that is not in that list, it was not available when this
 was written — get it and check this document against it** (`AGENTS.md` §3.1).
@@ -233,10 +235,15 @@ in force (§4.4). The same definition `spec/app-logo.md` §4 uses, and for the s
 This is the finding that shaped the rest of this section, and it was demonstrated by
 mutation in all three repos rather than argued.
 
-All three brand rows are `display: flex; align-items: center`. In MyCal and MyNotes the
-*badge* opts out with `align-self: flex-start`; in MyMail neither child opts out. So the
-row's height is `max(28px badge, label line box, anything else in the row)` and whichever
-box is shorter is centred in the leftover — i.e. **is a remainder**.
+All three brand rows are `display: flex; align-items: center`, so the row's height is its
+tallest item and whichever box is shorter is centred in the leftover — i.e. **is a
+remainder**.
+
+Whether the *badge* is exposed to that is `spec/app-logo.md` §4.2's business rather than this
+contract's, and it differs per app: MyCal and MyNotes opt their badge out with
+`align-self: flex-start`, and **MyMail's `main` does not** — that is `spec/app-logo.md` §4.4's
+recorded defect, with its remedy on a branch (§6.3). **The label is exposed in all three, and
+no app opts it out.**
 
 The label's line box is `font-size × line-height` = `1.1rem × 1.5` = **`1.65 × root`**, so
 it out-measures the 28px badge above a root of **28 ÷ 1.65 = 16.97px**.
@@ -299,6 +306,20 @@ MyMail's label and badge at 16 / 17 / 18 / 20 / 24 / 32, MyNotes at 16 — all f
   verified; it is carried here on the same footing. What *is* measured is the 1/128
   difference and that it appears in all three apps identically.
 
+> **This is a general rule about placement figures in this document, not an annotation on one
+> value — there are two independent specimens and they disagree about the direction.**
+>
+> | Closed form | Term in 1/64ths | Measured | Direction |
+> |---|---|---|---|
+> | label `y`, 16px root: `14 + (28 − 26.390625)/2` = **14.8046875** | 51.5 | **14.796875** | **down** |
+> | label `y` under `line-height: 1` in MyMail: `14 + (28 − 17.6)/2` = **19.2** | 332.8 | **19.203** | **up** |
+>
+> So you cannot predict even the *sign* of the error from the arithmetic, which is the practical
+> reason the rule is "measure it" rather than "allow for rounding". **Anyone adding a placement
+> figure to this document will reach for the closed form** — both of these were written that way
+> first, one by this document's author and one by the manager relaying it, and both were caught
+> by an app agent running the mutation instead of transcribing the number.
+
 **One more precision, because it is the number a reader expects and it is not the number
 the box has:** the flex-item height is **26.390625**, while `getComputedStyle` reports
 `line-height: 26.4px`. Used layout value against computed value. *(Surfaced by
@@ -333,11 +354,27 @@ mynotes-dev-b.)*
 **Padding an unrelated button moves the label 14px and the badge not at all, with nothing
 red anywhere.** The Reload button has no relationship to the label.
 
+**And measured again in MyMail, rather than transferred from MyCal:**
+
+| state | reload h | header h | label `y` | badge `y` |
+|---|---|---|---|---|
+| as shipped | 26 | 55 | **14.797** | 14 |
+| `.sidebar-reload-btn { padding: 20px }` | 56 | 83 | **28.797** | **14** |
+
+**14px in both apps — by coincidence of geometry, not by transfer**, since the two rows differ
+in every other dimension. *(mymail-dev, who measured it after being asked only to name the
+button as an operand. The stronger form of the finding is the one that cost an extra run.)*
+
 **MyCal and MyMail have a Reload button inside the brand row; MyNotes does not** — its
 Reload lives in `.sidebar-header`, outside the `.sidebar-brand` anchor, whose only children
 are the badge and the text node. **So two apps carry a third operand that the third does
-not.** It does not bind today, and it is the path by which one app's label could move while
-the other two hold.
+not, and their exposure is now measured in both rather than measured in one and assumed in
+the other.** It does not bind today, and it is the path by which one app's label could move
+while the other two hold.
+
+> **Note what holds the badge still in MyMail's row above.** It is the `align-self: flex-start`
+> that `spec/app-logo.md` §4.4's remedy adds. **Before it, that same mutation moved both.** So
+> the badge's protection and the label's exposure are the same declaration seen from two sides.
 
 > **MyCal's own stylesheet already documents these levers — as a counterfactual for the
 > badge.** `mycal/web/static/app.css:279-288` says padding Reload or growing the label's
@@ -459,8 +496,21 @@ Two of three apps have no element for the label, so an assertion keyed to a sele
 measures a *different element* in two apps and cannot say so. `mynotes/e2e/tests/logo.spec.ts:85-96`
 is the pattern this contract asks for: it finds the text node, takes
 `textNode.parentElement`, and returns **`labelFound`** (so a missing node fails rather than
-falling back) and **`labelParentIsAnchor`** (so the assumption breaks loudly if an app
-later wraps the text in a `<span>`).
+falling back) and a flag recording **whether the parent was the row itself** (so the
+assumption breaks loudly if an app later wraps the text in a `<span>`).
+
+> **Search the row's DESCENDANTS for the text node, not its direct children.** This is
+> prescriptive, because the two searches are indistinguishable today and behave oppositely on
+> the one edit the flag exists to catch. Wrapping the label in a `<span>` moves the text node
+> out of the direct-children list, so a direct-children search fails on `labelFound` — **loud,
+> but pointing at a disappearance that did not happen, and the "which element did these values
+> come from" flag never fires at all.** The descendant search finds the node, reports the new
+> parent, and fails on the flag with a message telling the reader what to re-derive.
+>
+> **Measured, not reasoned:** mymail-dev ran the wrap both ways — direct-children gives 12
+> failures, all of them "no label text node"; the descendant search gives 6, the first being the
+> flag with its re-derive message. *(Found by mymail-dev while implementing this section; it is
+> what §6.1 says, and the obvious implementation defeats it.)*
 
 **For geometry, name the box.** A bare text node has two, and they are not
 interchangeable:
@@ -538,7 +588,9 @@ any future claim that "all three need two".
 > list.** Adding `line-height: 1` to MyMail's `.sidebar-header` — the standard idiom for a
 > header row, and `.sidebar-reload-btn` 70 lines below already has it — would **freeze that
 > app's badge at 14 at every root**, accidentally satisfying `spec/app-logo.md` §4.2, **and
-> move its label from 14.797 to 19.2**, breaking §4.1 here. *(Found by mymail-dev.)*
+> move its label from 14.797 to 19.203**, breaking §4.1 here. *(Found by mymail-dev, and the
+> 19.203 is theirs: they ran the mutation rather than transcribing the closed form's 19.2 —
+> §4.1.1 again, on a second number.)*
 >
 > Neither document can see that on its own. It is recorded in both.
 
@@ -728,3 +780,16 @@ requirement, and `spec/sidebar-footer.md` §11's habit).
   > declaration its two siblings already carried, so the claim became **true** rather than
   > accurate-about-a-defect — and §4.4 records that it was false in the interim rather than
   > reading as though it had always held.
+
+- **This document went stale against a commit made by its own changeset**, which is worth a
+  line because this is the file that collects those. §4.1 said *"in MyMail neither child opts
+  out"* — true when written, falsified within the hour by the very fix §6.3 describes, leaving
+  two sections of one document disagreeing. It was caught by mymail-dev reporting it rather
+  than assuming it would be noticed.
+
+  > **`AGENTS.md` §3.5 at the shortest possible timescale.** The usual specimens age over
+  > weeks and are found by someone reading an unrelated file. This one aged over minutes, and
+  > the falsifying commit was one this changeset asked for. **Nothing about "there is no X"
+  > requires X to be far away** — it only requires the claim and the change to be in different
+  > files, and here they were in different repositories for about as long as it takes to run a
+  > build.

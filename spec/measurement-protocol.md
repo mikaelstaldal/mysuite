@@ -76,10 +76,26 @@ So a guard is not accepted when it goes green. It is accepted when it has been *
 red for the right reason**:
 
 1. deliberately break a value the guard is supposed to pin;
-2. confirm the run fails, **and that it fails on that assertion** rather than incidentally —
+2. **confirm the break actually took effect** — see below;
+3. confirm the run fails, **and that it fails on that assertion** rather than incidentally —
    a job that errors for an unrelated reason has told you nothing;
-3. revert;
-4. confirm it is green again.
+4. revert;
+5. confirm it is green again.
+
+> **Step 2 is not bookkeeping, and it was added because a run came back green for the wrong
+> reason.** mycal-dev mutated `.brand-reload-btn` by *prepending* `padding: 20px` to the rule —
+> and the rule's own later `padding: 4px` overrode it, so **nothing changed on the page.** The
+> suite was green because there was nothing to catch. Re-done as a replacement, the same
+> mutation goes red at the expected value.
+>
+> **A mutation that does not mutate is indistinguishable from an assertion that does not fire,
+> and both produce a green run.** *(mycal-dev's formulation.)*
+>
+> This is the same failure this document is otherwise about, arriving on the guard instead of on
+> the page: the apparatus answering confidently **in the direction of a pass**. A stale server
+> makes a test pass against assets you did not edit; an inert mutation makes it pass against a
+> page you did not change. Assert the mutated state — read the value back, or measure the thing
+> the mutation was supposed to move — before believing the green.
 
 Until that cycle has been run, the honest description of a new guard is "added", not
 "covering". **Do not upgrade a claim of protection on the strength of a first green run.**

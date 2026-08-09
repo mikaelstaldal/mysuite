@@ -512,6 +512,24 @@ assumption breaks loudly if an app later wraps the text in a `<span>`).
 > flag with its re-derive message. *(Found by mymail-dev while implementing this section; it is
 > what §6.1 says, and the obvious implementation defeats it.)*
 
+> **And EXCLUDE THE BADGE SUBTREE from that walk.** Also prescriptive, and it is the reason the
+> two requirements have to be stated together: a descendant walk that does not exclude the badge
+> will find the *mark's* text in at least one app. **MyCal's mark draws a real `<text>8</text>`,
+> so `.brand-logo`'s `textContent` is `"8"`** (`spec/app-logo.md` §9.6 records the same fact from
+> the other side — `getByText('8')` matches the logo).
+>
+> mycal-dev deleted the `.brand-name` element and re-ran: with the exclusion the guard reports
+> **"found 0"**. Without it, the walk would have found the mark, resolved a font size off it, and
+> **reported a pass for a page with no label at all.**
+>
+> **MyCal-specific in cause, general in consequence:** that is *absent* read as *could not look*,
+> which is the failure `spec/measurement-protocol.md` is largely built around, arriving inside the
+> guard rather than inside a measurement.
+>
+> **Two suites found two different ways to pass while measuring the wrong thing, independently,
+> in one afternoon.** That is the argument for §6.1 being prescriptive rather than descriptive:
+> the method has more sharp edges than any one implementer will find.
+
 **For geometry, name the box.** A bare text node has two, and they are not
 interchangeable:
 
@@ -619,10 +637,37 @@ and states it rather than letting a green line imply more.
 
 ### 7.2 Per app, rendered
 
-Each app asserts its own half, per §6.1's method, **including a 16px root** (§4.1).
+Each app asserts its own half, per §6.1's method, **including a 16px root** (§4.1), and each
+assertion is accepted only once it has been **shown red for the right reason** — which now
+includes **confirming the mutation took effect**, per `spec/measurement-protocol.md`'s
+*"Prove a new guard fails before trusting it"*. That step was added because of this work: a
+mutation here came back green not because the assertion was weak but because the mutation was
+inert, and **a mutation that does not mutate is indistinguishable from an assertion that does
+not fire**. *(mycal-dev.)*
 `mynotes/e2e/tests/logo.spec.ts:288-295` is the template — and note that it currently
 asserts `'17.6px'` at a 16px root **only**, which a `rem` → `px` conversion passes. A
 rendered suite cannot hold §3.2 on its own; that is §7.1's job.
+
+> **What a rendered suite can and cannot hold, narrowed after measurement.** This section used
+> to say a rendered suite *"cannot hold §3.2 on its own"*, flat. That is right about MyNotes'
+> template and wrong as a general claim:
+>
+> - **`1.1rem` → `17.6px` IS catchable — by asserting at a second root.** MyCal's suite expects
+>   `26.4px` at a 24px root, and mycal-dev mutation-tested that exact conversion: **red on that
+>   assertion alone, the 16px one still green.**
+> - **`1.1rem` → `1.1em` is not catchable at any number of roots**, and the reason is sharper
+>   than "identical today": in MyCal **every ancestor of `.brand` computes to the root size**,
+>   because `body` sets no `font-size`. So `em` and `rem` coincide at *every* root, and no sweep
+>   separates them. **§7.1 is what covers that**, and it is the residual justification for the
+>   static check once the two-root assertion exists.
+>
+> **Record the condition, because it is exactly `AGENTS.md` §3.3's shape:** the `em`
+> substitution is harmless *conditional on `body`, `.top-bar` and `.app` never taking a
+> `font-size`* — and until now that condition was written nowhere. Any of those three acquiring
+> one turns an invisible edit into a visible divergence.
+>
+> So the accurate form: **a rendered suite can hold §3.2 against `px` if it asserts at two
+> roots, and cannot hold it against `em` at all.** *(Narrowing owed to mycal-dev.)*
 
 **Three per-app suites are not a cross-repo check** and adding more cannot make one
 (`AGENTS.md` §2.5). All three run in CI, so each gates its own app's publication and none
@@ -663,9 +708,33 @@ Swept by all three agents in their own repos. Every item leaves the build green.
   added to `.brand` later.
 
 **MyCal** — `.brand`'s Reload button is in the row and moves the label (§4.2); the
-`≤600px` rule hides the label as well as the badge (§4.4); deleting `.brand-name`'s
-`min-width: 0` breaks the ellipsis without visibly failing until a longer name or a wider
-face arrives.
+`≤600px` rule hides the label as well as the badge (§4.4); and `.brand-name`'s
+**`min-width: 0` is inert today and load-bearing the day `overflow` changes**, which is a
+different hazard from the one it looks like:
+
+> **Deleting `min-width: 0` alone changes nothing rendered at all.** `overflow: hidden` is what
+> zeroes a flex item's automatic minimum size; while it stands, `min-width` does no work.
+> Measured by mycal-dev, 38-character name, label `clientWidth`:
+>
+> | mutation | label width | Reload | suite |
+> |---|---|---|---|
+> | shipped | 132 | in column | green |
+> | delete `min-width: 0` | **132 — unchanged** | in column | **green, correctly** |
+> | delete `overflow: hidden` | 132 | in column | green — clipping stops, which is paint, and nothing measures it |
+> | **delete both** | **380** | **pushed out** | **red** |
+>
+> So it is `spec/app-logo.md` §5's **delayed hazard**: the edit that arms it (removing
+> `overflow`, or changing it to `visible` for a tooltip) and the edit that fires it (removing
+> the now-genuinely-redundant `min-width`) are separate, and **neither looks wrong alone**.
+>
+> **It is also the one declaration on that rule no rendered measurement in any app can
+> defend**, which makes it a live specimen for §7.3 rather than an item in a list.
+>
+> *(This bullet used to say deleting `min-width: 0` breaks the ellipsis. It came from
+> mycal-dev's own phase-1 report and their mutation run is what refuted it — and MyCal's rule
+> carries a comment saying **`overflow` zeroes the automatic minimum size**, which is correct
+> and was three lines from the claim when it was written. `AGENTS.md` §3.2: the wrong sentence
+> was the one nobody doubted, in both directions at once.)*
 
 **MyMail** — `line-height: 1` on `.sidebar-header` (§6.3, the sharpest one); its Reload
 button shares the row (§4.2); its `font-weight: 600` sits beside a `--unread-weight: 600`
@@ -720,7 +789,7 @@ the same.
 
 | | Behaviour **[measured]** |
 |---|---|
-| MyCal | ellipsizes — `min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis`, proven by substituting a long name |
+| MyCal | ellipsizes — `white-space: nowrap; overflow: hidden; text-overflow: ellipsis`, with a `min-width: 0` that is **inert while `overflow` stands** (§8.1). Proven by substituting a 38-character name, which shows **the set works** and not that each member contributes |
 | MyMail | no wrap, no truncation, no ellipsis; the Reload button is pushed out first, then the header overflows silently |
 | MyNotes | no wrap, no truncation, no ellipsis; the **tab strip** is squeezed to zero width and paints over the action buttons, then the label clips edge-on |
 
@@ -766,7 +835,15 @@ requirement, and `spec/sidebar-footer.md` §11's habit).
 
 - **2026-08-09** — Written. All three apps already conformed on every mandated value at
   `mycal 42f2a66` / `mymail e024e1d` / `mynotes d68c1c5`. Supersedes `spec/app-logo.md`
-  §2's exclusion (§2.1). §4.3 and §4.4 open with the owner.
+  §2's exclusion (§2.1). The owner ruled on §4.3 (record the vertical remainder, do not
+  mandate authorship) and §4.4 (MyCal's ≤600px hide is a sanctioned exemption).
+
+- **Adoption, and the refs are stated because they differ.** MyCal's assertions and its
+  `web/AGENTS.md` section are on its `main` at **`9dbcd10`**. **MyMail's and MyNotes' are
+  on feature branches**, not on `main`, at the time of writing — so §7.2's coverage is one
+  app shipped and two pending. **Re-read each repo's `HEAD` rather than trusting these**;
+  two of the three are expected to move, and a hash quoted from a message is the thing
+  `spec/sidebar-footer.md` §11 warns about.
 - **Found while writing:** `spec/app-logo.md` §4.4's claim that *"all three hold `y = 14`
   from a 16px root to a 32px root"* was **false for MyMail** above a ~16.97px root, and its
   *"the only one that never moved"* was false in the same range. Predicted from a source

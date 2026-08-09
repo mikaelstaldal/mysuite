@@ -83,14 +83,31 @@ APPS = {
 
 # ─── app-name-label roles ───────────────────────────────────────────────────
 #
-# "brandrow" is the flex row holding the badge and the app-name label. In all
+# "brandrow" is the rule that DECLARES the label's typography on the row holding
+# the badge and the label. In MyCal (`.brand`) and MyMail (`.sidebar-header`) that
+# rule also carries the flex declarations. In MyNotes it does NOT: the element is
+# `<a class="brand sidebar-brand">` and `.brand` carries only typography, while the
+# flex row lives in a second rule, `.sidebar-brand`, on the same element. Same
+# element, two rules -- and app-name-label.md §8.1 warns that folding them is
+# inviting, which would turn this lookup into a `rule not found`. In all
 # three apps the label's typography is declared THERE and inherited, and not one
 # of the three declares it on the label itself (two of them have no element for
 # the label at all — spec/app-name-label.md §1). So this is the rule to read.
 #
-# That the three do it the same way is a fact about today's implementations, not
-# a requirement: an app declaring the size on the label would conform and would
-# report "rule not found" here. Loud, not silent, and the caveat block says so.
+# That the three do it the same way is a fact about today's implementations and
+# not a requirement — and reading the row has a HOLE, which is mutation-tested
+# and stated rather than glossed:
+#
+#   Removing the row's declaration reports "rule not found" or a mismatch. LOUD.
+#   ADDING a nearer declaration -- `font-size` on the label element itself --
+#   passes SILENTLY, because nothing here reads the label. Putting `1.4rem` on
+#   MyCal's `.brand-name` while leaving `.brand { font-size: 1.1rem }` in place
+#   is a visible three-way divergence in the value labelled STRONG below, and it
+#   ran GREEN until LABEL_ELEMENT (below) was added.
+#
+# So the STRONG line is strong against NORMALISATION OF THE ROW'S OWN VALUE --
+# which is the edit it exists for -- and was blind to a nearer declaration.
+# LABEL_ELEMENT closes that for the one app it can be closed for.
 #
 # NOTE the collision hazard: `.sidebar-header` is MyMail's brand row and MyNotes'
 # OUTER header (brand + tab strip + actions) — the same class name for different
@@ -173,11 +190,27 @@ PINS = [
 
 LABEL_PINS = [
     ("brandrow", "font-size",   "1.1rem", "text",  "§3.2", "STRONG"),
+    # Written in the SPEC'S OWN FORM, quotes and casing included, and normalised
+    # on both sides below. Anyone updating this pin will copy it out of
+    # app-name-label.md §3.1 -- which is the right instinct, and used to make all
+    # three apps fail with a confusing diff because only `raw` was normalised.
     ("bodytext", "font-family",
-     "system-ui, -apple-system, segoe ui, roboto, sans-serif", "stack", "§3.1",
+     'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif', "stack", "§3.1",
      "WEAK: body's stack, not the label's; the cascade between them is NOT "
      "checked, and nothing here says which face renders"),
 ]
+
+# The label element, for the ONE app that gives its label an element of its own.
+# It must declare none of the properties this contract pins, or the value read
+# off the row (LABEL_PINS) is not the value that reaches the label.
+#
+# MyMail's and MyNotes' labels are BARE TEXT NODES with no selector to check
+# (app-name-label.md §1), so there is nothing to add for them and their absence
+# here is not an oversight -- it is why this is a per-app dict and not a role in
+# APPS. If either ever wraps its label in an element, add it here; the rendered
+# suites' `labelParentIsAnchor` flag (§6.1) is what should tell you it happened.
+LABEL_ELEMENT = {"mycal": ".brand-name"}
+LABEL_ELEMENT_FORBIDDEN = ("font-size", "font-family", "font-weight")
 
 # (rule, property, light, dark, section) — compared as resolved values.
 COLOURS = [
@@ -420,7 +453,10 @@ class App:
         return None, None
 
     def declared(self, rule: str, prop: str):
-        selector = self.cfg[rule]
+        selector = self.cfg.get(rule)
+        if selector is None:
+            return None, (f"no `{rule}` role configured for {self.name} in APPS — "
+                          f"this is a gap in the checker, not a pass")
         block = self.rules.get(selector)
         if block is None:
             return None, f"rule `{selector}` not found"
@@ -448,14 +484,20 @@ class Report:
 def site(app: App, rule: str) -> str:
     """Where a reader should go to fix it: repo, file(s), selector."""
     files = " / ".join(app.cfg["css"])   # all of them: one entry would be a guess
-    return f"{app.name:<8} {files}   in rule `{app.cfg[rule]}`"
+    # An app added to APPS without every role would otherwise raise KeyError, and a
+    # traceback is a terminating path that prints no caveat block — which defeats
+    # the one guarantee AGENTS.md §3 asks of this script.
+    selector = app.cfg.get(rule) or f"<no `{rule}` role configured for {app.name}>"
+    return f"{app.name:<8} {files}   in rule `{selector}`"
 
 
 def check_label(apps: dict[str, App], report: Report) -> None:
     """spec/app-name-label.md — font size and font stack. Placement is NOT here
     and cannot be: it is a flex remainder, not a declared value in any app."""
     for rule, prop, expected, mode, section, strength in LABEL_PINS:
-        label = f"label {section:<6} {rule}.{prop}"
+        label = f"app-name-label {section:<6} {rule}.{prop}"
+        if mode == "stack":
+            expected = font_stack(expected)   # normalise BOTH sides, not just raw
         bad = []
         for app in apps.values():
             raw, err = app.declared(rule, prop)
@@ -474,10 +516,34 @@ def check_label(apps: dict[str, App], report: Report) -> None:
         else:
             report.ok(label, f"`{expected}` in all {len(apps)}   [{strength}]")
 
+    # The hole in reading the row: a declaration NEARER the label wins and is
+    # invisible above. Only MyCal has an element to check (see LABEL_ELEMENT).
+    label = f"app-name-label §1     label element declares no typography"
+    bad = []
+    for app in apps.values():
+        selector = LABEL_ELEMENT.get(app.name)
+        if selector is None:
+            continue
+        for prop in LABEL_ELEMENT_FORBIDDEN:
+            raw = (app.rules.get(selector) or {}).get(prop)
+            if raw is not None:
+                bad.append(
+                    f"{app.name:<8} {app.cfg['css'][0]}   in rule `{selector}`\n"
+                    f"           `{prop}: {raw}` is declared ON THE LABEL and beats the "
+                    f"value read from the row.\n"
+                    f"           The row still says the contract value, so every other "
+                    f"line here passes while the\n"
+                    f"           rendered label diverges. See app-name-label.md §8.1.")
+    if bad:
+        report.fail(label, bad)
+    else:
+        checked = ", ".join(f"{n} `{LABEL_ELEMENT[n]}`" for n in sorted(LABEL_ELEMENT))
+        report.ok(label, f"{checked} — the other two have no label element to check")
+
 
 def check(apps: dict[str, App], report: Report) -> None:
     for rule, prop, expected, mode, section in PINS:
-        label = f"{section:<8} {rule}.{prop}"
+        label = f"sidebar-footer {section:<6} {rule}.{prop}"
         bad = []
         for app in apps.values():
             raw, err = app.declared(rule, prop)
@@ -498,7 +564,7 @@ def check(apps: dict[str, App], report: Report) -> None:
 
     for rule, prop, light, dark, section in COLOURS:
         for theme, shared in (("light", light), ("dark", dark)):
-            label = f"{section:<28} [{theme}]"
+            label = f"sidebar-footer {section:<28} [{theme}]"
             bad, deviated = [], []
             for app in apps.values():
                 raw, err = app.declared(rule, prop)
@@ -558,7 +624,7 @@ def check(apps: dict[str, App], report: Report) -> None:
     # backgroundColor is not transparent; that is out of reach for a static
     # reader, so this says which form it ran rather than implying more.
     for theme in ("light", "dark"):
-        label = f"{'§5.3 backdrop is as recorded':<28} [{theme}]  (STATIC approximation)"
+        label = f"sidebar-footer {'§5.3 backdrop is as recorded':<28} [{theme}]  (STATIC approx)"
         bad = []
         for app in apps.values():
             props = app.light if theme == "light" else app.dark
@@ -596,7 +662,7 @@ def check(apps: dict[str, App], report: Report) -> None:
     # The focus outline is one declaration in every app, but its colour comes
     # from a token, so shape and resolved colour are checked together per theme.
     for theme, expected in (("light", "#2563eb"), ("dark", "#3b82f6")):
-        label = f"{'§6.2 focus outline':<28} [{theme}]"
+        label = f"sidebar-footer {'§6.2 focus outline':<28} [{theme}]"
         want, bad = f"2px solid {expected}", []
         for app in apps.values():
             raw, err = app.declared("focus", "outline")
@@ -644,11 +710,21 @@ failing one covers less ground than the count suggests.
     monospace face, and CI resolves it ~1.25x wider than a local run. No check
     anywhere can assert the rendered face, and this one does not try.
 
-  · THE TWO app-name-label LINES ARE NOT OF EQUAL STRENGTH, and each says which
-    it is. font-size is STRONG: `1.1rem` -> `1.10rem` or `-> 17.6px` is invisible
-    to every rendering test in all three repos, so that line is the only guard
-    that exists for it. The font stack is WEAK: it reads `body`'s declaration, so
-    a rule overriding the family for the brand row passes here.
+  · THE TWO app-name-label PIN LINES ARE NOT OF EQUAL STRENGTH, and each says
+    which it is. font-size is STRONG: `1.1rem` -> `1.10rem` or `-> 17.6px` is
+    invisible to every rendering test in all three repos, so that line is the only
+    guard that exists for it. The font stack is WEAK: it reads `body`'s
+    declaration, so a rule overriding the family for the brand row passes here.
+
+  · AND BOTH READ THE ROW, NOT THE LABEL, which leaves a hole that is only
+    PARTLY closed. A declaration NEARER the label beats the one those lines read,
+    and they cannot see it. The `label element declares no typography` line closes
+    that FOR MYCAL ONLY -- the one app whose label has an element. MyMail's and
+    MyNotes' labels are bare text nodes, so THERE IS NOTHING TO CHECK THERE and no
+    static reader can close it for them: a `<span>` added around either label,
+    carrying its own font-size, passes every line here. Their rendered suites'
+    `labelParentIsAnchor` flag is what catches that (app-name-label.md §6.1), and
+    it is per-app, so nothing compares the three afterwards.
 
   · Geometry is unverified — the 29.2px height, the (8,8) viewport position, the
     4px outline clearance, overflow and clipping. All need a browser (§2.2, §8).
@@ -742,6 +818,10 @@ SELF_TEST = [
     ("font stack: whitespace and case are normalised away",
      lambda: font_stack("system-ui,   Roboto ,sans-serif")
              == font_stack("System-UI, roboto, sans-serif")),
+    # The case the three repos rely on being safe is quoted-vs-unquoted, not just
+    # single-vs-double: `Segoe UI` may legally be written either way.
+    ("font stack: quoted and unquoted are the same family",
+     lambda: font_stack("system-ui, 'Segoe UI'") == font_stack("system-ui, Segoe UI")),
     ("font stack: a DIFFERENT family is still a difference",
      lambda: font_stack("system-ui, Roboto") != font_stack("system-ui, Helvetica")),
     ("font stack: a dropped family is still a difference",
@@ -774,7 +854,9 @@ def self_test() -> int:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="Check the MySuite sidebar-footer contract.")
+    ap = argparse.ArgumentParser(
+        description="Check the MySuite contracts: " + ", ".join(SPECS)
+                    + ". Does NOT check spec/app-logo.md, or placement in any contract.")
     ap.add_argument("--repos", default=None,
                     help="directory holding mycal/ mymail/ mynotes/ (default: this repo's parent)")
     ap.add_argument("--quiet", action="store_true", help="print only failures and the verdict")
@@ -835,9 +917,9 @@ def main() -> int:
         verdict = (f"FAILED — {len(report.failures)} pinned value(s) disagree "
                    f"across the three repos.")
         print(verdict)
-        print("Every value above is fixed by " + " or ".join(SPECS) + ". Changing one is a")
-        print("change in all three")
-        print("repos, or in none — a local 'fix' is the defect this check exists to find.")
+        print("Every value above is fixed by " + " or ".join(SPECS) + ".")
+        print("Changing one is a change in all three repos, or in none — a local 'fix' is")
+        print("the defect this check exists to find.")
     else:
         verdict = f"PASSED — every pinned value agrees across {', '.join(sorted(apps))}."
         print(verdict)

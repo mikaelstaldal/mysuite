@@ -74,7 +74,7 @@ documents rather than restating its values.
   from a checkout with the app repos as siblings:
 
   ```
-  tools/check-contract.py            # 0 agree · 1 disagree · 2 cannot check
+  tools/check-contract.py            # exit: 0 agree · 1 disagree · 2 cannot check
   ```
 
   It compares source text and resolved tokens, never rendering, so it sees things no browser

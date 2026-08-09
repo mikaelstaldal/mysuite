@@ -890,13 +890,25 @@ be half wrong.)*
   `web/static/app.css`. The root file is one level further from the edit. All three repos now
   place it that way:
 
-  | | Sidebar footer | App logo |
-  |---|---|---|
-  | MyNotes | `web/AGENTS.md`, titled section | `web/AGENTS.md`, titled section |
-  | MyMail | `web/AGENTS.md`, titled section | `web/AGENTS.md`, titled section |
-  | MyCal | `web/AGENTS.md`, **a bullet in a list** — no title of its own, but the richest content of the three: it names each tidy-up alongside the assertion that catches it | `web/AGENTS.md`, titled section |
+  | | Sidebar footer | App logo | App-name label |
+  |---|---|---|---|
+  | MyNotes | `web/AGENTS.md`, titled section | `web/AGENTS.md`, titled section | `web/AGENTS.md:232`, titled section |
+  | MyMail | `web/AGENTS.md`, titled section | `web/AGENTS.md`, titled section | `web/AGENTS.md:210`, titled section — worded *"The app name beside the logo"*, since its label has no element to name |
+  | MyCal | `web/AGENTS.md`, **a bullet in a list** — no title of its own, but the richest content of the three: it names each tidy-up alongside the assertion that catches it | `web/AGENTS.md`, titled section | `web/AGENTS.md:338`, titled section |
 
-  **Verified by reading all six locations**, not from any repo's report of itself.
+  **Verified by reading all nine locations**, not from any repo's report of itself.
+
+  > **The third column was missing for a while after the contract landed here, and that is the
+  > checklist failure `spec/README.md` documents, arriving in the file its list points at.** All
+  > three repos had written their section; this table — which is what tells the next author where
+  > to look — still enumerated two contracts of three. **Adding a contract means widening this
+  > table, and that step is not in the four-place list because this table is not an enumeration
+  > of contracts; it is an enumeration of *app-repo locations*.** Both need doing.
+  >
+  > **Ref caveat, and it is the point of `AGENTS.md` §3.6:** at the time of writing, the
+  > app-name-label sections are **not on any app's `main`** — MyCal's is uncommitted, MyMail's
+  > and MyNotes' are on feature branches. The line numbers above are working-tree readings.
+  > Re-derive them against `main` once those land rather than trusting them.
 
   > **This table used to say something else, and how it went wrong is §3.5 landing on §4.**
   > It read: MyNotes' titled section is *"the model"*, MyCal's is a bullet, and **MyMail's is

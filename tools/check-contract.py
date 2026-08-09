@@ -171,11 +171,20 @@ PINS = [
 # the line itself, not in a footer, because a reader who sees two green lines will
 # otherwise assume they mean the same thing.
 #
-#   font-size   STRONG. `1.1rem` -> `1.10rem` or `-> 17.6px` is identical computed
-#               at the 16px root every e2e suite runs at, and `1.10rem` is
-#               identical serialised as well. NOTHING RENDERED CAN SEE EITHER
-#               EDIT, in any of the three apps. This line is the only guard that
-#               exists for it (§3.2, §7.1).
+#   font-size   STRONG, and be precise about what it is strong against -- the
+#               obvious summary was wrong in BOTH directions and the correction
+#               is app-name-label.md §3.2's table:
+#                 `1.1rem` -> `1.10rem`  no rendering can see it, ever. This line
+#                                        and review are all there is.
+#                 `1.1rem` -> `17.6px`   a rendered suite CAN see it, but only if
+#                                        it asserts at a SECOND ROOT. At 16px
+#                                        alone the two are the same reading.
+#                 `1.1rem` -> `1.1em`    no rendering can see it at any number of
+#                                        roots, because in MyCal every ancestor
+#                                        of the row computes to the root size.
+#               So this is not "the only guard that exists"; it is the only one
+#               that catches the first and third, and the only one that compares
+#               the three apps at all.
 #
 #   font stack  WEAK, and labelled WEAK in the output. It reads `body`'s
 #               declaration in each app. It does NOT check the cascade between

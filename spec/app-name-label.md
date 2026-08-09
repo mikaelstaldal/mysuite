@@ -194,11 +194,21 @@ root only if all three scale the same way. An app converting to `17.6px` would a
 its siblings at the default root and disagree at every other, which is the divergence this
 repository exists to prevent, arriving invisibly.
 
-> **This is the `0.80rem` class of value** (`spec/sidebar-footer.md` §9.2): `1.1rem` →
-> `1.10rem` is identical computed *and* identical serialised, and `1.1rem` → `17.6px` is
-> identical computed at the root every test runs at. **No rendering test in any of the
-> three apps can see either edit.** §7.1 is the only thing that can, and §8.1 says what
-> else it cannot see.
+> **This is the `0.80rem` class of value** (`spec/sidebar-footer.md` §9.2) — but the class has
+> three members and they are not equally hidden. **State which, because both of the obvious
+> summaries are false:**
+>
+> | Substitution | Rendering can see it? | The static check can see it? |
+> |---|---|---|
+> | `1.1rem` → `1.10rem` | **No.** Identical computed *and* identical serialised, at every root | Yes — it compares source text |
+> | `1.1rem` → `17.6px` | **Yes, at a second root.** Identical at 16px, wrong at every other | Yes |
+> | `1.1rem` → `1.1em` | **No, at any number of roots.** See §7.2 — in MyCal every ancestor of the row computes to the root size, so the two coincide everywhere | Yes |
+>
+> So a rendered suite must assert at **two roots** to earn the middle row, and can never earn
+> the other two. And the static check reads the *row*, so it is beaten by a declaration nearer
+> the label — closed for MyCal only (§7.1). **Neither mechanism is sufficient and neither is
+> redundant**, which is the honest form of a claim this document twice tried to make as a
+> superlative.
 
 ### 3.3 Placement — what is pinned
 
@@ -286,7 +296,18 @@ and move the label 14px. MyNotes' anchor holds only the badge and the text. So �
 That is the condition a future reader can check (`AGENTS.md` §3.3), rather than a promise
 nothing defends.
 
-### 4.1.1 Why the tolerance exists, and why the closed form is not the value
+### 4.1.1 Closed forms are explanations, not values — a rule for this whole document
+
+> **Never write a placement figure in this document as an arithmetic expression, or as the
+> number an arithmetic expression gives. Write what was measured, with a tolerance.** The
+> expression belongs beside it as the *mechanism*, which is what tells the next reader which
+> edit moves the figure — but it will not be the number on the page, and you cannot predict by
+> how much or in which direction.
+
+That is stated as a rule rather than as a note on one value because **two independent figures
+in this document have already been written as closed forms first and corrected by measurement**
+— one by this document's author, one by the manager relaying a report — and they are wrong in
+*opposite* directions. The mechanism, and both specimens, follow.
 
 The centring term at a 16px root is `(28 − 26.390625) / 2 = 0.8046875`, which is `51.5/64`
 — **unrepresentable** in Chromium's 1/64px `LayoutUnit`. It lands on `51/64 = 0.796875`, so
@@ -621,7 +642,9 @@ ways, and the third is *"by nothing, stated as such"*.
 
 ### 7.1 Cross-repo, static — `tools/check-contract.py`
 
-**The only thing that compares the three apps.** It pins:
+**The only thing that compares the three apps** — which is a claim about *comparison*, and is
+the one superlative here that survived scrutiny. It is not a claim about being the only thing
+that can see any given edit; see §3.2's table for which mechanism catches what. It pins:
 
 - **`font-size`, as declaration text.** `1.1rem` in all three, compared as source text.
   This is the class of edit no browser can see (§3.2), and it is the reason a static check
@@ -700,9 +723,10 @@ Swept by all three agents in their own repos. Every item leaves the build green.
 
 - **Editing `body`'s font stack.** It *is* the label's font (§3.1); nothing nearer declares
   one. A change made for body copy is a change to this contract and will not look like one.
-- **Normalising `1.1rem`** — to `17.6px` (identical at a 16px root, frozen at every other)
-  or to `1.1em` (identical today, divergent the moment an ancestor sets a size). §7.1 is
-  the only guard that sees either.
+- **Normalising `1.1rem`** — to `17.6px` (identical at a 16px root, frozen at every other),
+  to `1.10rem` (identical computed *and* serialised), or to `1.1em` (identical at every root,
+  for the reason §7.2 records). **§7.1 sees all three; a rendered suite asserting at two roots
+  sees only the first** (§3.2's table).
 - **Moving `font-size` / `font-weight` off the row onto the label**, or the reverse. Renders
   identically today. In MyCal it would silently drop the size from any second text child
   added to `.brand` later.
@@ -857,6 +881,23 @@ requirement, and `spec/sidebar-footer.md` §11's habit).
   > declaration its two siblings already carried, so the claim became **true** rather than
   > accurate-about-a-defect — and §4.4 records that it was false in the interim rather than
   > reading as though it had always held.
+
+- **The guard's own comment denied a hazard this document already listed**, and only running
+  it settled which was right. `tools/check-contract.py` claimed that declaring the size on the
+  label *"would report 'rule not found' here. Loud, not silent."* It does not — that edit ran
+  **green, exit 0**, in the value the output labels STRONG. Meanwhile §8.1 had *"moving
+  `font-size` onto the label"* in its list of silent breakages the whole time.
+
+  > **The document knew and the code contradicted it.** That is `AGENTS.md` §2.5 — numbers and
+  > claims in comments going stale — with the sharpest possible operand: **the stale claim was
+  > in the guard, describing itself.** Prose that is wrong misleads a reader; a guard that is
+  > wrong about its own coverage misleads everyone downstream of a green run, and it is the one
+  > artefact nobody re-reads *because* it is passing.
+  >
+  > It was found by code review running a mutation, not by anyone reading either file. **Both
+  > texts had been read many times that day.** `spec/measurement-protocol.md`'s acceptance rule
+  > exists for exactly this and had not been applied to the new pin: it was accepted on a green
+  > run plus four mutations that all happened to attack the row rather than the label.
 
 - **This document went stale against a commit made by its own changeset**, which is worth a
   line because this is the file that collects those. §4.1 said *"in MyMail neither child opts

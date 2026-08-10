@@ -276,6 +276,11 @@ and was almost recorded as a pass. The probe was silently returning "missing" be
 build under test was a demo build with no Settings control, so it had found nothing to
 measure and said so in a way that read like success.
 
+*(That is history, and the fact behind it has since reversed: MyNotes renders Settings in a
+demo too — `spec/sidebar-footer.md` §10.9, which has the ref this is true of. Kept as written,
+because the lesson is about what a probe reports when it matches nothing, not about which build
+lacked a control. **The specimen would no longer reproduce; the failure mode is unchanged.**)*
+
 So assert the precondition, with numbers:
 
 - **content height vs container height**, both stated — e.g. 5749px of content in a 367px

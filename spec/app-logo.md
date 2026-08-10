@@ -885,7 +885,9 @@ in its repo, because the consequence is that the three stop matching.)*
   default page, one being the logo. It is hidden from the accessibility tree but not from the
   DOM. *(mycal-dev.)*
 - **MyCal's demo build is a second shipped surface** with different badge geometry, and it is what
-  GitHub Pages publishes. Its badge moved *non-monotonically* with viewport width (§4.3) — a
+  GitHub Pages publishes. **So is MyNotes'** — its workflow publishes `-demo-bundle` to Pages from
+  `main` — so "the demo build" is two apps' second surface, not one's; nothing here has measured
+  MyNotes' badge there. MyCal's badge moved *non-monotonically* with viewport width (§4.3) — a
   second symptom of the same computed-position defect §4.2 names, and the fix pinning `y = 14`
   unconditionally should resolve it. **Verify it there too**, since it is a different build.
 - **`--app-padding-x` moves MyCal's badge and cannot move its footer**, which cancels that exact

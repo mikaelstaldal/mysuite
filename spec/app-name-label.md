@@ -924,7 +924,9 @@ Recorded so the omissions read as decisions. None is a reason to hold up the con
   rendered**. §8.5's whole table is about declared behaviour, not painted pixels.
 - **MyCal's demo build is a second shipped surface** and is what GitHub Pages publishes. Its
   label figures were measured identical to the real build (mycal-dev, phase 1) and **nothing
-  asserts them there**. Same open item `spec/app-logo.md` §9.6 records for the badge.
+  asserts them there**. Same open item `spec/app-logo.md` §9.6 records for the badge — and it
+  is not MyCal's alone: MyNotes publishes a `-demo-bundle` to Pages from `main` too, and its
+  label has not been measured there at all.
 - **MyCal does not type-check its e2e suite.** Nothing runs `tsc -p e2e/tsconfig.json` — not
   `build.sh`, not CI — and Playwright transpiles without checking, so a type regression in the
   suite is invisible at runtime. It is clean when run by hand.

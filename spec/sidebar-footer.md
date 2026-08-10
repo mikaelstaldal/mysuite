@@ -1859,9 +1859,40 @@ be surprised.
    Worth stating in that direction, because "narrow layouts drop to B = 4" would read as a
    property of the contract rather than of MyCal, and a reader checking MyMail or MyNotes
    against it would find a disagreement that is not there.
-9. **MyNotes' demo builds have only one control.** Settings is rendered only when
-   `!isDemo()`, because a demo has no server to hold the MyMail URL. The geometry contract
-   still applies to the toggle; the pair does not exist.
+9. **Closing on an unmerged branch: MyNotes' demo builds carry both controls.** Settings used
+   to be rendered only when `!isDemo()` — a demo has no server to hold the MyMail URL — so a
+   demo showed the toggle alone and §8's (L, B) applied to a single control rather than to
+   the pair it is written about. `mynotes 59ae88e` renders it in a demo too, opening the same
+   modal, with an explanation that a demo has nothing to configure standing in for the MyMail
+   field. What differs between the two builds is the modal's *contents*, not whether the
+   control is there.
+
+   **Which ref that is true of** (§3.6). `59ae88e` is on MyNotes' branch `demo-settings` and
+   is **not** on its `main`. MyNotes' workflow builds `-demo-bundle` and publishes it to
+   GitHub Pages from `main`, so **the demo that ships today still shows one control**.
+   Re-derive this item when the branch lands; if it is abandoned instead, item 9 is open
+   again and nothing here will say so on its own.
+
+   **No app gates either footer control on build mode** — checked in all three by name (§3.2)
+   rather than generalised from the one that changed. MyCal renders its button
+   unconditionally (`web/ts/components/Settings.tsx`; its `!isDemo()` guards a block *inside*
+   the dialog), MyMail renders both unconditionally (`web/ts/layout/Sidebar.tsx`), and
+   MyNotes does on the branch above. Stated that way rather than as "no build anywhere is
+   missing a control", which is §3.5's shape and has no owner.
+
+   **No suite measures §8's coordinates on a demo build**, in any of the three — and the
+   qualifier is doing work, because the blunter version went false in the same changeset that
+   would have written it. MyNotes now runs a demo-only spec, `e2e/tests/demo-settings.spec.ts`,
+   in a second Playwright project against a `-demo-server` process on 8092. It asserts that
+   both controls are **present** there and that Settings opens; it deliberately asserts no
+   coordinate, colour or computed value, because those live in that repo's
+   `e2e/tests/sidebar-footer.spec.ts`, which runs against the real binary for the REST API it
+   seeds content through. MyCal's and MyMail's suites run against their real builds only.
+
+   So what is now covered is the claim this item is about — the pair exists in a demo — and
+   what remains uncovered is everything §8 measures about it, in every app.
+   `spec/app-logo.md` §9.6 records the uncovered half for MyCal's badge; this is that gap, for
+   this contract.
 10. **`0.80rem` is unenforceable** (§2.1). A formatter could normalise it with no test
    failing anywhere. Recorded as minor.
 11. **Settings has a hover tooltip in two apps and not the third.** MyCal and MyNotes set

@@ -15,9 +15,10 @@ The UI elements required to be identical across them are specified **here**, in
 [`spec/`](spec/), and the three app repos reference those contracts rather than restating
 them.
 
-There is no shared stylesheet and no shared component library. This repository is Markdown,
-**plus `tools/`** — scripts that *check* a contract, and nothing else (§3). Each app implements
-the contract in its own CSS, with its own class names and its own tokens.
+There is no shared app stylesheet and no shared component library. This repository holds
+the Markdown contracts, **`tools/`** for contract checks, and **`site/`** for the static
+MySuite marketing website, deployed by `.github/workflows/pages.yml` (§3). Each app implements
+the contracts in its own CSS, with its own class names and its own tokens.
 
 *(This paragraph read "no code of any kind in this repository" until `tools/check-contract.py`
 landed and made it false, with no edit to it — §3.5's own shape, in §1, corrected 120 lines
@@ -174,10 +175,14 @@ So:
 
 ## 3. Working in this repository
 
-- **Markdown, plus `tools/`.** The Markdown-only rule was lifted by the human for one
-  purpose: scripts that *check* a contract. `tools/check-contract.py` is the first. Still no
-  build system, no CI, no package manager, and no dependencies — a checking script must run
-  from a clean checkout with nothing installed, and must not introduce anything the app repos
+- **Markdown, contract checks, and the marketing website.** The human has authorized the
+  static site in `site/` and its GitHub Pages workflow in `.github/workflows/pages.yml`.
+  Keep the site plain HTML/CSS, with no backend or package manager. Its styles are local to
+  the marketing site, not shared app contracts. The workflow publishes only `site/` on pushes
+  to `main`; it does not run cross-repo contract checks.
+
+  `tools/` remains for scripts that *check* a contract. A checking script must run from a
+  clean checkout with nothing installed, and must not introduce anything the app repos
   would have to adopt (they have a standing rule against npm/npx). Python 3 or shell,
   stdlib only.
 
@@ -196,7 +201,8 @@ So:
 - **The remote is `origin` → `git@github.com:mikaelstaldal/mysuite.git`**
   (<https://github.com/mikaelstaldal/mysuite>). Commit locally; **pushing is the human's
   call** — say the work is ready rather than publishing it or routing around a missing
-  credential. `git remote -v` in each app repo is authoritative for where that one lives.
+  credential. A push to `main` also triggers publication of the marketing website.
+  `git remote -v` in each app repo is authoritative for where that one lives.
 
   Cross-references from the app repos still name this repo **by path** — `../mysuite`,
   `spec/sidebar-footer.md` — and should keep doing so: the path is what resolves for a reader

@@ -1,7 +1,33 @@
 # MySuite
 
-Shared UI contracts for the MySuite apps: [MyCal](https://github.com/mikaelstaldal/mycal), 
-[MyMail](https://github.com/mikaelstaldal/mymail) and [MyNotes](https://github.com/mikaelstaldal/mynotes).
+MySuite is a suite of personal productivity software: [MyCal](https://github.com/mikaelstaldal/mycal),
+[MyMail](https://github.com/mikaelstaldal/mymail), [MyNotes](https://github.com/mikaelstaldal/mynotes),
+[MyLinks](https://github.com/mikaelstaldal/mylinks) and [MyPass](https://github.com/mikaelstaldal/mypass),
+each with a companion Android app.
+
+This repository contains the [marketing website](https://mikaelstaldal.github.io/mysuite/)
+and shared UI contracts for MyCal, MyMail and MyNotes.
+
+## Website
+
+The website lives in [`site/`](site/): plain HTML, CSS and SVG, with no backend,
+JavaScript, package manager or build step. Preview it from the repository root:
+
+```sh
+python3 -m http.server 8080 --bind 127.0.0.1 --directory site
+```
+
+Open <http://127.0.0.1:8080/>. All local asset links are relative so the same files
+work beneath the production `/mysuite/` path.
+
+[`pages.yml`](.github/workflows/pages.yml) uploads only `site/` and deploys it to
+GitHub Pages on pushes to `main`, or through a manual workflow run on `main`.
+Before the first deployment, select **Settings → Pages → Build and deployment →
+Source → GitHub Actions** in the GitHub repository. See
+[GitHub's custom workflow documentation](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages).
+Pushing remains the human's call. The deployment workflow does not check the app UI contracts.
+
+## Shared UI contracts
 
 Three separate applications, three separate repositories, three separate binaries — but one
 product as far as anyone using them is concerned. Somebody with all three open in browser
@@ -23,7 +49,8 @@ hand is the problem this repository replaces, not a smaller version of it.
 
 ## What belongs here
 
-**Belongs:** anything that is required to be identical across two or more of the apps.
+**Belongs:** the static marketing website and its Pages deployment workflow, plus anything
+that is required to be identical across two or more of the apps.
 Geometry, resolved colours, interaction behaviour, on-screen position, accessibility
 guarantees, and the reasoning behind each — particularly where a value looks arbitrary or a
 rule looks redundant.
@@ -34,10 +61,10 @@ rule looks redundant.
   requirements document where it has one.
 - CSS class names, token names, or file layout. Those are deliberately per-project. What is
   shared is the *value*, never the name it is reached by.
-- Application code. There is no shared stylesheet and no shared component library — the
+- App implementation code. There is no shared app stylesheet and no shared component library — the
   apps implement the contracts in their own CSS, with their own class and token names.
 
-  There is one exception, and it is deliberate: **`tools/` holds scripts that check a
+  **`site/` is independent marketing code; `tools/` holds scripts that check a
   contract.** A specification nothing can verify is a specification that drifts, and this
   repository is the only place a *cross-repo* check can live, because it is the only place
   that knows about all three apps at once. Such a script is a contract artefact — it will be

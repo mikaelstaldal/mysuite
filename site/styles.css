@@ -27,7 +27,7 @@ svg, img.icon { flex-shrink: 0; }
 .site-header { min-height: 106px; display: flex; align-items: center; justify-content: space-between; gap: 24px; border-bottom: 1px solid var(--line); }
 .wordmark { display: inline-flex; align-items: center; gap: 9px; font-size: 1.5625rem; font-weight: 700; letter-spacing: -1.2px; }
 .wordmark-dot { color: #7c9253; margin-left: -8px; }
-.site-header nav { display: flex; gap: 34px; align-items: center; font-size: 0.875rem; font-weight: 550; }
+.site-header nav { display: flex; flex-wrap: wrap; gap: 34px; align-items: center; font-size: 0.875rem; font-weight: 550; }
 .site-header nav a, .suite-strip a, .footer-meta > a { min-height: 28px; display: inline-flex; align-items: center; }
 .nav-source { display: flex; gap: 5px; align-items: center; }
 .nav-source .icon { width: 18px; }
@@ -108,7 +108,10 @@ h2 { font-size: clamp(2rem, 3.3vw, 2.6875rem); letter-spacing: -1.8px; line-heig
 .app-category { color: var(--muted); font-size: 0.5rem; letter-spacing: 1.2px; font-weight: 600; }
 .app-card h3 { font-size: 1.5625rem; font-weight: 600; letter-spacing: -.8px; margin-bottom: 8px; }
 .card-tagline { font-size: 0.8125rem; font-weight: 600; margin-bottom: 10px; }
-.card-description { font-size: 0.8125rem; color: var(--muted); margin-bottom: 25px; flex-grow: 1; }
+.card-description { font-size: 0.8125rem; color: var(--muted); margin-bottom: 16px; }
+.feature-list { margin: 0 0 25px; padding-left: 18px; color: var(--muted); font-size: 0.8125rem; line-height: 1.65; flex-grow: 1; }
+.feature-list li + li { margin-top: 10px; }
+.feature-list li::marker { color: #5c7950; }
 .card-links { display: flex; gap: 20px; justify-content: space-between; align-items: center; font-size: 0.6875rem; font-weight: 650; margin-bottom: 21px; flex-wrap: wrap; }
 .card-links a { display: inline-flex; align-items: center; gap: 4px; }
 .card-links .icon { width: 17px; height: 17px; }
@@ -121,6 +124,15 @@ h2 { font-size: clamp(2rem, 3.3vw, 2.6875rem); letter-spacing: -1.8px; line-heig
 .suite-note p { font-size: 0.75rem; color: var(--muted); margin-bottom: 17px; }
 .suite-note .suite-note-title { font: italic 2.0625rem/1.18 Georgia, serif; letter-spacing: -.8px; color: var(--ink); margin-bottom: 15px; }
 
+.screenshots-section { padding-bottom: 90px; }
+.screenshots-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+.screenshot-card { margin: 0; background: #fffef9; border: 1px solid var(--line); border-radius: 11px; }
+.screenshot-card > a { display: block; border-radius: 11px 11px 0 0; }
+.screenshot-card img { display: block; width: 100%; height: auto; border-radius: 11px 11px 0 0; border-bottom: 1px solid var(--line); }
+.screenshot-card > a:hover img { opacity: .88; }
+.screenshot-card figcaption { padding: 20px 24px; }
+.screenshot-card strong { font-size: 1.125rem; }
+.screenshot-card p { margin: 8px 0 0; color: var(--muted); font-size: 0.8125rem; }
 .android-section { background: #e9eddf; border: 1px solid #dce1cf; border-radius: 14px; display: grid; grid-template-columns: 1fr 1.25fr; align-items: center; gap: 35px; padding: 48px 68px; overflow: hidden; }
 .android-art { position: relative; width: 100%; min-height: 336px; isolation: isolate; display: grid; place-items: center; }
 .phone-shell { position: relative; width: 167px; height: 315px; border: 5px solid #354635; border-radius: 27px; background: #f8f7ee; transform: rotate(-9deg); padding: 20px 15px; box-shadow: 14px 19px 0 #bfcaae5c; }
@@ -174,6 +186,7 @@ h2 { font-size: clamp(2rem, 3.3vw, 2.6875rem); letter-spacing: -1.8px; line-heig
   .suite-strip { flex-wrap: wrap; justify-content: center; gap: 22px 32px; }
   .strip-intro { width: 100%; text-align: center; }
   .apps-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .screenshots-grid { grid-template-columns: 1fr; }
   .section-heading { align-items: flex-start; }
   .section-heading > p { max-width: 210px; margin-top: 30px; }
   .android-section { gap: 20px; padding: 40px 27px; }
@@ -219,6 +232,9 @@ h2 { font-size: clamp(2rem, 3.3vw, 2.6875rem); letter-spacing: -1.8px; line-heig
   .app-card { padding: 27px; }
   .card-top { margin-bottom: 21px; }
   .card-description { font-size: 0.875rem; }
+  .feature-list { font-size: 0.875rem; }
+  .screenshots-section { padding-bottom: 56px; }
+  .screenshots-grid { gap: 20px; }
   .card-links { font-size: 0.75rem; }
   .android-link { font-size: 0.75rem; min-height: 44px; }
   .suite-note { align-items: center; text-align: center; padding-block: 22px; }

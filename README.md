@@ -10,7 +10,7 @@ and shared UI contracts for MyCal, MyMail and MyNotes.
 
 ## Website
 
-The website lives in [`site/`](site/): plain HTML, CSS and SVG, with no backend,
+The website lives in [`site/`](site/): plain HTML, CSS, SVG and PNG, with no backend,
 JavaScript, package manager or build step. Preview it from the repository root:
 
 ```sh
@@ -30,6 +30,39 @@ When refreshing them, copy the source SVG rather than redrawing or recoloring it
 | `icons/mynotes.svg` | `../mynotes/web/static/favicon.svg` | `caece6e` |
 | `icons/mylinks.svg` | `../mylinks/ui/static/favicon.svg` | `1f1ff09` |
 | `icons/mypass.svg` | `../mypass/webextension/icons/mypass.svg` | `9f0debb` |
+
+### Web UI screenshots
+
+`site/screenshots/` contains actual browser captures, not mockups. Captured on
+2026-09-21 using Chromium, a 1440 × 900 viewport, device scale factor 1, the light
+theme, and the default 16px root font size. The site links each thumbnail to its
+full-size PNG. MyPass has no web UI screenshot.
+
+| Screenshot | Source and selected view |
+|---|---|
+| `mycal.png` | [Public demo](https://mikaelstaldal.github.io/mycal/), initial week view after dismissing the welcome dialog |
+| `mymail.png` | [Public demo](https://mikaelstaldal.github.io/mymail/), sample “Q2 Budget Review” email and its conversation thread |
+| `mynotes.png` | [Public demo](https://mikaelstaldal.github.io/mynotes/), sample “Weekend in Lisbon” note |
+| `mylinks.png` | Fresh local build of MyLinks `1f1ff09`, using an isolated temporary database with sample bookmarks and a note |
+
+To refresh the public-demo captures, use a fresh browser context, dismiss the
+demo dialog, select the view above, and wait for the content and fonts to load.
+The demos' sample dates can change; these are snapshots of the deployed demos,
+not conformance measurements or a claim that they match a sibling checkout's HEAD.
+
+For MyLinks, build the app and start it with a new temporary `-data` directory.
+The sample bookmarks are `https://go.dev/doc/`,
+`https://developer.mozilla.org/en-US/docs/Web/CSS`, and
+`https://www.rfc-editor.org/rfc/rfc5545`. Add a sample note titled “Ideas for the
+weekend”. Use only sample data; do not capture a personal database. This capture
+uses the app without its optional page-screenshot service. No app UI or source
+was modified for any of the screenshots.
+
+The feature descriptions are based on the five apps' READMEs; MyCal's view names
+were also checked in its rendered demo. Server-backed capabilities such as
+iCalendar import/export are described as app features, not demo capabilities.
+
+### Publishing
 
 [`pages.yml`](.github/workflows/pages.yml) uploads only `site/` and deploys it to
 GitHub Pages on pushes to `main`, or through a manual workflow run on `main`.

@@ -18,7 +18,7 @@ a { color: inherit; text-decoration: none; text-underline-offset: 4px; }
 a:hover { text-decoration: underline; }
 a:focus-visible { outline: 3px solid #976029; outline-offset: 5px; border-radius: 3px; }
 p { line-height: 1.7; }
-svg { flex-shrink: 0; }
+svg, img.icon { flex-shrink: 0; }
 .icon { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .icon-definitions { position: absolute; width: 0; height: 0; overflow: hidden; }
 .wrap { width: min(1180px, calc(100% - 96px)); margin-inline: auto; }
@@ -89,7 +89,7 @@ h1 em { font-family: Georgia, "Times New Roman", serif; font-weight: 400; color:
 .suite-strip { border-block: 1px solid var(--line); padding-block: 25px; display: flex; align-items: center; justify-content: space-between; gap: 22px; }
 .strip-intro { font-size: 0.5625rem; letter-spacing: 1.2px; font-weight: 650; color: var(--muted); }
 .suite-strip a { display: flex; align-items: center; gap: 9px; font-size: 1rem; font-weight: 600; letter-spacing: -.4px; }
-.suite-strip .icon { width: 19px; height: 19px; color: #78816d; }
+.suite-strip .icon { width: 19px; height: 19px; }
 .apps-section { padding-block: 90px; }
 .section-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 30px; margin-bottom: 36px; }
 .section-heading .eyebrow { margin-bottom: 16px; }
@@ -97,13 +97,14 @@ h2 { font-size: clamp(2rem, 3.3vw, 2.6875rem); letter-spacing: -1.8px; line-heig
 .section-heading > p { color: var(--muted); font-size: 0.875rem; margin-bottom: 3px; }
 .apps-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
 .app-card { display: flex; flex-direction: column; background: #fffef9; padding: 28px; border: 1px solid #e0e1d7; border-radius: 11px; scroll-margin-top: 24px; }
-.cal-card { --app-fill: #e6eddf; --app-ink: #536e41; }
-.mail-card { --app-fill: #e5eaf2; --app-ink: #526b8e; }
-.notes-card { --app-fill: #f4edcf; --app-ink: #8b7139; }
-.links-card { --app-fill: #f1e4da; --app-ink: #976648; }
-.pass-card { --app-fill: #eae4f1; --app-ink: #7b638b; }
+.cal-card { --app-fill: #e6eddf; }
+.mail-card { --app-fill: #e5eaf2; }
+.notes-card { --app-fill: #f4edcf; }
+.links-card { --app-fill: #f1e4da; }
+.pass-card { --app-fill: #eae4f1; }
 .card-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 25px; }
-.app-icon { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 11px; color: var(--app-ink); background: var(--app-fill); }
+.app-icon { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 11px; background: var(--app-fill); }
+.app-icon img { width: 32px; height: 32px; }
 .app-category { color: var(--muted); font-size: 0.5rem; letter-spacing: 1.2px; font-weight: 600; }
 .app-card h3 { font-size: 1.5625rem; font-weight: 600; letter-spacing: -.8px; margin-bottom: 8px; }
 .card-tagline { font-size: 0.8125rem; font-weight: 600; margin-bottom: 10px; }
@@ -128,7 +129,7 @@ h2 { font-size: clamp(2rem, 3.3vw, 2.6875rem); letter-spacing: -1.8px; line-heig
 .phone-shell p { font-size: 1.125rem; letter-spacing: -.6px; line-height: 1.3; margin: 25px 0 22px; }
 .phone-shell em { font-family: Georgia, serif; color: #7b8c5b; }
 .phone-apps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-.phone-apps > span { aspect-ratio: 1; background: var(--app-fill); color: var(--app-ink); border-radius: 10px; display: grid; place-items: center; }
+.phone-apps > span { aspect-ratio: 1; background: var(--app-fill); border-radius: 10px; display: grid; place-items: center; }
 .phone-apps .icon { width: 20px; height: 20px; }
 .phone-brand { display: block; font-size: 0.5rem; color: #7b816e; text-align: center; margin-top: 27px; }
 .phone-home { position: absolute; width: 48px; height: 3px; border-radius: 3px; background: #354635; bottom: 8px; left: 54px; }
@@ -137,6 +138,7 @@ h2 { font-size: clamp(2rem, 3.3vw, 2.6875rem); letter-spacing: -1.8px; line-heig
 .android-copy .eyebrow { font-size: 0.5625rem; margin-bottom: 17px; }
 .android-copy > p:not(.eyebrow) { color: #59664f; font-size: 0.875rem; max-width: 420px; margin: 23px 0; }
 .android-copy > p.android-directions { font-size: 0.6875rem; }
+.android-repositories { display: flex; flex-wrap: wrap; gap: 10px; }
 .button-outline { border-color: #a8b397; color: #3d5135; padding: 12px 17px; }
 .button-outline:hover { background: #dce4d1; }
 .demo-section { text-align: center; padding-block: 90px 85px; }

@@ -18,11 +18,6 @@
   <a class="skip-link" href="#main">Skip to content</a>
   <svg class="icon-definitions" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
     <defs>
-      <symbol id="calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M7 3v4m10-4v4M3 11h18m-13 4h2m4 0h2m-8 3h2"/></symbol>
-      <symbol id="mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/></symbol>
-      <symbol id="notes" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9Zm0 0v6h6M8 13h8m-8 4h5"/></symbol>
-      <symbol id="links" viewBox="0 0 24 24"><path d="m10 13 4-4m-5 6-2 2a4 4 0 0 1-6-6l4-4a4 4 0 0 1 6 0m2 2 2-2a4 4 0 0 1 6 6l-4 4a4 4 0 0 1-6 0" transform="translate(1 0)"/></symbol>
-      <symbol id="lock" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3m-4 5v2"/></symbol>
       <symbol id="arrow" viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></symbol>
       <symbol id="external" viewBox="0 0 24 24"><path d="M7 17 17 7M7 7h10v10"/></symbol>
       <symbol id="phone" viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M10 5h4m-3 14h2"/></symbol>
@@ -55,7 +50,7 @@
         <div class="art-orbit orbit-one"></div><div class="art-orbit orbit-two"></div>
         <div class="art-caption">A PLACE FOR EVERY PART OF YOUR DAY</div>
         <div class="illustration-calendar">
-          <div class="mini-heading"><span class="mini-app"><svg class="icon"><use href="#calendar"/></svg> MyCal</span><span class="mini-dots">•••</span></div>
+          <div class="mini-heading"><span class="mini-app"><img class="icon" src="icons/mycal.svg" alt=""> MyCal</span><span class="mini-dots">•••</span></div>
           <div class="calendar-title">September <span>2026</span></div>
           <div class="calendar-grid">
             <b>M</b><b>T</b><b>W</b><b>T</b><b>F</b><b>S</b><b>S</b>
@@ -67,10 +62,10 @@
           </div>
           <div class="calendar-event"><span></span><div>Make time for a good idea<small>09:00 – 10:00 · Just for you</small></div></div>
         </div>
-        <div class="illustration-note"><svg class="icon"><use href="#notes"/></svg><span>A little thought</span><p>Less scattered.<br>More present.</p><div class="note-line"></div><div class="note-line short"></div><span class="note-spark" aria-hidden="true">✳</span></div>
-        <div class="illustration-mail"><span class="art-mail-icon"><svg class="icon"><use href="#mail"/></svg></span><div>A conversation worth keeping<small>Room for the things that matter.</small></div><span class="mail-dot"></span></div>
-        <div class="art-token token-link"><svg class="icon"><use href="#links"/></svg></div>
-        <div class="art-token token-lock"><svg class="icon"><use href="#lock"/></svg></div>
+        <div class="illustration-note"><img class="icon" src="icons/mynotes.svg" alt=""><span>A little thought</span><p>Less scattered.<br>More present.</p><div class="note-line"></div><div class="note-line short"></div><span class="note-spark" aria-hidden="true">✳</span></div>
+        <div class="illustration-mail"><span class="art-mail-icon"><img class="icon" src="icons/mymail.svg" alt=""></span><div>A conversation worth keeping<small>Room for the things that matter.</small></div><span class="mail-dot"></span></div>
+        <div class="art-token token-link"><img class="icon" src="icons/mylinks.svg" alt=""></div>
+        <div class="art-token token-lock"><img class="icon" src="icons/mypass.svg" alt=""></div>
         <span class="art-flower" aria-hidden="true">✳</span>
         <span class="art-bottom-caption">a calmer kind of productive.</span>
       </div>
@@ -78,42 +73,42 @@
 
     <nav class="suite-strip wrap" aria-label="Five apps in MySuite">
       <span class="strip-intro">FIVE APPS. ONE SUITE.</span>
-      <a href="#mycal"><svg class="icon" aria-hidden="true"><use href="#calendar"/></svg>MyCal</a>
-      <a href="#mymail"><svg class="icon" aria-hidden="true"><use href="#mail"/></svg>MyMail</a>
-      <a href="#mynotes"><svg class="icon" aria-hidden="true"><use href="#notes"/></svg>MyNotes</a>
-      <a href="#mylinks"><svg class="icon" aria-hidden="true"><use href="#links"/></svg>MyLinks</a>
-      <a href="#mypass"><svg class="icon" aria-hidden="true"><use href="#lock"/></svg>MyPass</a>
+      <a href="#mycal"><img class="icon" src="icons/mycal.svg" alt="">MyCal</a>
+      <a href="#mymail"><img class="icon" src="icons/mymail.svg" alt="">MyMail</a>
+      <a href="#mynotes"><img class="icon" src="icons/mynotes.svg" alt="">MyNotes</a>
+      <a href="#mylinks"><img class="icon" src="icons/mylinks.svg" alt="">MyLinks</a>
+      <a href="#mypass"><img class="icon" src="icons/mypass.svg" alt="">MyPass</a>
     </nav>
 
     <section class="apps-section wrap" id="apps" aria-labelledby="apps-title">
       <div class="section-heading"><div><p class="eyebrow">MEET YOUR EVERYDAY ESSENTIALS</p><h2 id="apps-title">A small suite.<br>A whole lot of possibility.</h2></div><p>Pick the tools that fit your day.<br>Each has a purpose. Each has a place.</p></div>
       <div class="apps-grid">
         <article class="app-card cal-card" id="mycal">
-          <div class="card-top"><span class="app-icon"><svg class="icon" aria-hidden="true"><use href="#calendar"/></svg></span><span class="app-category">YOUR TIME</span></div>
+          <div class="card-top"><span class="app-icon"><img class="icon" src="icons/mycal.svg" alt=""></span><span class="app-category">YOUR TIME</span></div>
           <h3>MyCal</h3><p class="card-tagline">Make space for your day.</p><p class="card-description">A personal calendar for plans big and small. Organize events, see your month at a glance, and bring your calendars along with iCalendar support.</p>
           <div class="card-links"><a href="https://mikaelstaldal.github.io/mycal/" aria-label="Try the MyCal live demo">Try live demo <svg class="icon" aria-hidden="true"><use href="#external"/></svg></a><a href="https://github.com/mikaelstaldal/mycal" aria-label="MyCal source code on GitHub">Source code <span aria-hidden="true">↗</span></a></div>
           <a class="android-link" href="https://github.com/mikaelstaldal/mycal-android"><svg class="icon" aria-hidden="true"><use href="#phone"/></svg> MyCal for Android <span aria-hidden="true">↗</span></a>
         </article>
         <article class="app-card mail-card" id="mymail">
-          <div class="card-top"><span class="app-icon"><svg class="icon" aria-hidden="true"><use href="#mail"/></svg></span><span class="app-category">YOUR CONVERSATIONS</span></div>
+          <div class="card-top"><span class="app-icon"><img class="icon" src="icons/mymail.svg" alt=""></span><span class="app-category">YOUR CONVERSATIONS</span></div>
           <h3>MyMail</h3><p class="card-tagline">Give your inbox a little clarity.</p><p class="card-description">A personal, self-hosted email client. Keep conversations together, find messages with full-text search, and make use of scheduled sending and snooze.</p>
           <div class="card-links"><a href="https://mikaelstaldal.github.io/mymail/" aria-label="Try the MyMail live demo">Try live demo <svg class="icon" aria-hidden="true"><use href="#external"/></svg></a><a href="https://github.com/mikaelstaldal/mymail" aria-label="MyMail source code on GitHub">Source code <span aria-hidden="true">↗</span></a></div>
           <a class="android-link" href="https://github.com/mikaelstaldal/mymail-android"><svg class="icon" aria-hidden="true"><use href="#phone"/></svg> MyMail for Android <span aria-hidden="true">↗</span></a>
         </article>
         <article class="app-card notes-card" id="mynotes">
-          <div class="card-top"><span class="app-icon"><svg class="icon" aria-hidden="true"><use href="#notes"/></svg></span><span class="app-category">YOUR IDEAS</span></div>
+          <div class="card-top"><span class="app-icon"><img class="icon" src="icons/mynotes.svg" alt=""></span><span class="app-category">YOUR IDEAS</span></div>
           <h3>MyNotes</h3><p class="card-tagline">Catch a thought. Let it grow.</p><p class="card-description">A home for quick thoughts and longer ideas. Write in Markdown, connect your notes, and give your thinking room to take shape.</p>
           <div class="card-links"><a href="https://mikaelstaldal.github.io/mynotes/" aria-label="Try the MyNotes live demo">Try live demo <svg class="icon" aria-hidden="true"><use href="#external"/></svg></a><a href="https://github.com/mikaelstaldal/mynotes" aria-label="MyNotes source code on GitHub">Source code <span aria-hidden="true">↗</span></a></div>
           <a class="android-link" href="https://github.com/mikaelstaldal/mynotes-android"><svg class="icon" aria-hidden="true"><use href="#phone"/></svg> MyNotes for Android <span aria-hidden="true">↗</span></a>
         </article>
         <article class="app-card links-card" id="mylinks">
-          <div class="card-top"><span class="app-icon"><svg class="icon" aria-hidden="true"><use href="#links"/></svg></span><span class="app-category">YOUR FINDS</span></div>
+          <div class="card-top"><span class="app-icon"><img class="icon" src="icons/mylinks.svg" alt=""></span><span class="app-category">YOUR FINDS</span></div>
           <h3>MyLinks</h3><p class="card-tagline">Good finds deserve a home.</p><p class="card-description">Save the pages you want to come back to. Collect bookmarks with automatic titles and descriptions, then search your saved pages when you need them.</p>
           <div class="card-links"><a href="https://github.com/mikaelstaldal/mylinks" aria-label="Explore MyLinks on GitHub">Explore on GitHub <svg class="icon" aria-hidden="true"><use href="#external"/></svg></a></div>
           <a class="android-link" href="https://github.com/mikaelstaldal/mylinks-android"><svg class="icon" aria-hidden="true"><use href="#phone"/></svg> MyLinks for Android <span aria-hidden="true">↗</span></a>
         </article>
         <article class="app-card pass-card" id="mypass">
-          <div class="card-top"><span class="app-icon"><svg class="icon" aria-hidden="true"><use href="#lock"/></svg></span><span class="app-category">YOUR PASSWORDS</span></div>
+          <div class="card-top"><span class="app-icon"><img class="icon" src="icons/mypass.svg" alt=""></span><span class="app-category">YOUR PASSWORDS</span></div>
           <h3>MyPass</h3><p class="card-tagline">One less thing to remember.</p><p class="card-description">A password manager that keeps your passwords in an encrypted file. Generate and retrieve passwords from the command line, with an Android app for your phone.</p>
           <div class="card-links"><a href="https://github.com/mikaelstaldal/mypass" aria-label="Explore MyPass on GitHub">Explore on GitHub <svg class="icon" aria-hidden="true"><use href="#external"/></svg></a></div>
           <a class="android-link" href="https://github.com/mikaelstaldal/mypass-android"><svg class="icon" aria-hidden="true"><use href="#phone"/></svg> MyPass for Android <span aria-hidden="true">↗</span></a>
@@ -123,13 +118,25 @@
     </section>
 
     <section class="android-section wrap" id="android" aria-labelledby="android-title">
-      <div class="android-art" aria-hidden="true"><div class="phone-shell"><div class="phone-camera"></div><span class="phone-time">9:41</span><p>A little more<br><em>possibility.</em></p><div class="phone-apps"><span class="cal-card"><svg class="icon"><use href="#calendar"/></svg></span><span class="mail-card"><svg class="icon"><use href="#mail"/></svg></span><span class="notes-card"><svg class="icon"><use href="#notes"/></svg></span><span class="links-card"><svg class="icon"><use href="#links"/></svg></span><span class="pass-card"><svg class="icon"><use href="#lock"/></svg></span></div><span class="phone-brand">MySuite</span><div class="phone-home"></div></div><span class="phone-flower">✳</span><span class="phone-orbit"></span></div>
-      <div class="android-copy"><p class="eyebrow">AWAY FROM YOUR DESK. STILL IN YOUR ELEMENT.</p><h2 id="android-title">Your essentials.<br>Along for the ride.</h2><p>Ideas don’t wait until you’re at a keyboard. Neither should your tools. All five MySuite apps have a native Android companion, so there’s a place for them in your pocket, too.</p><p class="android-directions">Find each app’s Android repository in the cards above for its source code and setup instructions.</p><a class="button button-outline" href="#apps">Explore the Android apps <svg class="icon" aria-hidden="true"><use href="#arrow"/></svg></a></div>
+      <div class="android-art" aria-hidden="true"><div class="phone-shell"><div class="phone-camera"></div><span class="phone-time">9:41</span><p>A little more<br><em>possibility.</em></p><div class="phone-apps"><span class="cal-card"><img class="icon" src="icons/mycal.svg" alt=""></span><span class="mail-card"><img class="icon" src="icons/mymail.svg" alt=""></span><span class="notes-card"><img class="icon" src="icons/mynotes.svg" alt=""></span><span class="links-card"><img class="icon" src="icons/mylinks.svg" alt=""></span><span class="pass-card"><img class="icon" src="icons/mypass.svg" alt=""></span></div><span class="phone-brand">MySuite</span><div class="phone-home"></div></div><span class="phone-flower">✳</span><span class="phone-orbit"></span></div>
+      <div class="android-copy">
+        <p class="eyebrow">AWAY FROM YOUR DESK. STILL IN YOUR ELEMENT.</p>
+        <h2 id="android-title">Your essentials.<br>Along for the ride.</h2>
+        <p>Ideas don’t wait until you’re at a keyboard. Neither should your tools. All five MySuite apps have a native Android companion, so there’s a place for them in your pocket, too.</p>
+        <p class="android-directions">Explore the Android repositories for source code and setup instructions.</p>
+        <nav class="android-repositories" aria-label="Android app repositories">
+          <a class="button button-outline" href="https://github.com/mikaelstaldal/mycal-android" aria-label="MyCal for Android on GitHub"><img class="icon" src="icons/mycal.svg" alt=""> MyCal <svg class="icon" aria-hidden="true"><use href="#external"/></svg></a>
+          <a class="button button-outline" href="https://github.com/mikaelstaldal/mymail-android" aria-label="MyMail for Android on GitHub"><img class="icon" src="icons/mymail.svg" alt=""> MyMail <svg class="icon" aria-hidden="true"><use href="#external"/></svg></a>
+          <a class="button button-outline" href="https://github.com/mikaelstaldal/mynotes-android" aria-label="MyNotes for Android on GitHub"><img class="icon" src="icons/mynotes.svg" alt=""> MyNotes <svg class="icon" aria-hidden="true"><use href="#external"/></svg></a>
+          <a class="button button-outline" href="https://github.com/mikaelstaldal/mylinks-android" aria-label="MyLinks for Android on GitHub"><img class="icon" src="icons/mylinks.svg" alt=""> MyLinks <svg class="icon" aria-hidden="true"><use href="#external"/></svg></a>
+          <a class="button button-outline" href="https://github.com/mikaelstaldal/mypass-android" aria-label="MyPass for Android on GitHub"><img class="icon" src="icons/mypass.svg" alt=""> MyPass <svg class="icon" aria-hidden="true"><use href="#external"/></svg></a>
+        </nav>
+      </div>
     </section>
 
     <section class="demo-section wrap" id="demos" aria-labelledby="demos-title">
       <p class="eyebrow">GET A FEEL FOR IT</p><h2 id="demos-title">Less reading. More exploring.</h2><p>Take MyCal, MyMail, and MyNotes for a spin in your browser.<br>Interactive demos, ready when you are.</p>
-      <div class="demo-links"><a href="https://mikaelstaldal.github.io/mycal/"><svg class="icon" aria-hidden="true"><use href="#calendar"/></svg> Try MyCal <svg class="icon" aria-hidden="true"><use href="#external"/></svg></a><a href="https://mikaelstaldal.github.io/mymail/"><svg class="icon" aria-hidden="true"><use href="#mail"/></svg> Try MyMail <svg class="icon" aria-hidden="true"><use href="#external"/></svg></a><a href="https://mikaelstaldal.github.io/mynotes/"><svg class="icon" aria-hidden="true"><use href="#notes"/></svg> Try MyNotes <svg class="icon" aria-hidden="true"><use href="#external"/></svg></a></div>
+      <div class="demo-links"><a href="https://mikaelstaldal.github.io/mycal/"><img class="icon" src="icons/mycal.svg" alt=""> Try MyCal <svg class="icon" aria-hidden="true"><use href="#external"/></svg></a><a href="https://mikaelstaldal.github.io/mymail/"><img class="icon" src="icons/mymail.svg" alt=""> Try MyMail <svg class="icon" aria-hidden="true"><use href="#external"/></svg></a><a href="https://mikaelstaldal.github.io/mynotes/"><img class="icon" src="icons/mynotes.svg" alt=""> Try MyNotes <svg class="icon" aria-hidden="true"><use href="#external"/></svg></a></div>
     </section>
   </main>
 

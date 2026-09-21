@@ -20,6 +20,17 @@ python3 -m http.server 8080 --bind 127.0.0.1 --directory site
 Open <http://127.0.0.1:8080/>. All local asset links are relative so the same files
 work beneath the production `/mysuite/` path.
 
+The app icons in `site/icons/` are unmodified copies of existing project assets.
+When refreshing them, copy the source SVG rather than redrawing or recoloring it:
+
+| Site asset | Source path (relative to this repo) | Copied from commit |
+|---|---|---|
+| `icons/mycal.svg` | `../mycal/web/static/favicon.svg` | `46c5761` |
+| `icons/mymail.svg` | `../mymail/web/static/favicon.svg` | `a8f56a6` |
+| `icons/mynotes.svg` | `../mynotes/web/static/favicon.svg` | `caece6e` |
+| `icons/mylinks.svg` | `../mylinks/ui/static/favicon.svg` | `1f1ff09` |
+| `icons/mypass.svg` | `../mypass/webextension/icons/mypass.svg` | `9f0debb` |
+
 [`pages.yml`](.github/workflows/pages.yml) uploads only `site/` and deploys it to
 GitHub Pages on pushes to `main`, or through a manual workflow run on `main`.
 Before the first deployment, select **Settings → Pages → Build and deployment →

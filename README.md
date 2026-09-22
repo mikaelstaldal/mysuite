@@ -33,9 +33,10 @@ When refreshing them, copy the source SVG rather than redrawing or recoloring it
 
 ### Web UI screenshots
 
-`site/screenshots/` contains actual browser captures, not mockups. Captured on
-2026-09-21 using Chromium, a 1440 × 900 viewport, device scale factor 1, the light
-theme, and the default 16px root font size. The site links each thumbnail to its
+`site/screenshots/` contains actual browser captures, not mockups. MyCal,
+MyMail, and MyNotes were captured on 2026-09-21; MyLinks was captured on
+2026-09-22. All use Chromium, a 1440 × 900 viewport, device scale factor 1,
+the light theme, and the default 16px root font size. The site links each thumbnail to its
 full-size PNG. MyPass has no web UI screenshot.
 
 | Screenshot | Source and selected view |
@@ -43,20 +44,16 @@ full-size PNG. MyPass has no web UI screenshot.
 | `mycal.png` | [Public demo](https://mikaelstaldal.github.io/mycal/), initial week view after dismissing the welcome dialog |
 | `mymail.png` | [Public demo](https://mikaelstaldal.github.io/mymail/), sample “Q2 Budget Review” email and its conversation thread |
 | `mynotes.png` | [Public demo](https://mikaelstaldal.github.io/mynotes/), sample “Weekend in Lisbon” note |
-| `mylinks.png` | Fresh local build of MyLinks `1f1ff09`, using an isolated temporary database with sample bookmarks and a note |
+| `mylinks.png` | Fresh local bundle of the [browser demo](https://mikaelstaldal.github.io/mylinks/), showing its seeded links and “Ideas to explore” note |
 
-To refresh the public-demo captures, use a fresh browser context, dismiss the
+To refresh the first three captures, use a fresh browser context, dismiss the
 demo dialog, select the view above, and wait for the content and fonts to load.
-The demos' sample dates can change; these are snapshots of the deployed demos,
-not conformance measurements or a claim that they match a sibling checkout's HEAD.
-
-For MyLinks, build the app and start it with a new temporary `-data` directory.
-The sample bookmarks are `https://go.dev/doc/`,
-`https://developer.mozilla.org/en-US/docs/Web/CSS`, and
-`https://www.rfc-editor.org/rfc/rfc5545`. Add a sample note titled “Ideas for the
-weekend”. Use only sample data; do not capture a personal database. This capture
-uses the app without its optional page-screenshot service. No app UI or source
-was modified for any of the screenshots.
+For MyLinks, build a fresh demo bundle from `../mylinks` with
+`go run ./cmd/mylinks -demo-bundle <empty-directory>`, serve that directory over
+HTTP, and wait for its seeded entries to appear. Its demo has no dialog to dismiss.
+The demos' sample dates can change; these are snapshots, not conformance
+measurements or a claim that they match a sibling checkout's HEAD. No app UI or
+source was modified for any of the screenshots.
 
 The feature descriptions are based on the five apps' READMEs; MyCal's view names
 were also checked in its rendered demo. Server-backed capabilities such as

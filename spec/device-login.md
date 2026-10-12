@@ -11,14 +11,18 @@ This contract covers those two apps; MyNotes has no device token login.
   nonexistent requested resources fail login with invalid_scope before a code
   is issued.
 - The CLI prints an approval URL and a short `XXXX-XXXX` user code to stderr.
-  A complete URL opens Settings → API Tokens with the code filled in, without
-  approving it. Code entry is case- and hyphen-insensitive.
+  The link opens a separate `device-approval.html` page showing only the approval
+  flow. A complete URL fills in the code and loads the request without approving
+  it. Settings → API Tokens also allows manual code entry. Code entry is case-
+  and hyphen-insensitive.
 - Before approving, the user sees the code, CLI identity, requested token name,
   requested folders/calendars, lifetime, request age, and socket IP/User-Agent.
   The UI reminds them to approve only a login they started and compare its code.
-  No resources start selected; granted lifetime starts at 30 days. They select
-  at least one resource, choose a positive lifetime up to ten years,
+  Requested scope and lifetime are pre-filled. The user can adjust them, must
+  grant at least one resource, and chooses a positive lifetime up to ten years,
   then explicitly Approve or Deny. A decision cannot be changed or repeated.
+  The dedicated page attempts to close after either successful decision. If the
+  browser blocks closing, it shows completion and tells the user to close the tab.
 - The grant expires after ten minutes. The CLI waits five seconds between polls
   and increases that wait by five seconds after `slow_down`. Network timeouts
   and transient server failures back off; cancellation and expiry stop the flow.
@@ -37,10 +41,10 @@ This contract covers those two apps; MyNotes has no device token login.
 
 The device grant changes token issuance only. Existing scope restrictions,
 listing, revocation and token expiry remain the app's own token-store behavior.
-Refresh tokens, discovery metadata, dynamic client registration and a separate
-consent page are out of scope.
+Refresh tokens, discovery metadata and dynamic client registration are out of scope.
 
-Verification lives in each app's `device_login_test.go`, token CLI tests, and
+Verification lives in each app's `device_login_test.go`, `device_page_test.go`
+(CSP importmap and deployment URL checks), token CLI tests, and
 `e2e/tests/device-approval.spec.ts`, plus the shared package's protocol/client
 unit tests. These checks run against local code; they do not establish which
 library version has been published or which app commit has been deployed.

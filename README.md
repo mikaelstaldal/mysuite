@@ -135,6 +135,10 @@ documents rather than restating its values.
     Implemented in all three apps.
   - **[`spec/app-name-label.md`](spec/app-name-label.md)** — the app-name text beside the
     badge: its font, font size and placement. Implemented in all three apps.
+- **[`spec/device-login.md`](spec/device-login.md)** — the shared device-login
+  protocol and consent behavior for scoped API tokens in MyMail and MyCal.
+  This app integration protocol is separate from the three UI contracts and is
+  verified by app and library tests.
 - **[`tools/check-contract.py`](tools/check-contract.py)** — checks the three apps against
   the **sidebar-footer** contract, and against the **app-name-label** contract's font size and
   font stack. It does **not** check the app-logo contract at all, and it cannot check

@@ -31,6 +31,14 @@ claim with a deadline; if you find one that has not moved, that is the defect.**
 |------------------------------------------------------|-----------------------------------------------------------------------------------------------------------|
 | [`measurement-protocol.md`](measurement-protocol.md) | Every contract. How to verify a change to shared UI, and why a green build proves nothing about geometry. |
 
+## App integration protocols
+
+[Device login for scoped API tokens](device-login.md) specifies the shared CLI
+and consent behavior in MyMail and MyCal. It covers token issuance through the
+shared server library; it does not mandate identical UI geometry or add a token
+login feature to MyNotes. Its verification lives in the apps and shared library,
+outside the static UI contract checker.
+
 ## How a contract is written
 
 Each contract document states, in this order:

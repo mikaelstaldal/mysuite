@@ -13,7 +13,9 @@ This contract covers those two apps; MyNotes has no device token login.
 - The CLI prints an approval URL and a short `XXXX-XXXX` user code to stderr.
   The link opens a separate `device-approval.html` page showing only the approval
   flow. A complete URL fills in the code and loads the request without approving
-  it. Settings → API Tokens also allows manual code entry. Code entry is case-
+  it. Once loaded, the dedicated page shows the request without a redundant
+  code-entry form or Review request button. Manual entry remains available when
+  no request is loaded, after a failed decision, and in Settings → API Tokens. Code entry is case-
   and hyphen-insensitive.
 - Before approving, the user sees the code, CLI identity, requested token name,
   requested folders/calendars, lifetime, request age, and socket IP/User-Agent.
@@ -25,10 +27,13 @@ This contract covers those two apps; MyNotes has no device token login.
   browser blocks closing, it shows completion and tells the user to close the tab.
 - The grant expires after ten minutes. The CLI waits five seconds between polls
   and increases that wait by five seconds after `slow_down`. Network timeouts
-  and transient server failures back off; cancellation and expiry stop the flow.
+  and dropped connections (EOF, truncated responses, resets) as well as transient
+  server failures back off; cancellation and expiry stop the flow.
 - Approval records consent. The next eligible poll creates an ordinary scoped,
   hash-stored API token and consumes the grant in one transaction. Its secret is
-  returned once; transient mint failures can be retried. A removed approved
+  returned once; transient mint failures can be retried. If that response is lost
+  after minting, the CLI cannot recover the secret; it advises checking the token
+  list and revoking unused tokens before starting again. A removed approved
   resource invalidates the grant with invalid_grant, even if its ID is reused. Denial creates no token.
   Live requests are capped at ten globally and three per socket IP.
 - On success, only the token goes to stdout (or a newly created 0600 file with

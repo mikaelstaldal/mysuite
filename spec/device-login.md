@@ -17,6 +17,10 @@ This contract covers those two apps; MyNotes has no device token login.
   code-entry form or Review request button. Manual entry remains available when
   no request is loaded, after a failed decision, and in Settings → API Tokens. Code entry is case-
   and hyphen-insensitive.
+- Settings → API Tokens is a separate tab in both apps. It lists existing
+  tokens with their resource scope and expiry, supports confirmed revocation,
+  and allows manual device-code approval. Direct token creation uses the CLI.
+  Review request is disabled while the code is empty or whitespace.
 - Before approving, the user sees the code, CLI identity, requested token name,
   requested folders/calendars, lifetime, request age, and socket IP/User-Agent.
   The UI reminds them to approve only a login they started and compare its code.

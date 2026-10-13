@@ -33,11 +33,10 @@ claim with a deadline; if you find one that has not moved, that is the defect.**
 
 ## App integration protocols
 
-[Device login for scoped API tokens](device-login.md) specifies the shared CLI
-and consent behavior in MyMail and MyCal. It covers token issuance through the
-shared server library; it does not mandate identical UI geometry or add a token
-login feature to MyNotes. Its verification lives in the apps and shared library,
-outside the static UI contract checker.
+[Device login for API tokens](device-login.md) specifies the shared CLI
+and consent behavior in MyMail, MyCal and MyNotes. It covers token issuance through the
+shared server library; it does not mandate identical UI geometry. Its verification lives 
+in the apps and shared library, outside the static UI contract checker.
 
 ## How a contract is written
 

@@ -136,7 +136,7 @@ documents rather than restating its values.
   - **[`spec/app-name-label.md`](spec/app-name-label.md)** — the app-name text beside the
     badge: its font, font size and placement. Implemented in all three apps.
 - **[`spec/device-login.md`](spec/device-login.md)** — the shared device-login
-  protocol and consent behavior for scoped API tokens in MyMail and MyCal.
+  protocol and consent behavior for API tokens in MyMail, MyCal and MyNotes.
   This app integration protocol is separate from the three UI contracts and is
   verified by app and library tests.
 - **[`tools/check-contract.py`](tools/check-contract.py)** — checks the three apps against

@@ -2,8 +2,7 @@
 
 MyMail, MyCal and MyNotes share RFC 8628 protocol code from
 `go-server-common/devicegrant`. MyMail/MyCal have resource-scoped access; MyNotes
-has unscoped read-only access to its whole API. This extension follows the
-MyNotes task mys-mbldsm and the implementations/tests in the three app repos.
+has unscoped read-only access to its whole API.
 
 - `mymail-token login -name NAME [-lifetime N[s|m|h|d]] [-folders ID[,ID…]] [-out FILE]`
   and `mycal-token login -name NAME [-lifetime N[s|m|h|d]] [-calendars ID[,ID…]] [-out FILE]`
@@ -56,9 +55,9 @@ MyNotes accepts only client ID `mynotes-token` and empty requested/granted scope
 Empty scope means whole-API read-only access (notes/search, tags, artifacts, icons,
 Markdown downloads), with GET and corresponding HEAD support. Nonempty scopes
 are rejected, and there is no resource picker or resource-selection CLI flag.
-The consent page explicitly describes that whole-API access. MyNotes uses a
-narrow empty-scope consent adapter because shared v1.13.2 requires nonempty
-resource scope on approval; authorization/polling and atomic exchange remain shared.
+The consent page explicitly describes that whole-API access. MyNotes uses
+shared v1.14.0 with `AllowEmptyScope: true`; its scope validator still rejects
+nonempty scopes on approval and exchange. All device protocol handlers are shared.
 
 The device grant changes token issuance only. Existing scope restrictions,
 listing, revocation and token expiry remain the app's own token-store behavior.

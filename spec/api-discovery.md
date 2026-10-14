@@ -1,9 +1,8 @@
 # API discovery
 
-**Status: implemented in all four apps on their local `main`, unpushed, as of 2026-10-14. That
-means it is binding on all four.** The commits are listed in §7. "On local `main`" is a claim about
-those four checkouts on that date. Until the commits are pushed, a fresh clone of any of the four
-does not have them. Re-read §7 against each repo's `origin/main` before relying on it.
+**Status: binding, implemented in all four apps.** The implementing commits are listed in §7 and
+were pushed to each repo's `origin/main` on 2026-10-14. That was confirmed from the local
+remote-tracking refs, not by querying the remotes.
 
 The owner accepted the contract for implementation on 2026-10-14. Until the first app
 implemented it, it was a proposal, as `spec/README.md` requires.
@@ -15,12 +14,12 @@ adopting it is a claim with a deadline, not a standing exemption.
 How a client that knows only an app's origin finds that app's HTTP API and its machine-readable
 description. It applies to **four** apps, which is one more than the UI contracts:
 
-| App | Repo | API base path | OpenAPI document today |
-|---|---|---|---|
-| MyCal | `../mycal` | `/api/v1/` | `openapi.yaml`, generated with ogen |
-| MyMail | `../mymail` | `/api/v1/` | `openapi.yaml`, generated with ogen |
-| MyNotes | `../mynotes` | `/api/v1/` | `openapi.yaml`, generated with ogen |
-| MyLinks | `../mylinks` | `/` | **none** when this contract was written; added by `mys-uqbie3` (§7) |
+| App     | Repo         | API base path | OpenAPI document today                                              |
+|---------|--------------|---------------|---------------------------------------------------------------------|
+| MyCal   | `../mycal`   | `/api/v1/`    | `openapi.yaml`                                                      |
+| MyMail  | `../mymail`  | `/api/v1/`    | `openapi.yaml`                                                      |
+| MyNotes | `../mynotes` | `/api/v1/`    | `openapi.yaml`                                                      |
+| MyLinks | `../mylinks` | `/`           | **none** when this contract was written; added by `mys-uqbie3` (§7) |
 
 Like `spec/device-login.md`, this is an app integration protocol, not a UI contract. It mandates
 HTTP behaviour; nothing in it is rendered, and `spec/measurement-protocol.md` does not apply.
@@ -157,17 +156,17 @@ the path anyway. A single path makes the apps interchangeable for a human with `
 
 ## 7. Adoption
 
-| App | AWB issue | Implementing commit on local `main`, unpushed (2026-10-14) |
-|---|---|---|
-| MyLinks | `mys-uqbie3`: OpenAPI 3.0.3 document and ogen generation | `5e36342` |
-| MyLinks | `mys-m4zgzu`: discovery | `e78a2db` |
-| MyCal | `mys-jiijqf` | `64146bc` |
-| MyMail | `mys-k1xdht` | `8dd04e5` |
-| MyNotes | `mys-o669cx` | `2388858` |
+| App     | AWB issue                                                | Implementing commit, on `origin/main` (2026-10-14) |
+|---------|----------------------------------------------------------|----------------------------------------------------|
+| MyLinks | `mys-uqbie3`: OpenAPI 3.0.3 document and ogen generation | `5e36342`                                          |
+| MyLinks | `mys-m4zgzu`: discovery                                  | `e78a2db`                                          |
+| MyCal   | `mys-jiijqf`                                             | `64146bc`                                          |
+| MyMail  | `mys-k1xdht`                                             | `8dd04e5`                                          |
+| MyNotes | `mys-o669cx`                                             | `2388858`                                          |
 
 MyCal's, MyMail's and MyNotes' discovery commits also upgrade them from ogen v1.22.0 to v1.24.0.
 MyLinks had no ogen before this work; its prerequisite `5e36342` introduces it at v1.24.0. Each app's agent reported a full build passing and a cross-harness review folded in. This
-repository has not re-verified those reports. All five issues were left open for the owner.
+repository has not re-verified those reports. All five issues were closed by the owner on 2026-10-14.
 
 ## 8. Known gaps
 

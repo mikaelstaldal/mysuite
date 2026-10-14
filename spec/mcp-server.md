@@ -36,8 +36,8 @@ boundary (§5.1).
   specification. When the binary runs the transport, stdout carries protocol messages and nothing
   else, from the first byte. Diagnostics go to stderr. `-help` is the one exception: it prints
   usage to stdout and exits without starting the transport.
-- The binary is **statically linked**: built with `CGO_ENABLED=0` and `-tags netgo`, and
-  `go version -m` on it reports `CGO_ENABLED=0` and `-tags=netgo`.
+- The binary is **statically linked**: built with `CGO_ENABLED=0` and `-tags netgo`. This is
+  held by the build command alone; §4 does not verify it (§5.9).
 - It uses `github.com/modelcontextprotocol/go-sdk` **v1.8.0**.
 - The MCP `serverInfo.name` is the binary name (`mycal-mcp`, …). `serverInfo.version` is local.
 - Flags and environment, matching that app's `*-cli`:
@@ -273,18 +273,17 @@ token store**. Not a mock: the point is that authorization is the server's.
 6. Query parameters out of order and repeated are honoured; an unknown one is refused with -32603
    and its reason, without an HTTP request; MyCal `from=2026-10-01` is accepted.
 7. Startup with a disallowed URL or an unreadable token file exits 1 and writes nothing to stdout.
-8. The built binary reports `CGO_ENABLED=0` and `-tags=netgo`.
-9. `completion/complete` returns values for exactly the arguments in §2.6, from the server, and
+8. `completion/complete` returns values for exactly the arguments in §2.6, from the server, and
    nothing for any other argument.
-10. Every tool's annotations and input schema are as in §2.3: required arguments marked required,
+9. Every tool's annotations and input schema are as in §2.3: required arguments marked required,
     list arguments typed as arrays.
-11. A configured token that the server rejects gives the token-configured 401 message.
-12. With the server down, startup succeeds and each read and tool call reports the failure.
-13. The token secret appears in no stdout, stderr, result or error, on any of the paths above.
-14. The `initialize` result advertises no resource subscription and no `listChanged`.
-15. A draft's raw resource gives the draft error, not a blob.
-16. An empty body arrives as an empty blob, with the response's MIME type.
-17. An out-of-range query parameter, rejected by ogen, gives the `error_message` text, not the raw
+10. A configured token that the server rejects gives the token-configured 401 message.
+11. With the server down, startup succeeds and each read and tool call reports the failure.
+12. The token secret appears in no stdout, stderr, result or error, on any of the paths above.
+13. The `initialize` result advertises no resource subscription and no `listChanged`.
+14. A draft's raw resource gives the draft error, not a blob.
+15. An empty body arrives as an empty blob, with the response's MIME type.
+16. An out-of-range query parameter, rejected by ogen, gives the `error_message` text, not the raw
     body.
 
 **Nothing checks the three against each other** (`AGENTS.md` §2.1). `tools/check-contract.py`
@@ -343,6 +342,12 @@ Ruled by the owner on 2026-10-14, after trying MyNotes from Claude Code. go-sdk 
 therefore lost its message, including *"use the search_notes tool to search"*, which is what lets
 a model recover. Sent as -32603, the message reaches the model, as an HTTP 400's did in the same
 session. The cost, accepted: the code no longer says the request was malformed.
+
+### 5.9 Static linking is required but not verified
+
+Ruled by the owner on 2026-10-14: the check was dropped. MyNotes' first implementation had
+`build.sh` assert `CGO_ENABLED=0` and `-tags=netgo` in `go version -m`, and the owner removed it.
+The build flags in §2.1 stay mandated; nothing checks that a built binary carries them.
 
 ## 6. Out of scope
 

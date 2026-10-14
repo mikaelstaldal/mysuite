@@ -335,6 +335,13 @@ writes `from=2026-10-01T09:00:00Z`, whose unencoded `:` fails the SDK's template
 "Resource not found", which reads as though the resource does not exist. Accepting `mycal-cli`'s
 date-only form avoids the common case, and reuses a parser MyCal already ships.
 
+**The remaining case stays as documented, by the owner's ruling on 2026-10-14**, after trying
+MyCal from Claude Code, where `from=2026-10-01T00:00:00Z` gave *"Resource not found"*. The
+alternative considered was an extra catch-all template using RFC 6570's reserved expansion
+(`{+…}`), whose match permits `:`, so that such URIs reach the handler. It was not adopted: it
+adds a confusing entry to every app's template list. MyCal's server instructions suggest a date
+such as `2026-10-01`, and its user manual says to percent-encode the colons of a time.
+
 ### 5.5 `mark_message_read` is exposed
 
 Ruled by the owner on 2026-10-14. It is the only write a token can make in any of the three apps.

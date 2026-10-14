@@ -1,8 +1,12 @@
 # API discovery
 
-**Status: proposal, accepted for implementation by the owner on 2026-10-14. Not yet implemented
-in any of the four apps' `main`.** `spec/README.md` asks for a contract that nothing implements to
-be marked a proposal, so it is one. It becomes binding on all four when the first app ships it.
+**Status: implemented in all four apps on their local `main`, unpushed, as of 2026-10-14. That
+means it is binding on all four.** The commits are listed in §7. "On local `main`" is a claim about
+those four checkouts on that date. Until the commits are pushed, a fresh clone of any of the four
+does not have them. Re-read §7 against each repo's `origin/main` before relying on it.
+
+The owner accepted the contract for implementation on 2026-10-14. Until the first app
+implemented it, it was a proposal, as `spec/README.md` requires.
 Adoption is tracked as one AWB issue per app (§7). Once the contract is binding, an app still
 adopting it is a claim with a deadline, not a standing exemption.
 
@@ -16,7 +20,7 @@ description. It applies to **four** apps, which is one more than the UI contract
 | MyCal | `../mycal` | `/api/v1/` | `openapi.yaml`, generated with ogen |
 | MyMail | `../mymail` | `/api/v1/` | `openapi.yaml`, generated with ogen |
 | MyNotes | `../mynotes` | `/api/v1/` | `openapi.yaml`, generated with ogen |
-| MyLinks | `../mylinks` | `/` | **none**: written first, by its own AWB issue (§7) |
+| MyLinks | `../mylinks` | `/` | **none** when this contract was written; added by `mys-uqbie3` (§7) |
 
 Like `spec/device-login.md`, this is an app integration protocol, not a UI contract. It mandates
 HTTP behaviour; nothing in it is rendered, and `spec/measurement-protocol.md` does not apply.
@@ -153,14 +157,17 @@ the path anyway. A single path makes the apps interchangeable for a human with `
 
 ## 7. Adoption
 
-| App | AWB issue | Depends on |
+| App | AWB issue | Implementing commit on local `main`, unpushed (2026-10-14) |
 |---|---|---|
-| MyLinks | mys-m4zgzu | mys-uqbie3: an OpenAPI 3.0.3 description of its current API and ogen generation |
-| MyCal | mys-jiijqf | — |
-| MyMail | mys-k1xdht | — |
-| MyNotes | mys-o669cx | — |
+| MyLinks | `mys-uqbie3`: OpenAPI 3.0.3 document and ogen generation | `5e36342` |
+| MyLinks | `mys-m4zgzu`: discovery | `e78a2db` |
+| MyCal | `mys-jiijqf` | `64146bc` |
+| MyMail | `mys-k1xdht` | `8dd04e5` |
+| MyNotes | `mys-o669cx` | `2388858` |
 
-Each issue also upgrades that app to ogen v1.24.0. Today all three generating apps pin v1.22.0.
+MyCal's, MyMail's and MyNotes' discovery commits also upgrade them from ogen v1.22.0 to v1.24.0.
+MyLinks had no ogen before this work; its prerequisite `5e36342` introduces it at v1.24.0. Each app's agent reported a full build passing and a cross-harness review folded in. This
+repository has not re-verified those reports. All five issues were left open for the owner.
 
 ## 8. Known gaps
 

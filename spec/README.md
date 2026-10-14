@@ -40,8 +40,8 @@ in the apps and shared library, outside the static UI contract checker.
 
 [API discovery](api-discovery.md) specifies how MyCal, MyMail, MyNotes **and MyLinks** serve their
 OpenAPI document and an RFC 9727 API catalog (`/.well-known/api-catalog`). It is the first contract
-here that binds MyLinks. Status: proposal accepted for implementation, implemented on no app's `main`
-yet; its §7 lists the AWB issues. Verification lives in each app's Go tests; `tools/check-contract.py` does not check it.
+here that binds MyLinks. Status: implemented in all four on local `main`, unpushed (2026-10-14); its §7
+lists the commits. Verification lives in each app's Go tests; `tools/check-contract.py` does not check it.
 
 ## How a contract is written
 

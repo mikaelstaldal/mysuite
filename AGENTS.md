@@ -48,7 +48,8 @@ verified by each app's own tests rather than by `tools/check-contract.py`:
   MyMail, MyCal and MyNotes.
 - **[`spec/api-discovery.md`](spec/api-discovery.md)**: serving the OpenAPI document and an
   RFC 9727 API catalog. It binds **four** apps, MyLinks (`../mylinks`) included, so §2.1's
-  "three repos" reads "four" for this contract. Being adopted; implemented in none yet.
+  "three repos" reads "four" for this contract. Implemented in all four on local `main`,
+  unpushed as of 2026-10-14 (`spec/api-discovery.md` §7).
 
 Cross-cutting:
 

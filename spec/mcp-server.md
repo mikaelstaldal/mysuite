@@ -1,8 +1,9 @@
 # MCP servers
 
-**Status: proposal, implemented in none.** The design decisions in §5 were made by the owner on
-2026-10-14. This text has not yet been accepted. Adoption will be tracked as one AWB issue per app
-(§7). Until the first app implements it, it stays a proposal, as `spec/README.md` requires.
+**Status: binding, being adopted: implemented in MyNotes only, not pushed (§7).** The design
+decisions in §5 were made by the owner on 2026-10-14, who then had MyNotes implement it the same
+day. Adoption is tracked as one AWB issue per app (§7). MyCal and MyMail still adopting it is a
+claim with a deadline, not a standing exemption (`spec/README.md`).
 
 ## 1. What it covers
 
@@ -61,7 +62,9 @@ boundary (§5.1).
 - Startup fails, with a message on stderr and exit status 1, only on bad configuration: an
   unparseable or disallowed URL, or a token file that cannot be read or is empty. An unreachable
   server is **not** a startup failure; it is reported per request (§2.5).
-- The token secret never appears on stdout, on stderr, or in any resource or tool result.
+- The token secret never appears on stdout, on stderr, or in any resource or tool result. That
+  includes text the server or a proxy sends back: an error body echoing the `Authorization`
+  header has the secret replaced before it reaches the client.
 
 ### 2.2 Resources first, tools only where a resource cannot work
 
@@ -144,7 +147,8 @@ percent-encoded again into the HTTP path.
 - `search_notes` has no `sort` or `order`: the API ignores both when `q` is set.
 
 **Every search tool** is annotated `readOnlyHint: true`, `openWorldHint: false`. Its input schema
-marks `q` required. It returns the server's JSON both as `structuredContent` and as one text block.
+marks `q` required. It returns the server's JSON both as `structuredContent` and as one text block,
+and the text block is the server's bytes, not a re-serialisation of the structured value.
 
 **Excluded, deliberately**, and the drift test (§4) lists exactly these. Routes reachable without
 any credential, which a token can also reach:
@@ -170,6 +174,11 @@ Bearer-protected routes:
   returned as blobs, whatever their bytes. Every other resource is returned as **text** when the
   response's `Content-Type` is `text/*` or `application/json` and its body is valid UTF-8, and as a
   blob otherwise.
+- **An empty body is an empty blob**, whatever the resource. go-sdk v1.8.0 drops an empty `text`
+  field from the wire (`omitempty`) but keeps an empty, non-nil `blob` (`omitzero`, serialised as
+  `""`), so empty text would arrive as contents that are neither. MyMail's
+  `mymail://messages/{id}/text` for a message with no plain-text body is the case that will
+  happen.
 - **A draft has no raw form.** MyMail answers `/messages/{id}/raw` for a draft with 200,
   `application/json` and `{}` (its `openapi.yaml`). `mymail://messages/{id}/raw` turns that into a
   read error saying the message is a draft, not a two-byte blob.
@@ -179,8 +188,12 @@ Bearer-protected routes:
   naming the limit. It is never truncated. The same cap applies to the response a tool reads: MyMail
   and MyNotes search return one page of at most 200 results, but MyCal's `/api/v1/events` has no
   `limit` parameter, so `search_events` is otherwise unbounded.
-- **Unknown query parameters are rejected**, as invalid params. A resource URI reaches only the
-  parameters in its template, so search cannot be reached through `mycal://events?q=…`.
+- **Unknown query parameters are rejected** without an HTTP request. A resource URI reaches only
+  the parameters in its template, so search cannot be reached through `mycal://events?q=…`. On a
+  template that takes a query, the handler refuses the unknown parameter as invalid params. A query
+  on a resource or template that takes none matches no template, so the SDK's dispatch refuses it
+  as "Resource not found" before any handler runs. In go-sdk v1.8.0 both carry JSON-RPC code
+  -32602.
 - Query parameters may appear in any order and list parameters may repeat. **The handler parses
   the query itself** (§3), because the SDK's template library does neither.
 
@@ -192,12 +205,16 @@ Bearer-protected routes:
 | 401, no token                         | JSON-RPC error: the server requires authentication; set `MYCAL_TOKEN_FILE`       | `isError` result, same text |
 | 403                                   | JSON-RPC error: outside this token's scope (MyMail; MyCal filters instead, §2.3) | `isError` result, same text |
 | 404                                   | the SDK's `ResourceNotFoundError`                                                | `isError` result            |
-| other status                          | JSON-RPC error carrying the status and the server's `error` field                | `isError` result, same text |
+| other status                          | JSON-RPC error carrying the status and the server's `error` field (§2.5 below)   | `isError` result, same text |
 | network failure                       | JSON-RPC error                                                                   | `isError` result            |
 | response over the cap                  | JSON-RPC error naming the limit                                                  | `isError` result, same text |
-| missing required or unknown parameter | invalid params, without an HTTP request                                          | invalid params              |
+| missing required or unknown parameter | invalid params, or the SDK's not-found (§2.4); without an HTTP request | `isError` result, without an HTTP request |
 
 The binary and variable names in the messages are each app's own. No message echoes the token.
+
+An error body is read under the same 1 MiB cap as any other. Its `error` field is carried whole or
+not at all: a body over the cap gives the status alone. A body that is not the API's error shape,
+such as a proxy's page, is shown only when it is short (MyNotes: up to 1 KiB of UTF-8).
 
 ### 2.6 Completion
 
@@ -263,6 +280,7 @@ token store**. Not a mock: the point is that authorization is the server's.
 13. The token secret appears in no stdout, stderr, result or error, on any of the paths above.
 14. The `initialize` result advertises no resource subscription and no `listChanged`.
 15. A draft's raw resource gives the draft error, not a blob.
+16. An empty body arrives as an empty blob, with the response's MIME type.
 
 **Nothing checks the three against each other** (`AGENTS.md` §2.1). `tools/check-contract.py`
 does not check this contract.
@@ -303,6 +321,15 @@ Ruled by the owner on 2026-10-14. It is the only write a token can make in any o
 Ruled by the owner on 2026-10-14, first for blobs and then, the same day, for text resources too,
 closing what §8 had listed as a gap.
 
+### 5.7 Tool argument errors are tool results
+
+Measured while implementing MyNotes, on 2026-10-14: go-sdk v1.8.0 validates tool arguments against
+the input schema and reports a failure as a tool result with `isError`, not as a JSON-RPC error.
+The contract first said invalid params; it now follows the SDK, which also lets a model read the
+message and retry. The inferred schema already refuses unknown properties
+(`additionalProperties: false`). It types every Go slice as `["null", "array"]`, so an
+implementation pins list arguments to `array` explicitly (§2.3).
+
 ## 6. Out of scope
 
 - An HTTP or SSE transport, and MCP authorization (§5.1).
@@ -315,19 +342,25 @@ closing what §8 had listed as a gap.
 
 Each app's adoption also adds a reference to this contract in its own `AGENTS.md` files, beside
 its references to `spec/device-login.md` and `spec/api-discovery.md` (`spec/README.md`, *Adding a
-contract*). None does yet.
+contract*).
 
 | App     | AWB issue | Implementing commit |
 |---------|-----------|---------------------|
-| MyNotes | not filed | none                |
-| MyCal   | not filed | none                |
-| MyMail  | not filed | none                |
+| MyNotes | `mys-ld3qsf` | `0db9019`, not pushed |
+| MyCal   | `mys-5rbsw8` | none                |
+| MyMail  | `mys-07x53a` | none                |
+
+MyNotes' commit also adds the `AGENTS.md` reference. `./build.sh` passed at that commit on
+2026-10-14, after a cross-harness review was folded in.
 
 Planned order: MyNotes (no scoping, one tool), then MyCal (scoping, iCalendar), then MyMail
 (scoping, the write, blobs).
 
 ## 8. Known gaps
 
+- **The drift test sees only documented routes.** MyNotes' enumerates the routes a token may read
+  from `openapi.yaml`'s GET operations, probed through the bearer middleware, so a bearer-readable
+  route missing from `openapi.yaml` is invisible to it.
 - **Not tested against a resource-reading client other than the SDK's own.** How each MCP client
   presents resource templates to its model varies.
 - **Source set.** Written from the MCP planning discussion of 2026-10-14 with the owner's rulings

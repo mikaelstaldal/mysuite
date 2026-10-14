@@ -1,6 +1,6 @@
 # MCP servers
 
-**Status: binding, implemented in all three, none pushed (§7).** The design decisions in §5 were
+**Status: binding, implemented in all three (§7 has each commit and whether it is pushed).** The design decisions in §5 were
 made by the owner on 2026-10-14, who then had all three apps implement it the same day. Adoption
 is tracked as one AWB issue per app (§7).
 
@@ -391,11 +391,13 @@ contract*).
 
 | App     | AWB issue | Implementing commit |
 |---------|-----------|---------------------|
-| MyNotes | `mys-ld3qsf` | `5ab2327`, then `8ef435d` (refusing a body that contains the token); not pushed |
-| MyMail  | `mys-07x53a` | `7ce7a95`, not pushed |
-| MyCal   | `mys-5rbsw8` | `5bf3c4e`, not pushed; it needed paging for `GET /api/v1/events` first, `mys-dxqj7x`, MyCal `cb4d43d` |
+| MyNotes | `mys-ld3qsf` | `5ab2327` and `7c80584` (refusing a body that contains the token), pushed; `a0aeefe` (checking every JSON string), not pushed |
+| MyMail  | `mys-07x53a` | `ca9527f`, pushed; `4fd4a86` (checking every JSON string), not pushed |
+| MyCal   | `mys-5rbsw8` | `5bf3c4e`, pushed; it needed paging for `GET /api/v1/events` first, `mys-dxqj7x`, MyCal `cb4d43d` |
 
-Each app's first commit (`5ab2327`, `7ce7a95`, `5bf3c4e`) adds its `AGENTS.md` references.
+"Pushed" was read from each repository's `origin/main` remote-tracking ref on 2026-10-14, not by
+querying the remotes. Each app's first commit (`5ab2327`, `ca9527f`, `5bf3c4e`) adds its
+`AGENTS.md` references.
 `./build.sh` passed at every commit listed, on 2026-10-14, after a cross-harness review was folded
 in.
 

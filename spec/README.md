@@ -44,7 +44,7 @@ here that binds MyLinks. Status: binding, implemented in all four; its §7 lists
 
 [MCP servers](mcp-server.md) specifies a stdio Model Context Protocol server binary in MyCal,
 MyMail and MyNotes, exposing exactly what an API token can reach, as resources and tools. Status:
-binding, implemented in all three, not pushed. Verification lives in each app's Go tests;
+binding, implemented in all three; its §7 lists the commits. Verification lives in each app's Go tests;
 `tools/check-contract.py` does not check it.
 
 ## How a contract is written

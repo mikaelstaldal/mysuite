@@ -52,7 +52,7 @@ verified by each app's own tests rather than by `tools/check-contract.py`:
   (`spec/api-discovery.md` §7).
 - **[`spec/mcp-server.md`](spec/mcp-server.md)**: a stdio MCP server binary per app exposing
   what an API token can reach, as resources and tools, in MyCal, MyMail and MyNotes.
-  **Binding, implemented in all three, not pushed** (`spec/mcp-server.md` §7).
+  **Binding, implemented in all three** (`spec/mcp-server.md` §7 lists the commits).
 
 Cross-cutting:
 

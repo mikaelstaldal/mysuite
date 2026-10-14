@@ -144,6 +144,19 @@ so re-run it before relying on it.
 else in MyLinks, whose API has no prefix. The catalog is what a client reads first, and it names
 the path anyway. A single path makes the apps interchangeable for a human with `curl`.
 
+### 5.3 Relative URIs in the Linkset, a deliberate deviation from a SHOULD
+
+**Ruled by the owner on 2026-10-14: relative URIs are accepted.** RFC 9264 §4.2.2 and §4.2.3 (read
+2026-10-14) say that `anchor` and `href` each *"MUST be a URI reference and SHOULD NOT be a relative
+reference"*. RFC 9264 does not define how a relative reference in the JSON format resolves. This
+contract relies on ordinary RFC 3986 resolution against the URL the catalog was retrieved from.
+
+The alternative was absolute URIs. Those need the public origin, and while all four apps have a
+`-public-url` flag, it is optional in all four (required only for wildcard binds or reverse
+proxies). Without it, the only fallback is the client-controlled `Host` header. Absolute URIs built
+from `-public-url` when it is set were considered and not adopted. Reopening that would change all
+four apps.
+
 ## 6. Out of scope
 
 - **OAuth discovery metadata** (RFC 8414 `/.well-known/oauth-authorization-server`, RFC 9728
@@ -170,19 +183,9 @@ repository has not re-verified those reports. All five issues were closed by the
 
 ## 8. Known gaps
 
-- **Relative URIs in the Linkset are a deliberate deviation from a SHOULD.** RFC 9264 §4.2.2 and
-  §4.2.3, read 2026-10-14: `anchor` and `href` each *"MUST be a URI reference and SHOULD NOT be a
-  relative reference"*. RFC 9264 does not define how a relative reference in the JSON format is
-  resolved. This contract relies on ordinary RFC 3986 resolution against the URL the catalog was
-  retrieved from, which works for a client that fetched it directly and fails for one that
-  stores the document detached from its URL.
-
-  **The reason absolute URIs were not mandated:** building them needs the public origin. All four
-  apps have a `-public-url` flag, but it is optional in all four (required only for wildcard binds
-  or reverse proxies), and the fallback, the `Host` header, is client-controlled. A future change
-  could mandate absolute URIs from `-public-url` when it is set, and relative ones otherwise. That
-  change would cover all four apps, and MyCal had already implemented the relative form when this
-  was recorded. Not yet tested against a third-party RFC 9727 client.
+- **Relative Linkset URIs have not been tested against a third-party RFC 9727 client.** The owner
+  accepted relative URIs knowing this (§5.3). A client that stores the catalog without the URL it
+  was retrieved from cannot resolve them.
 - **Source set.** This contract was written from the API-discovery discussion on 2026-10-14 (the
   standards survey, the ogen measurement in §5.1, RFC 9727's text read the same day) and from
   each app's `openapi.yaml`, `go.mod`, `main.go` routing, and CI workflows at that date. MyLinks'

@@ -1,8 +1,8 @@
 # MCP servers
 
-**Status: binding, implemented in all three (§7 has each commit and whether it is pushed).** The design decisions in §5 were
+**Status: binding, implemented in all three; §7 lists the commits.** The design decisions in §5 were
 made by the owner on 2026-10-14, who then had all three apps implement it the same day. Adoption
-is tracked as one AWB issue per app (§7).
+was tracked as one AWB issue per app, all closed (§7).
 
 ## 1. What it covers
 
@@ -391,12 +391,12 @@ contract*).
 
 | App     | AWB issue | Implementing commit |
 |---------|-----------|---------------------|
-| MyNotes | `mys-ld3qsf` | `5ab2327` and `7c80584` (refusing a body that contains the token), pushed; `a0aeefe` (checking every JSON string), not pushed |
-| MyMail  | `mys-07x53a` | `ca9527f`, pushed; `4fd4a86` (checking every JSON string), not pushed |
-| MyCal   | `mys-5rbsw8` | `5bf3c4e`, pushed; it needed paging for `GET /api/v1/events` first, `mys-dxqj7x`, MyCal `cb4d43d` |
+| MyNotes | `mys-ld3qsf` | `5ab2327`, `7c80584` (refusing a body that contains the token), `a0aeefe` (checking every JSON string) |
+| MyMail  | `mys-07x53a` | `ca9527f`, `4fd4a86` (checking every JSON string) |
+| MyCal   | `mys-5rbsw8` | `5bf3c4e`; it needed paging for `GET /api/v1/events` first, `mys-dxqj7x`, MyCal `cb4d43d` |
 
-"Pushed" was read from each repository's `origin/main` remote-tracking ref on 2026-10-14, not by
-querying the remotes. Each app's first commit (`5ab2327`, `ca9527f`, `5bf3c4e`) adds its
+All of these were on each repository's `origin/main` on 2026-10-14, read from the local
+remote-tracking refs, not by querying the remotes. All four issues were closed the same day. Each app's first commit (`5ab2327`, `ca9527f`, `5bf3c4e`) adds its
 `AGENTS.md` references.
 `./build.sh` passed at every commit listed, on 2026-10-14, after a cross-harness review was folded
 in.
@@ -411,17 +411,23 @@ The order changed from the plan: MyMail went second while MyCal waited for pagin
   bearer-reachable route missing from `openapi.yaml` is invisible to it. MyCal's test fixture also
   omits the public discovery routes, which `openapi.yaml` does not list.
 - **Tried against one client besides the SDK's own: Claude Code, on 2026-10-14, by hand, with
-  MyNotes.** Static resources, a template read with query parameters, a note as JSON and
-  Markdown, an artifact blob, `search_notes`, a not-found read and refusals were exercised, and
-  that trial produced §5.8 and the `error_message` rule in §2.5. Nothing automated runs against
-  any client but the SDK's, and other clients present resource templates to their models
+  all three, against the owner's own servers and tokens.** MyNotes: static resources, a template
+  read with query parameters, a note as JSON and Markdown, an artifact blob, `search_notes`, a
+  not-found read and refusals; that trial produced §5.8 and the `error_message` rule in §2.5.
+  MyMail: folders, a folder page, a message as JSON, text and headers, raw and attachment blobs,
+  `search_messages`, `mark_message_read` on an already-read message, a scope error and a
+  refusal. MyCal: calendars, events by date and by percent-encoded time with paging, an event as
+  iCalendar, `search_events`, scope filtering and refusals; that trial produced the ruling in
+  §5.4. Not every binary tried was the final commit in §7. Nothing automated runs against any
+  client but the SDK's, and other clients present resource templates to their models
   differently.
 - **Source set.** Written from the MCP planning discussion of 2026-10-14 with the owner's rulings
   in §5, and from, at the commits below: each app's bearer-token middleware (MyCal
   `internal/token/bearer.go`, MyMail `internal/token/token.go` `Bearer`, MyNotes
   `internal/token/bearer.go`), `openapi.yaml`, `cmd/cli/main.go` and `build.sh`; MyCal `64146bc`,
-  MyMail `8dd04e5`, MyNotes `2388858`. go-sdk v1.8.0's `mcp/resource.go` and `mcp/server.go`, and
-  the template measurement in §3.
+  MyMail `8dd04e5`, MyNotes `2388858`; for MyCal's paging, its `openapi.yaml` at `cb4d43d`. go-sdk
+  v1.8.0's `mcp/resource.go` and `mcp/server.go`, and the template measurement in §3. Corrected
+  since from each implementation and the cross-harness reviews of them, as §5 and §7 record.
 
 ## 9. Withdrawn rules
 

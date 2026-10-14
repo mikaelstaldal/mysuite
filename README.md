@@ -139,6 +139,10 @@ documents rather than restating its values.
   protocol and consent behavior for API tokens in MyMail, MyCal and MyNotes.
   This app integration protocol is separate from the three UI contracts and is
   verified by app and library tests.
+- **[`spec/api-discovery.md`](spec/api-discovery.md)** — how MyCal, MyMail, MyNotes and MyLinks
+  serve their OpenAPI document and an RFC 9727 API catalog. An app integration protocol like
+  device login, and the only contract here that binds MyLinks. Being adopted; implemented in
+  none of the four yet.
 - **[`tools/check-contract.py`](tools/check-contract.py)** — checks the three apps against
   the **sidebar-footer** contract, and against the **app-name-label** contract's font size and
   font stack. It does **not** check the app-logo contract at all, and it cannot check

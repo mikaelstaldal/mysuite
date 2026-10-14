@@ -41,6 +41,15 @@ Currently binding:
   §2.1. The original ruling stays readable in `app-logo.md` §2 as history. If you find a comment
   saying the label's typography is unspecified, that is what it is quoting.)*
 
+App integration protocols. These mandate HTTP and CLI behaviour, not UI geometry, and they are
+verified by each app's own tests rather than by `tools/check-contract.py`:
+
+- **[`spec/device-login.md`](spec/device-login.md)**: device login for read-only API tokens, in
+  MyMail, MyCal and MyNotes.
+- **[`spec/api-discovery.md`](spec/api-discovery.md)**: serving the OpenAPI document and an
+  RFC 9727 API catalog. It binds **four** apps, MyLinks (`../mylinks`) included, so §2.1's
+  "three repos" reads "four" for this contract. Being adopted; implemented in none yet.
+
 Cross-cutting:
 
 - **[`spec/measurement-protocol.md`](spec/measurement-protocol.md)** — how to verify a change

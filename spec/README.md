@@ -38,6 +38,11 @@ and consent behavior in MyMail, MyCal and MyNotes. It covers token issuance thro
 shared server library; it does not mandate identical UI geometry. Its verification lives 
 in the apps and shared library, outside the static UI contract checker.
 
+[API discovery](api-discovery.md) specifies how MyCal, MyMail, MyNotes **and MyLinks** serve their
+OpenAPI document and an RFC 9727 API catalog (`/.well-known/api-catalog`). It is the first contract
+here that binds MyLinks. Status: proposal accepted for implementation, implemented on no app's `main`
+yet; its §7 lists the AWB issues. Verification lives in each app's Go tests; `tools/check-contract.py` does not check it.
+
 ## How a contract is written
 
 Each contract document states, in this order:
@@ -78,11 +83,18 @@ added. Both are named above rather than left to be noticed. *(`AGENTS.md` §3.2:
 prose describing a list directly below it is stale within one changeset — that section deleted
 such a count from itself for this reason.)*
 
-**Plus one per app repo**, per `AGENTS.md` §4: each needs a short titled section in its
-`web/AGENTS.md` saying the new element is governed from outside the repo, naming the routine
+**Plus one per participating app repo**, per `AGENTS.md` §4: each needs a short titled section in
+its `web/AGENTS.md` saying the new element is governed from outside the repo, naming the routine
 tidying that would break it silently. That is the only guard that fires *before* the change.
 
-**So the honest total is four here and three more across the app repos, not four.** The app-repo
+**So the honest total is four here and one more per participating app, not four.** For the UI
+contracts that is three. `api-discovery.md` binds four apps, MyLinks included.
+
+**An app integration protocol** (`device-login.md`, `api-discovery.md`) is registered the same
+way, with two differences. In this file it gets a paragraph under *App integration protocols*,
+not a row in the table above. In `AGENTS.md` §1 it goes under the integration-protocol list, not
+*"Currently binding"*. The other two places still apply. `README.md`'s count of three describes
+the UI contracts only. `check-contract.py`'s caveat block names the protocols it does not check. The app-repo
 sections are outside the count above only because they are outside this repository, and that is
 not a reason for them to read as an afterthought — they are the highest-value item on the list.
 

@@ -695,10 +695,11 @@ What this run does NOT tell you — on a pass OR a failure. It reads CSS source
 and never renders anything, so a clean result is narrower than it looks and a
 failing one covers less ground than the count suggests.
 
-  · IT CHECKS NEITHER APP INTEGRATION PROTOCOL. spec/device-login.md and
-    spec/api-discovery.md mandate HTTP and CLI behaviour, not CSS, and nothing
-    here reads them. api-discovery.md also binds a FOURTH app, ../mylinks, which
-    this script never opens. Their verification lives in each app's own tests.
+  · IT CHECKS NO APP INTEGRATION PROTOCOL. spec/device-login.md,
+    spec/api-discovery.md and spec/mcp-server.md mandate HTTP, CLI and MCP
+    behaviour, not CSS, and nothing here reads them. api-discovery.md also
+    binds a FOURTH app, ../mylinks, which this script never opens. Their
+    verification lives in each app's own tests.
 
   · IT CHECKS TWO CONTRACTS OF THREE. spec/ holds THREE binding UI contracts. This
     script knows about spec/sidebar-footer.md (fully) and spec/app-name-label.md

@@ -42,6 +42,11 @@ in the apps and shared library, outside the static UI contract checker.
 OpenAPI document and an RFC 9727 API catalog (`/.well-known/api-catalog`). It is the first contract
 here that binds MyLinks. Status: binding, implemented in all four; its §7 lists the commits. Verification lives in each app's Go tests; `tools/check-contract.py` does not check it.
 
+[MCP servers](mcp-server.md) specifies a stdio Model Context Protocol server binary in MyCal,
+MyMail and MyNotes, exposing exactly what an API token can reach, as resources and tools. Status:
+proposal, implemented in none. Verification will live in each app's Go tests;
+`tools/check-contract.py` does not check it.
+
 ## How a contract is written
 
 Each contract document states, in this order:
@@ -89,7 +94,7 @@ tidying that would break it silently. That is the only guard that fires *before*
 **So the honest total is four here and one more per participating app, not four.** For the UI
 contracts that is three. `api-discovery.md` binds four apps, MyLinks included.
 
-**An app integration protocol** (`device-login.md`, `api-discovery.md`) is registered the same
+**An app integration protocol** (`device-login.md`, `api-discovery.md`, `mcp-server.md`) is registered the same
 way, with two differences. In this file it gets a paragraph under *App integration protocols*,
 not a row in the table above. In `AGENTS.md` §1 it goes under the integration-protocol list, not
 *"Currently binding"*. The other two places still apply. `README.md`'s count of three describes

@@ -1,0 +1,340 @@
+# MCP servers
+
+**Status: proposal, implemented in none.** The design decisions in §5 were made by the owner on
+2026-10-14. This text has not yet been accepted. Adoption will be tracked as one AWB issue per app
+(§7). Until the first app implements it, it stays a proposal, as `spec/README.md` requires.
+
+## 1. What it covers
+
+Each of MyCal, MyMail and MyNotes ships one more binary: a Model Context Protocol (MCP) server
+that an MCP client starts as a subprocess and talks to over stdio. It exposes, as MCP resources and
+tools, **exactly the bearer-protected API routes an API token can reach** in that app, and nothing
+else. Routes every client can reach without credentials (API discovery, MyNotes' published notes)
+are not part of that surface; §2.3 lists them.
+
+| App     | Repo         | Binary        | Source       | Resource URI scheme |
+|---------|--------------|---------------|--------------|---------------------|
+| MyCal   | `../mycal`   | `mycal-mcp`   | `cmd/mcp/`   | `mycal:`            |
+| MyMail  | `../mymail`  | `mymail-mcp`  | `cmd/mcp/`   | `mymail:`           |
+| MyNotes | `../mynotes` | `mynotes-mcp` | `cmd/mcp/`   | `mynotes:`          |
+
+Like `spec/device-login.md` and `spec/api-discovery.md`, this is an app integration protocol, not a
+UI contract. Nothing in it is rendered, and `spec/measurement-protocol.md` does not apply. It
+binds three apps; MyLinks and MyPass are out of scope (§6).
+
+The MCP server is an HTTP **client** of the app's running server, in the same way as `*-cli`. It
+holds no data and makes no authorization decision. Scoping, the snapshot reads and the write
+barrier all stay in each server's bearer-token middleware, which is the only authorization
+boundary (§5.1).
+
+## 2. Mandated behaviour
+
+### 2.1 Process, transport and configuration
+
+- The only transport is **stdio**: newline-delimited JSON-RPC on stdin/stdout, as in the MCP
+  specification. When the binary runs the transport, stdout carries protocol messages and nothing
+  else, from the first byte. Diagnostics go to stderr. `-help` is the one exception: it prints
+  usage to stdout and exits without starting the transport.
+- The binary is **statically linked**: built with `CGO_ENABLED=0` and `-tags netgo`, and
+  `go version -m` on it reports `CGO_ENABLED=0` and `-tags=netgo`.
+- It uses `github.com/modelcontextprotocol/go-sdk` **v1.8.0**.
+- The MCP `serverInfo.name` is the binary name (`mycal-mcp`, …). `serverInfo.version` is local.
+- Flags and environment, matching that app's `*-cli`:
+
+  | Flag              | Default                                  | Meaning                     |
+  |-------------------|------------------------------------------|-----------------------------|
+  | `-url URL`        | `MYCAL_URL`, else `http://127.0.0.1:8080` | server base URL, may carry a path |
+  | `-token-file PATH`| `MYCAL_TOKEN_FILE`                       | read the API token from a file |
+  | `-help`           |                                          | print usage to stdout, exit 0 |
+
+  with `MYMAIL_` and `MYNOTES_` in the other two. There is **no `-token-stdin`**, because stdin
+  is the protocol channel.
+- **No token is not an error.** Without `-token-file` or the environment variable, the server
+  runs unauthenticated and sends no `Authorization` header, as `*-cli` does. That works against a
+  server with no Basic authentication configured; against one with it, every read fails with the
+  401 message in §2.5.
+- **The exposed surface does not depend on authentication.** An unauthenticated server would
+  answer more routes than a token can reach; the MCP server still exposes only the token surface
+  in §2.3, so the same binary offers the same resources and tools against every server.
+- URL rules are `*-cli`'s, by reusing that app's `internal/clihttp`: plain HTTP only to a literal
+  loopback address, HTTPS otherwise; redirects and environment HTTP proxies disabled.
+- Startup fails, with a message on stderr and exit status 1, only on bad configuration: an
+  unparseable or disallowed URL, or a token file that cannot be read or is empty. An unreachable
+  server is **not** a startup failure; it is reported per request (§2.5).
+- The token secret never appears on stdout, on stderr, or in any resource or tool result.
+
+### 2.2 Resources first, tools only where a resource cannot work
+
+- A read is an MCP **resource**. A fixed read is a static resource listed by `resources/list`. A
+  read with parameters is a **resource template** (RFC 6570) listed by `resources/templates/list`.
+- **Free-text search is a tool**, in all three apps. A search is a query the model formulates,
+  not a document it addresses.
+- **A write is a tool.** There is one: MyMail's `mark_message_read`.
+- `resources/list` returns only the static resources in §2.3. It never enumerates notes, events
+  or messages.
+- Resources do not support subscription, and the server does not send `list_changed`.
+
+### 2.3 The surface, per app
+
+Query parameter names and values in a resource URI are **the API's own**, forwarded unchanged
+except where noted. A list-valued parameter is repeated (`calendar_id=1&calendar_id=2`), which is
+what RFC 6570's exploded `{?name*}` produces and what each API accepts. Tool argument names are
+also the API's parameter names, with the API's types: a list-valued argument is a JSON array
+(MyCal `calendar_id`: array of integers; MyNotes `tag`: array of strings), forwarded as the
+repeated query parameter. Path variables are percent-decoded from the URI and
+percent-encoded again into the HTTP path.
+
+**MyCal**
+
+| Resource or tool | MIME type | API request |
+|---|---|---|
+| `mycal://calendars` (static) | `application/json` | `GET /api/v1/calendars` |
+| `mycal://events{?from,to,calendar_id*}` | `application/json` | `GET /api/v1/events` |
+| `mycal://events/{id}` | `application/json` | `GET /api/v1/events/{id}` |
+| `mycal://events/{id}/ics` | `text/calendar` | `GET /api/v1/events/{id}/ics` |
+| `mycal://calendar.ics{?calendar_id*}` | `text/calendar` | `GET /api/v1/events.ics` |
+| tool `search_events(q, from?, to?, calendar_id?)` | `application/json` | `GET /api/v1/events?q=…` |
+
+- `from` and `to` are required by `mycal://events`. Both there and in `search_events` they accept
+  the forms `mycal-cli` accepts — RFC 3339, `YYYY-MM-DD`, `YYYY-MM-DD[T or space]HH:MM[:SS]` —
+  and are converted to RFC 3339 exactly as `mycal-cli` converts them. This is the one exception
+  to forwarding values unchanged, and §5.4 says why.
+- `mycal://calendar.ics` with no query is also a static resource, the whole feed.
+- Event IDs may be composite (`42_2026-03-09T09:00:00Z`) and are percent-encoded in the URI.
+- `calendar_id` in `search_events` is an array of integers, forwarded as repeated `calendar_id`
+  parameters.
+- **MyCal scopes by filtering, not by refusing.** A token's calendar IDs are intersected with the
+  ones requested, so an out-of-scope calendar yields a shorter or empty list, and an out-of-scope
+  event is 404. The MCP server passes that through; it does not turn either into a scope error.
+
+**MyMail**
+
+| Resource or tool | MIME type | API request |
+|---|---|---|
+| `mymail://folders` (static) | `application/json` | `GET /api/v1/folders`, which the server filters to the token's folders |
+| `mymail://folders/{folder_id}/messages{?limit,offset,unread,flagged}` | `application/json` | `GET /api/v1/folders/{folder_id}/messages` |
+| `mymail://messages/{id}` | `application/json` | `GET /api/v1/messages/{id}` |
+| `mymail://messages/{id}/text` | `text/plain` | `body_text` of `GET /api/v1/messages/{id}`, as `mymail-cli messages text` extracts it |
+| `mymail://messages/{id}/headers` | `text/plain` | `GET /api/v1/messages/{id}/headers` |
+| `mymail://messages/{id}/body{?external}` | `text/html` | `GET /api/v1/messages/{id}/body` |
+| `mymail://messages/{id}/raw` | `message/rfc822`, blob | `GET /api/v1/messages/{id}/raw` |
+| `mymail://attachments/{id}` | the server's `Content-Type`, blob | `GET /api/v1/attachments/{id}` |
+| tool `search_messages(folder_id, q, date_from?, date_to?, from_addr?, to_addr?, sort?, limit?, offset?)` | `application/json` | `GET /api/v1/messages/search` |
+| tool `mark_message_read(id)` | none | `PUT /api/v1/messages/{id}/read` |
+
+- `search_messages` **requires `folder_id`**, in its input schema. That is the server's rule for
+  bearer requests (exactly one `folder_id`), stated where a model reads it.
+- `mark_message_read` is annotated `readOnlyHint: false`, `destructiveHint: false`,
+  `idempotentHint: true`, `openWorldHint: false`. On 204 it returns a text result saying the
+  message is marked read.
+
+**MyNotes**
+
+| Resource or tool | MIME type | API request |
+|---|---|---|
+| `mynotes://tags` (static) | `application/json` | `GET /api/v1/tags` |
+| `mynotes://notes{?tag*,sort,order,limit,offset}` | `application/json` | `GET /api/v1/notes` |
+| `mynotes://notes/{slug}` | `application/json` | `GET /api/v1/notes/{slug}` |
+| `mynotes://notes/{slug}/markdown` | `text/markdown` | `GET /api/v1/notes/{slug}/download-markdown` |
+| `mynotes://artifacts/{sha256}` | the server's `Content-Type`, blob | `GET /api/v1/artifacts/{sha256}` |
+| tool `search_notes(q, titlePrefix?, tag?, limit?, offset?)` | `application/json` | `GET /api/v1/notes?q=…` |
+
+- `mynotes://notes` with no query is also a static resource, the first page of the browse list.
+- `tag` in `search_notes` is an array of strings, forwarded as repeated `tag` parameters.
+- `search_notes` has no `sort` or `order`: the API ignores both when `q` is set.
+
+**Every search tool** is annotated `readOnlyHint: true`, `openWorldHint: false`. Its input schema
+marks `q` required. It returns the server's JSON both as `structuredContent` and as one text block.
+
+**Excluded, deliberately**, and the drift test (§4) lists exactly these. Routes reachable without
+any credential, which a token can also reach:
+
+- In all three: `GET /openapi.yaml` and `GET /.well-known/api-catalog` (`spec/api-discovery.md`).
+- MyNotes: `GET /public/…` (published notes, their artifacts and stylesheet), which the bearer
+  middleware hands to the full-access handler before looking at the token.
+
+Bearer-protected routes:
+
+- MyCal `GET /calendar.ics`: documented in MyCal's `openapi.yaml` as *"Same as
+  `/api/v1/events.ics`"*, a convenience URL for calendar apps.
+- MyCal's `calendar` query parameter (filter by calendar name), described there as *"backward
+  compatible"*. `calendar_id` covers it.
+- MyNotes `GET /api/v1/icons/…`: UI assets.
+- `HEAD` on any route. It adds nothing a `GET` does not.
+
+### 2.4 Resource contents
+
+- The MIME type column in §2.3 is what the server is expected to send. **The response decides**:
+  `mimeType` in the result is the response's `Content-Type`, without parameters.
+- The resources marked **blob** in §2.3 (MyMail raw and attachments, MyNotes artifacts) are always
+  returned as blobs, whatever their bytes. Every other resource is returned as **text** when the
+  response's `Content-Type` is `text/*` or `application/json` and its body is valid UTF-8, and as a
+  blob otherwise.
+- **A draft has no raw form.** MyMail answers `/messages/{id}/raw` for a draft with 200,
+  `application/json` and `{}` (its `openapi.yaml`). `mymail://messages/{id}/raw` turns that into a
+  read error saying the message is a draft, not a two-byte blob.
+- JSON is passed through as the server sent it. The MCP layer does not reshape it.
+- **A blob is capped at 1 MiB** (1,048,576 bytes). The server reads at most one byte more than the
+  cap; a body over it fails the read with an error naming the limit. It is never truncated. Text
+  resources are not capped (§8).
+- **Unknown query parameters are rejected**, as invalid params. A resource URI reaches only the
+  parameters in its template, so search cannot be reached through `mycal://events?q=…`.
+- Query parameters may appear in any order and list parameters may repeat. **The handler parses
+  the query itself** (§3), because the SDK's template library does neither.
+
+### 2.5 Errors
+
+| Condition | Resource read | Tool call |
+|---|---|---|
+| 401, token configured | JSON-RPC error: token expired or revoked; run `mycal-token login` | `isError` result, same text |
+| 401, no token | JSON-RPC error: the server requires authentication; set `MYCAL_TOKEN_FILE` | `isError` result, same text |
+| 403 | JSON-RPC error: outside this token's scope (MyMail; MyCal filters instead, §2.3) | `isError` result, same text |
+| 404 | the SDK's `ResourceNotFoundError` | `isError` result |
+| other status | JSON-RPC error carrying the status and the server's `error` field | `isError` result, same text |
+| network failure | JSON-RPC error | `isError` result |
+| blob over the cap | JSON-RPC error naming the limit | not applicable |
+| missing required or unknown parameter | invalid params, without an HTTP request | invalid params |
+
+The binary and variable names in the messages are each app's own. No message echoes the token.
+
+### 2.6 Completion
+
+The server supports `completion/complete` for exactly these template arguments, whose values the
+token can list cheaply: MyCal `calendar_id` (from `/api/v1/calendars`), MyMail `folder_id` (from
+`/api/v1/folders`), MyNotes `tag` (from `/api/v1/tags`). Nothing else is completed. Note slugs,
+event IDs and message IDs are unbounded collections.
+
+## 3. Mechanisms: mandated and local
+
+**Mandated:** the binary names, flags, environment variables, stdio, static linking, the SDK
+version, the URI schemes and templates, which reads are resources and which are tools, tool names
+and argument names, annotations, the text/blob rule, the blob cap, the error mapping and its
+wording's content, completion's scope, and that the surface equals the token surface.
+
+**Local:** the package layout under `cmd/mcp/`, how requests are built (reusing the app's
+`internal/clihttp` is expected but the URL rules are what is mandated), `serverInfo.version`, the
+exact error wording, and server `instructions` text if any.
+
+**Why handlers parse URIs themselves.** go-sdk v1.8.0 dispatches a `resources/read` by matching the
+URI against each template's regular expression from `github.com/yosida95/uritemplate/v3` v3.0.2.
+Measured on 2026-10-14 against that version:
+
+> `{?from,to,calendar_id*}` against `?to=b&from=a` matches, and `Match` returns no values.
+> Against `?from=a&to=b&calendar_id=1&calendar_id=2` it matches, and `Match` returns
+> `calendar_id` as empty. Against `?bogus=1` it matches.
+> The query-value character class excludes an unencoded `:` and `+`.
+
+So the template decides **which handler** runs, and the handler parses the URI with `net/url`.
+That is a reading of one version of two libraries, not a property of MCP; re-run it before
+relying on it after an upgrade.
+
+## 4. Verification
+
+Each app holds its own half, in its Go test suite, using go-sdk's in-memory transports against an
+`httptest` server that runs **the app's real router behind its real bearer middleware and a real
+token store**. Not a mock: the point is that authorization is the server's.
+
+1. **The drift test.** Enumerate the static resources, templates and tools the MCP server offers.
+   Every one maps to a route the bearer middleware permits. Every route the bearer middleware
+   permits is covered, or is on the exclusion list in §2.3, which the test holds verbatim.
+2. Each resource and tool returns what the API returns for the same request, with the MIME type
+   and text/blob form in §2.4.
+3. **Scope**, as each server enforces it. MyMail: a token scoped to folder A gets the 403 error
+   for B through each resource template and `search_messages`; `mark_message_read` succeeds in
+   scope, is idempotent, and gets 403 out of scope. MyCal: with a token scoped to calendar A,
+   `mycal://calendars`, `mycal://events`, `mycal://calendar.ics` and `search_events` return
+   nothing from B even when B is requested, and an event in B is not found.
+4. **No token**: reads succeed against a server without Basic authentication and give the
+   no-token 401 message against one with it.
+5. A blob of exactly 1 MiB is returned; one byte more is refused.
+6. Query parameters out of order and repeated are honoured; an unknown one is refused without an
+   HTTP request; MyCal `from=2026-10-01` is accepted.
+7. Startup with a disallowed URL or an unreadable token file exits 1 and writes nothing to stdout.
+8. The built binary reports `CGO_ENABLED=0` and `-tags=netgo`.
+9. `completion/complete` returns values for exactly the arguments in §2.6, from the server, and
+   nothing for any other argument.
+10. Every tool's annotations and input schema are as in §2.3: required arguments marked required,
+    list arguments typed as arrays.
+11. A configured token that the server rejects gives the token-configured 401 message.
+12. With the server down, startup succeeds and each read and tool call reports the failure.
+13. The token secret appears in no stdout, stderr, result or error, on any of the paths above.
+14. The `initialize` result advertises no resource subscription and no `listChanged`.
+15. A draft's raw resource gives the draft error, not a blob.
+
+**Nothing checks the three against each other** (`AGENTS.md` §2.1). `tools/check-contract.py`
+does not check this contract.
+
+## 5. Decisions recorded
+
+### 5.1 A stdio client, not an endpoint in the server
+
+Ruled by the owner on 2026-10-14: stdio only, separate binaries. The alternative was a Streamable
+HTTP endpoint at `/mcp` inside each server. A client keeps authorization where it already is and
+adds no server attack surface. A remote endpoint would also have to answer the MCP authorization
+specification (OAuth with RFC 9728 protected-resource metadata), which `spec/device-login.md` and
+`spec/api-discovery.md` §6 put out of scope.
+
+### 5.2 Unauthenticated runs are allowed
+
+Ruled by the owner on 2026-10-14, matching `*-cli`. The surface stays the token surface (§2.1).
+
+### 5.3 Resources wherever possible; search and writes are tools
+
+Ruled by the owner on 2026-10-14, in two steps: resources wherever possible, then free-text search
+as a tool in all three. **The cost, accepted:** resources are read when the client chooses to. An
+MCP client that exposes only tools to its model will see little of these servers.
+
+### 5.4 MyCal date forms
+
+Not an owner ruling; recorded here so it can be overruled. A model writing a resource URI by hand
+writes `from=2026-10-01T09:00:00Z`, whose unencoded `:` fails the SDK's template match (§3) with
+"Resource not found", which reads as though the resource does not exist. Accepting `mycal-cli`'s
+date-only form avoids the common case, and reuses a parser MyCal already ships.
+
+### 5.5 `mark_message_read` is exposed
+
+Ruled by the owner on 2026-10-14. It is the only write a token can make in any of the three apps.
+
+### 5.6 The 1 MiB blob cap
+
+Ruled by the owner on 2026-10-14.
+
+## 6. Out of scope
+
+- An HTTP or SSE transport, and MCP authorization (§5.1).
+- MyLinks and MyPass. MyLinks is bound by `api-discovery.md` but has no API tokens: its Go sources had no bearer handling on 2026-10-14.
+- Anything a token cannot reach, even when the server is unauthenticated (§2.1).
+- Prompts, sampling, elicitation, roots and logging capabilities.
+- Resource subscriptions and change notifications.
+
+## 7. Adoption
+
+Each app's adoption also adds a reference to this contract in its own `AGENTS.md` files, beside
+its references to `spec/device-login.md` and `spec/api-discovery.md` (`spec/README.md`, *Adding a
+contract*). None does yet.
+
+| App     | AWB issue | Implementing commit |
+|---------|-----------|---------------------|
+| MyNotes | not filed | none                |
+| MyCal   | not filed | none                |
+| MyMail  | not filed | none                |
+
+Planned order: MyNotes (no scoping, one tool), then MyCal (scoping, iCalendar), then MyMail
+(scoping, the write, blobs).
+
+## 8. Known gaps
+
+- **Text resources have no size cap.** The owner ruled on a cap for blobs. A large HTML message
+  body or iCalendar export goes to the client whole.
+- **Not tested against a resource-reading client other than the SDK's own.** How each MCP client
+  presents resource templates to its model varies.
+- **Source set.** Written from the MCP planning discussion of 2026-10-14 with the owner's rulings
+  in §5, and from, at the commits below: each app's bearer-token middleware (MyCal
+  `internal/token/bearer.go`, MyMail `internal/token/token.go` `Bearer`, MyNotes
+  `internal/token/bearer.go`), `openapi.yaml`, `cmd/cli/main.go` and `build.sh`; MyCal `64146bc`,
+  MyMail `8dd04e5`, MyNotes `2388858`. go-sdk v1.8.0's `mcp/resource.go` and `mcp/server.go`, and
+  the template measurement in §3.
+
+## 9. Withdrawn rules
+
+None yet.

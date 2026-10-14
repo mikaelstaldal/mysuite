@@ -41,11 +41,11 @@ boundary (§5.1).
 - The MCP `serverInfo.name` is the binary name (`mycal-mcp`, …). `serverInfo.version` is local.
 - Flags and environment, matching that app's `*-cli`:
 
-  | Flag              | Default                                  | Meaning                     |
-  |-------------------|------------------------------------------|-----------------------------|
-  | `-url URL`        | `MYCAL_URL`, else `http://127.0.0.1:8080` | server base URL, may carry a path |
-  | `-token-file PATH`| `MYCAL_TOKEN_FILE`                       | read the API token from a file |
-  | `-help`           |                                          | print usage to stdout, exit 0 |
+  | Flag               | Default                                   | Meaning                           |
+  |--------------------|-------------------------------------------|-----------------------------------|
+  | `-url URL`         | `MYCAL_URL`, else `http://127.0.0.1:8080` | server base URL, may carry a path |
+  | `-token-file PATH` | `MYCAL_TOKEN_FILE`                        | read the API token from a file    |
+  | `-help`            |                                           | print usage to stdout, exit 0     |
 
   with `MYMAIL_` and `MYNOTES_` in the other two. There is **no `-token-stdin`**, because stdin
   is the protocol channel.
@@ -86,14 +86,14 @@ percent-encoded again into the HTTP path.
 
 **MyCal**
 
-| Resource or tool | MIME type | API request |
-|---|---|---|
-| `mycal://calendars` (static) | `application/json` | `GET /api/v1/calendars` |
-| `mycal://events{?from,to,calendar_id*}` | `application/json` | `GET /api/v1/events` |
-| `mycal://events/{id}` | `application/json` | `GET /api/v1/events/{id}` |
-| `mycal://events/{id}/ics` | `text/calendar` | `GET /api/v1/events/{id}/ics` |
-| `mycal://calendar.ics{?calendar_id*}` | `text/calendar` | `GET /api/v1/events.ics` |
-| tool `search_events(q, from?, to?, calendar_id?)` | `application/json` | `GET /api/v1/events?q=…` |
+| Resource or tool                                  | MIME type          | API request                   |
+|---------------------------------------------------|--------------------|-------------------------------|
+| `mycal://calendars` (static)                      | `application/json` | `GET /api/v1/calendars`       |
+| `mycal://events{?from,to,calendar_id*}`           | `application/json` | `GET /api/v1/events`          |
+| `mycal://events/{id}`                             | `application/json` | `GET /api/v1/events/{id}`     |
+| `mycal://events/{id}/ics`                         | `text/calendar`    | `GET /api/v1/events/{id}/ics` |
+| `mycal://calendar.ics{?calendar_id*}`             | `text/calendar`    | `GET /api/v1/events.ics`      |
+| tool `search_events(q, from?, to?, calendar_id?)` | `application/json` | `GET /api/v1/events?q=…`      |
 
 - `from` and `to` are required by `mycal://events`. Both there and in `search_events` they accept
   the forms `mycal-cli` accepts — RFC 3339, `YYYY-MM-DD`, `YYYY-MM-DD[T or space]HH:MM[:SS]` —
@@ -109,18 +109,18 @@ percent-encoded again into the HTTP path.
 
 **MyMail**
 
-| Resource or tool | MIME type | API request |
-|---|---|---|
-| `mymail://folders` (static) | `application/json` | `GET /api/v1/folders`, which the server filters to the token's folders |
-| `mymail://folders/{folder_id}/messages{?limit,offset,unread,flagged}` | `application/json` | `GET /api/v1/folders/{folder_id}/messages` |
-| `mymail://messages/{id}` | `application/json` | `GET /api/v1/messages/{id}` |
-| `mymail://messages/{id}/text` | `text/plain` | `body_text` of `GET /api/v1/messages/{id}`, as `mymail-cli messages text` extracts it |
-| `mymail://messages/{id}/headers` | `text/plain` | `GET /api/v1/messages/{id}/headers` |
-| `mymail://messages/{id}/body{?external}` | `text/html` | `GET /api/v1/messages/{id}/body` |
-| `mymail://messages/{id}/raw` | `message/rfc822`, blob | `GET /api/v1/messages/{id}/raw` |
-| `mymail://attachments/{id}` | the server's `Content-Type`, blob | `GET /api/v1/attachments/{id}` |
-| tool `search_messages(folder_id, q, date_from?, date_to?, from_addr?, to_addr?, sort?, limit?, offset?)` | `application/json` | `GET /api/v1/messages/search` |
-| tool `mark_message_read(id)` | none | `PUT /api/v1/messages/{id}/read` |
+| Resource or tool                                                                                         | MIME type                         | API request                                                                           |
+|----------------------------------------------------------------------------------------------------------|-----------------------------------|---------------------------------------------------------------------------------------|
+| `mymail://folders` (static)                                                                              | `application/json`                | `GET /api/v1/folders`, which the server filters to the token's folders                |
+| `mymail://folders/{folder_id}/messages{?limit,offset,unread,flagged}`                                    | `application/json`                | `GET /api/v1/folders/{folder_id}/messages`                                            |
+| `mymail://messages/{id}`                                                                                 | `application/json`                | `GET /api/v1/messages/{id}`                                                           |
+| `mymail://messages/{id}/text`                                                                            | `text/plain`                      | `body_text` of `GET /api/v1/messages/{id}`, as `mymail-cli messages text` extracts it |
+| `mymail://messages/{id}/headers`                                                                         | `text/plain`                      | `GET /api/v1/messages/{id}/headers`                                                   |
+| `mymail://messages/{id}/body{?external}`                                                                 | `text/html`                       | `GET /api/v1/messages/{id}/body`                                                      |
+| `mymail://messages/{id}/raw`                                                                             | `message/rfc822`, blob            | `GET /api/v1/messages/{id}/raw`                                                       |
+| `mymail://attachments/{id}`                                                                              | the server's `Content-Type`, blob | `GET /api/v1/attachments/{id}`                                                        |
+| tool `search_messages(folder_id, q, date_from?, date_to?, from_addr?, to_addr?, sort?, limit?, offset?)` | `application/json`                | `GET /api/v1/messages/search`                                                         |
+| tool `mark_message_read(id)`                                                                             | none                              | `PUT /api/v1/messages/{id}/read`                                                      |
 
 - `search_messages` **requires `folder_id`**, in its input schema. That is the server's rule for
   bearer requests (exactly one `folder_id`), stated where a model reads it.
@@ -130,14 +130,14 @@ percent-encoded again into the HTTP path.
 
 **MyNotes**
 
-| Resource or tool | MIME type | API request |
-|---|---|---|
-| `mynotes://tags` (static) | `application/json` | `GET /api/v1/tags` |
-| `mynotes://notes{?tag*,sort,order,limit,offset}` | `application/json` | `GET /api/v1/notes` |
-| `mynotes://notes/{slug}` | `application/json` | `GET /api/v1/notes/{slug}` |
-| `mynotes://notes/{slug}/markdown` | `text/markdown` | `GET /api/v1/notes/{slug}/download-markdown` |
-| `mynotes://artifacts/{sha256}` | the server's `Content-Type`, blob | `GET /api/v1/artifacts/{sha256}` |
-| tool `search_notes(q, titlePrefix?, tag?, limit?, offset?)` | `application/json` | `GET /api/v1/notes?q=…` |
+| Resource or tool                                            | MIME type                         | API request                                  |
+|-------------------------------------------------------------|-----------------------------------|----------------------------------------------|
+| `mynotes://tags` (static)                                   | `application/json`                | `GET /api/v1/tags`                           |
+| `mynotes://notes{?tag*,sort,order,limit,offset}`            | `application/json`                | `GET /api/v1/notes`                          |
+| `mynotes://notes/{slug}`                                    | `application/json`                | `GET /api/v1/notes/{slug}`                   |
+| `mynotes://notes/{slug}/markdown`                           | `text/markdown`                   | `GET /api/v1/notes/{slug}/download-markdown` |
+| `mynotes://artifacts/{sha256}`                              | the server's `Content-Type`, blob | `GET /api/v1/artifacts/{sha256}`             |
+| tool `search_notes(q, titlePrefix?, tag?, limit?, offset?)` | `application/json`                | `GET /api/v1/notes?q=…`                      |
 
 - `mynotes://notes` with no query is also a static resource, the first page of the browse list.
 - `tag` in `search_notes` is an array of strings, forwarded as repeated `tag` parameters.
@@ -174,9 +174,11 @@ Bearer-protected routes:
   `application/json` and `{}` (its `openapi.yaml`). `mymail://messages/{id}/raw` turns that into a
   read error saying the message is a draft, not a two-byte blob.
 - JSON is passed through as the server sent it. The MCP layer does not reshape it.
-- **A blob is capped at 1 MiB** (1,048,576 bytes). The server reads at most one byte more than the
-  cap; a body over it fails the read with an error naming the limit. It is never truncated. Text
-  resources are not capped (§8).
+- **Every resource is capped at 1 MiB** (1,048,576 bytes) of response body, text and blob alike.
+  The server reads at most one byte more than the cap; a body over it fails the read with an error
+  naming the limit. It is never truncated. The same cap applies to the response a tool reads: MyMail
+  and MyNotes search return one page of at most 200 results, but MyCal's `/api/v1/events` has no
+  `limit` parameter, so `search_events` is otherwise unbounded.
 - **Unknown query parameters are rejected**, as invalid params. A resource URI reaches only the
   parameters in its template, so search cannot be reached through `mycal://events?q=…`.
 - Query parameters may appear in any order and list parameters may repeat. **The handler parses
@@ -184,16 +186,16 @@ Bearer-protected routes:
 
 ### 2.5 Errors
 
-| Condition | Resource read | Tool call |
-|---|---|---|
-| 401, token configured | JSON-RPC error: token expired or revoked; run `mycal-token login` | `isError` result, same text |
-| 401, no token | JSON-RPC error: the server requires authentication; set `MYCAL_TOKEN_FILE` | `isError` result, same text |
-| 403 | JSON-RPC error: outside this token's scope (MyMail; MyCal filters instead, §2.3) | `isError` result, same text |
-| 404 | the SDK's `ResourceNotFoundError` | `isError` result |
-| other status | JSON-RPC error carrying the status and the server's `error` field | `isError` result, same text |
-| network failure | JSON-RPC error | `isError` result |
-| blob over the cap | JSON-RPC error naming the limit | not applicable |
-| missing required or unknown parameter | invalid params, without an HTTP request | invalid params |
+| Condition                             | Resource read                                                                    | Tool call                   |
+|---------------------------------------|----------------------------------------------------------------------------------|-----------------------------|
+| 401, token configured                 | JSON-RPC error: token expired or revoked; run `mycal-token login`                | `isError` result, same text |
+| 401, no token                         | JSON-RPC error: the server requires authentication; set `MYCAL_TOKEN_FILE`       | `isError` result, same text |
+| 403                                   | JSON-RPC error: outside this token's scope (MyMail; MyCal filters instead, §2.3) | `isError` result, same text |
+| 404                                   | the SDK's `ResourceNotFoundError`                                                | `isError` result            |
+| other status                          | JSON-RPC error carrying the status and the server's `error` field                | `isError` result, same text |
+| network failure                       | JSON-RPC error                                                                   | `isError` result            |
+| response over the cap                  | JSON-RPC error naming the limit                                                  | `isError` result, same text |
+| missing required or unknown parameter | invalid params, without an HTTP request                                          | invalid params              |
 
 The binary and variable names in the messages are each app's own. No message echoes the token.
 
@@ -208,7 +210,7 @@ event IDs and message IDs are unbounded collections.
 
 **Mandated:** the binary names, flags, environment variables, stdio, static linking, the SDK
 version, the URI schemes and templates, which reads are resources and which are tools, tool names
-and argument names, annotations, the text/blob rule, the blob cap, the error mapping and its
+and argument names, annotations, the text/blob rule, the resource cap, the error mapping and its
 wording's content, completion's scope, and that the surface equals the token surface.
 
 **Local:** the package layout under `cmd/mcp/`, how requests are built (reusing the app's
@@ -246,7 +248,8 @@ token store**. Not a mock: the point is that authorization is the server's.
    nothing from B even when B is requested, and an event in B is not found.
 4. **No token**: reads succeed against a server without Basic authentication and give the
    no-token 401 message against one with it.
-5. A blob of exactly 1 MiB is returned; one byte more is refused.
+5. A response body of exactly 1 MiB is returned, as a text resource, as a blob resource and
+   through a search tool; one byte more is refused in all three.
 6. Query parameters out of order and repeated are honoured; an unknown one is refused without an
    HTTP request; MyCal `from=2026-10-01` is accepted.
 7. Startup with a disallowed URL or an unreadable token file exits 1 and writes nothing to stdout.
@@ -295,9 +298,10 @@ date-only form avoids the common case, and reuses a parser MyCal already ships.
 
 Ruled by the owner on 2026-10-14. It is the only write a token can make in any of the three apps.
 
-### 5.6 The 1 MiB blob cap
+### 5.6 The 1 MiB resource cap
 
-Ruled by the owner on 2026-10-14.
+Ruled by the owner on 2026-10-14, first for blobs and then, the same day, for text resources too,
+closing what §8 had listed as a gap.
 
 ## 6. Out of scope
 
@@ -324,8 +328,6 @@ Planned order: MyNotes (no scoping, one tool), then MyCal (scoping, iCalendar), 
 
 ## 8. Known gaps
 
-- **Text resources have no size cap.** The owner ruled on a cap for blobs. A large HTML message
-  body or iCalendar export goes to the client whole.
 - **Not tested against a resource-reading client other than the SDK's own.** How each MCP client
   presents resource templates to its model varies.
 - **Source set.** Written from the MCP planning discussion of 2026-10-14 with the owner's rulings

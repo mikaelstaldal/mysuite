@@ -190,10 +190,10 @@ Bearer-protected routes:
   `limit` parameter, so `search_events` is otherwise unbounded.
 - **Unknown query parameters are rejected** without an HTTP request. A resource URI reaches only
   the parameters in its template, so search cannot be reached through `mycal://events?q=…`. On a
-  template that takes a query, the handler refuses the unknown parameter as invalid params. A query
-  on a resource or template that takes none matches no template, so the SDK's dispatch refuses it
-  as "Resource not found" before any handler runs. In go-sdk v1.8.0 both carry JSON-RPC code
-  -32602.
+  template that takes a query, the handler refuses an unknown or repeated parameter with JSON-RPC
+  code **-32603** and a message saying what to do instead (§5.8). A query on a resource or template
+  that takes none matches no template, so the SDK's dispatch refuses it as "Resource not found"
+  (-32602 in go-sdk v1.8.0) before any handler runs.
 - Query parameters may appear in any order and list parameters may repeat. **The handler parses
   the query itself** (§3), because the SDK's template library does neither.
 
@@ -205,15 +205,18 @@ Bearer-protected routes:
 | 401, no token                         | JSON-RPC error: the server requires authentication; set `MYCAL_TOKEN_FILE`       | `isError` result, same text |
 | 403                                   | JSON-RPC error: outside this token's scope (MyMail; MyCal filters instead, §2.3) | `isError` result, same text |
 | 404                                   | the SDK's `ResourceNotFoundError`                                                | `isError` result            |
-| other status                          | JSON-RPC error carrying the status and the server's `error` field (§2.5 below)   | `isError` result, same text |
+| other status                          | JSON-RPC error carrying the status and the server's error field (§2.5 below)     | `isError` result, same text |
 | network failure                       | JSON-RPC error                                                                   | `isError` result            |
 | response over the cap                  | JSON-RPC error naming the limit                                                  | `isError` result, same text |
-| missing required or unknown parameter | invalid params, or the SDK's not-found (§2.4); without an HTTP request | `isError` result, without an HTTP request |
+| missing required or unknown parameter | -32603 with the reason, or the SDK's not-found (§2.4); without an HTTP request | `isError` result, without an HTTP request |
 
 The binary and variable names in the messages are each app's own. No message echoes the token.
 
-An error body is read under the same 1 MiB cap as any other. Its `error` field is carried whole or
-not at all: a body over the cap gives the status alone. A body that is not the API's error shape,
+An error body is read under the same 1 MiB cap as any other. Its error field is carried whole or
+not at all: a body over the cap gives the status alone. The field is `error` in the API's own
+errors and **`error_message`** when ogen rejects a request before the handler runs (an
+out-of-range or malformed query parameter); ogen v1.24.0 writes the latter in
+`ogenerrors/handler.go`, and all three apps use ogen. A body that is not the API's error shape,
 such as a proxy's page, is shown only when it is short (MyNotes: up to 1 KiB of UTF-8).
 
 ### 2.6 Completion
@@ -267,8 +270,8 @@ token store**. Not a mock: the point is that authorization is the server's.
    no-token 401 message against one with it.
 5. A response body of exactly 1 MiB is returned, as a text resource, as a blob resource and
    through a search tool; one byte more is refused in all three.
-6. Query parameters out of order and repeated are honoured; an unknown one is refused without an
-   HTTP request; MyCal `from=2026-10-01` is accepted.
+6. Query parameters out of order and repeated are honoured; an unknown one is refused with -32603
+   and its reason, without an HTTP request; MyCal `from=2026-10-01` is accepted.
 7. Startup with a disallowed URL or an unreadable token file exits 1 and writes nothing to stdout.
 8. The built binary reports `CGO_ENABLED=0` and `-tags=netgo`.
 9. `completion/complete` returns values for exactly the arguments in §2.6, from the server, and
@@ -281,6 +284,8 @@ token store**. Not a mock: the point is that authorization is the server's.
 14. The `initialize` result advertises no resource subscription and no `listChanged`.
 15. A draft's raw resource gives the draft error, not a blob.
 16. An empty body arrives as an empty blob, with the response's MIME type.
+17. An out-of-range query parameter, rejected by ogen, gives the `error_message` text, not the raw
+    body.
 
 **Nothing checks the three against each other** (`AGENTS.md` §2.1). `tools/check-contract.py`
 does not check this contract.
@@ -330,6 +335,15 @@ message and retry. The inferred schema already refuses unknown properties
 (`additionalProperties: false`). It types every Go slice as `["null", "array"]`, so an
 implementation pins list arguments to `array` explicitly (§2.3).
 
+### 5.8 A refusal is -32603, so its message survives the client
+
+Ruled by the owner on 2026-10-14, after trying MyNotes from Claude Code. go-sdk v1.8.0 gives
+"Resource not found" the invalid-params code, -32602, and Claude Code shows every -32602 from
+`resources/read` as *"Resource not found … the URI is stale"*. A refusal sent as invalid params
+therefore lost its message, including *"use the search_notes tool to search"*, which is what lets
+a model recover. Sent as -32603, the message reaches the model, as an HTTP 400's did in the same
+session. The cost, accepted: the code no longer says the request was malformed.
+
 ## 6. Out of scope
 
 - An HTTP or SSE transport, and MCP authorization (§5.1).
@@ -346,7 +360,7 @@ contract*).
 
 | App     | AWB issue | Implementing commit |
 |---------|-----------|---------------------|
-| MyNotes | `mys-ld3qsf` | `0db9019`, not pushed |
+| MyNotes | `mys-ld3qsf` | `5ab2327`, not pushed |
 | MyCal   | `mys-5rbsw8` | none                |
 | MyMail  | `mys-07x53a` | none                |
 
@@ -361,8 +375,12 @@ Planned order: MyNotes (no scoping, one tool), then MyCal (scoping, iCalendar), 
 - **The drift test sees only documented routes.** MyNotes' enumerates the routes a token may read
   from `openapi.yaml`'s GET operations, probed through the bearer middleware, so a bearer-readable
   route missing from `openapi.yaml` is invisible to it.
-- **Not tested against a resource-reading client other than the SDK's own.** How each MCP client
-  presents resource templates to its model varies.
+- **Tried against one client besides the SDK's own: Claude Code, on 2026-10-14, by hand, with
+  MyNotes.** Static resources, a template read with query parameters, a note as JSON and
+  Markdown, an artifact blob, `search_notes`, a not-found read and refusals were exercised, and
+  that trial produced §5.8 and the `error_message` rule in §2.5. Nothing automated runs against
+  any client but the SDK's, and other clients present resource templates to their models
+  differently.
 - **Source set.** Written from the MCP planning discussion of 2026-10-14 with the owner's rulings
   in §5, and from, at the commits below: each app's bearer-token middleware (MyCal
   `internal/token/bearer.go`, MyMail `internal/token/token.go` `Bearer`, MyNotes

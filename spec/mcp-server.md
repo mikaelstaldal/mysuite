@@ -1,9 +1,10 @@
 # MCP servers
 
-**Status: binding, being adopted: implemented in MyNotes only, not pushed (§7).** The design
-decisions in §5 were made by the owner on 2026-10-14, who then had MyNotes implement it the same
-day. Adoption is tracked as one AWB issue per app (§7). MyCal and MyMail still adopting it is a
-claim with a deadline, not a standing exemption (`spec/README.md`).
+**Status: binding, being adopted: implemented in MyNotes and MyMail, neither pushed (§7).** The
+design decisions in §5 were made by the owner on 2026-10-14, who then had MyNotes and MyMail
+implement it the same day. Adoption is tracked as one AWB issue per app (§7). MyCal still
+adopting it is a claim with a deadline, not a standing exemption (`spec/README.md`); its issue is
+blocked on adding paging to its events endpoint.
 
 ## 1. What it covers
 
@@ -63,8 +64,11 @@ boundary (§5.1).
   unparseable or disallowed URL, or a token file that cannot be read or is empty. An unreachable
   server is **not** a startup failure; it is reported per request (§2.5).
 - The token secret never appears on stdout, on stderr, or in any resource or tool result. That
-  includes text the server or a proxy sends back: an error body echoing the `Authorization`
-  header has the secret replaced before it reaches the client.
+  includes text the server or a proxy sends back. An error body echoing the `Authorization`
+  header has the secret replaced. A successful body containing it is **refused whole**, as an
+  error, because §2.4 passes a body's bytes through unchanged or not at all. "Containing" covers
+  a JSON string that decodes to it (`\u0072…`), not only its literal bytes, since the server's
+  own decoding (MyMail's `/text`, completion) would otherwise hand the secret on.
 
 ### 2.2 Resources first, tools only where a resource cannot work
 
@@ -125,6 +129,9 @@ percent-encoded again into the HTTP path.
 | tool `search_messages(folder_id, q, date_from?, date_to?, from_addr?, to_addr?, sort?, limit?, offset?)` | `application/json`                | `GET /api/v1/messages/search`                                                         |
 | tool `mark_message_read(id)`                                                                             | none                              | `PUT /api/v1/messages/{id}/read`                                                      |
 
+- **MyMail's bearer middleware answers a message outside the token's folders and a message that
+  does not exist alike, with 403**, so the scope message says it may be either. Without a token
+  against a server with no Basic authentication, a missing message is 404 and reads as not found.
 - `search_messages` **requires `folder_id`**, in its input schema. That is the server's rule for
   bearer requests (exactly one `folder_id`), stated where a model reads it.
 - `mark_message_read` is annotated `readOnlyHint: false`, `destructiveHint: false`,
@@ -279,7 +286,8 @@ token store**. Not a mock: the point is that authorization is the server's.
     list arguments typed as arrays.
 10. A configured token that the server rejects gives the token-configured 401 message.
 11. With the server down, startup succeeds and each read and tool call reports the failure.
-12. The token secret appears in no stdout, stderr, result or error, on any of the paths above.
+12. The token secret appears in no stdout, stderr, result or error, on any of the paths above,
+    including a successful response and an error response that echo it.
 13. The `initialize` result advertises no resource subscription and no `listChanged`.
 14. A draft's raw resource gives the draft error, not a blob.
 15. An empty body arrives as an empty blob, with the response's MIME type.
@@ -365,21 +373,21 @@ contract*).
 
 | App     | AWB issue | Implementing commit |
 |---------|-----------|---------------------|
-| MyNotes | `mys-ld3qsf` | `5ab2327`, not pushed |
-| MyCal   | `mys-5rbsw8` | none                |
-| MyMail  | `mys-07x53a` | none                |
+| MyNotes | `mys-ld3qsf` | `5ab2327`, then `7c80584` (refusing a body that contains the token); not pushed |
+| MyMail  | `mys-07x53a` | `ca9527f`, not pushed |
+| MyCal   | `mys-5rbsw8` | none; blocked on `mys-dxqj7x`, paging for `GET /api/v1/events` |
 
-MyNotes' commit also adds the `AGENTS.md` reference. `./build.sh` passed at that commit on
-2026-10-14, after a cross-harness review was folded in.
+Each app's first commit (`5ab2327`, `ca9527f`) adds its `AGENTS.md` references. `./build.sh`
+passed at every commit listed, on 2026-10-14, after a cross-harness review was folded in.
 
-Planned order: MyNotes (no scoping, one tool), then MyCal (scoping, iCalendar), then MyMail
-(scoping, the write, blobs).
+The order changed: MyMail went second because MyCal's issue is blocked.
 
 ## 8. Known gaps
 
-- **The drift test sees only documented routes.** MyNotes' enumerates the routes a token may read
-  from `openapi.yaml`'s GET operations, probed through the bearer middleware, so a bearer-readable
-  route missing from `openapi.yaml` is invisible to it.
+- **The drift test sees only documented routes.** Both implementations enumerate the operations a
+  token may use from `openapi.yaml`, probed through the bearer middleware (MyNotes: its GET
+  operations; MyMail: every operation, with IDs the token can reach), so a bearer-reachable route
+  missing from `openapi.yaml` is invisible to it.
 - **Tried against one client besides the SDK's own: Claude Code, on 2026-10-14, by hand, with
   MyNotes.** Static resources, a template read with query parameters, a note as JSON and
   Markdown, an artifact blob, `search_notes`, a not-found read and refusals were exercised, and

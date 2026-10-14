@@ -1,10 +1,8 @@
 # MCP servers
 
-**Status: binding, being adopted: implemented in MyNotes and MyMail, neither pushed (§7).** The
-design decisions in §5 were made by the owner on 2026-10-14, who then had MyNotes and MyMail
-implement it the same day. Adoption is tracked as one AWB issue per app (§7). MyCal still
-adopting it is a claim with a deadline, not a standing exemption (`spec/README.md`); its issue is
-blocked on adding paging to its events endpoint.
+**Status: binding, implemented in all three, none pushed (§7).** The design decisions in §5 were
+made by the owner on 2026-10-14, who then had all three apps implement it the same day. Adoption
+is tracked as one AWB issue per app (§7).
 
 ## 1. What it covers
 
@@ -65,10 +63,13 @@ boundary (§5.1).
   server is **not** a startup failure; it is reported per request (§2.5).
 - The token secret never appears on stdout, on stderr, or in any resource or tool result. That
   includes text the server or a proxy sends back. An error body echoing the `Authorization`
-  header has the secret replaced. A successful body containing it is **refused whole**, as an
-  error, because §2.4 passes a body's bytes through unchanged or not at all. "Containing" covers
-  a JSON string that decodes to it (`\u0072…`), not only its literal bytes, since the server's
-  own decoding (MyMail's `/text`, completion) would otherwise hand the secret on.
+  header has the secret replaced in the error text taken from its `error` field, and an error
+  body shown as it is (§2.5) is not shown at all if it contains the secret. A successful body
+  containing it is **refused whole**, as an error, because §2.4 passes a body's bytes through
+  unchanged or not at all. "Containing" covers a JSON string that decodes to it (`\u0072…`), not
+  only its literal bytes, since the server's own decoding (MyMail's `/text`, completion) would
+  otherwise hand the secret on, and it covers every string in the body, keys and repeated
+  members included: a decoded map keeps only the last of a repeated key.
 
 ### 2.2 Resources first, tools only where a resource cannot work
 
@@ -96,16 +97,24 @@ percent-encoded again into the HTTP path.
 | Resource or tool                                  | MIME type          | API request                   |
 |---------------------------------------------------|--------------------|-------------------------------|
 | `mycal://calendars` (static)                      | `application/json` | `GET /api/v1/calendars`       |
-| `mycal://events{?from,to,calendar_id*}`           | `application/json` | `GET /api/v1/events`          |
+| `mycal://events{?from,to,calendar_id*,limit,offset}` | `application/json` | `GET /api/v1/events`       |
 | `mycal://events/{id}`                             | `application/json` | `GET /api/v1/events/{id}`     |
 | `mycal://events/{id}/ics`                         | `text/calendar`    | `GET /api/v1/events/{id}/ics` |
 | `mycal://calendar.ics{?calendar_id*}`             | `text/calendar`    | `GET /api/v1/events.ics`      |
-| tool `search_events(q, from?, to?, calendar_id?)` | `application/json` | `GET /api/v1/events?q=…`      |
+| tool `search_events(q, from?, to?, calendar_id?, limit?, offset?)` | `application/json` | `GET /api/v1/events?q=…` |
 
 - `from` and `to` are required by `mycal://events`. Both there and in `search_events` they accept
   the forms `mycal-cli` accepts — RFC 3339, `YYYY-MM-DD`, `YYYY-MM-DD[T or space]HH:MM[:SS]` —
   and are converted to RFC 3339 exactly as `mycal-cli` converts them. This is the one exception
   to forwarding values unchanged, and §5.4 says why.
+- `limit` (1–200) and `offset` page both. They were added to the API for this server, in MyCal
+  `cb4d43d`; without `limit` the response is unbounded, as it was before, from `offset` on. A recurring event is
+  expanded before paging in a listing; search pages the stored events, newest first.
+- In `search_events`, `from` and `to` are given together or not at all, as in `mycal-cli`.
+- **`search_events` returns no `structuredContent`.** The API answers with a JSON array, and
+  go-sdk v1.8.0 appends a second, re-serialised text block to any structured output that is not
+  an object (`mcp/server.go`, read 2026-10-14), which would break the one-text-block rule below.
+  Its one text block is the server's bytes.
 - `mycal://calendar.ics` with no query is also a static resource, the whole feed.
 - Event IDs may be composite (`42_2026-03-09T09:00:00Z`) and are percent-encoded in the URI.
 - `calendar_id` in `search_events` is an array of integers, forwarded as repeated `calendar_id`
@@ -154,8 +163,9 @@ percent-encoded again into the HTTP path.
 - `search_notes` has no `sort` or `order`: the API ignores both when `q` is set.
 
 **Every search tool** is annotated `readOnlyHint: true`, `openWorldHint: false`. Its input schema
-marks `q` required. It returns the server's JSON both as `structuredContent` and as one text block,
-and the text block is the server's bytes, not a re-serialisation of the structured value.
+marks `q` required. It returns the server's JSON as one text block, the server's bytes, not a
+re-serialisation, and, where that JSON is an object (MyMail, MyNotes), also as
+`structuredContent`.
 
 **Excluded, deliberately**, and the drift test (§4) lists exactly these. Routes reachable without
 any credential, which a token can also reach:
@@ -192,9 +202,9 @@ Bearer-protected routes:
 - JSON is passed through as the server sent it. The MCP layer does not reshape it.
 - **Every resource is capped at 1 MiB** (1,048,576 bytes) of response body, text and blob alike.
   The server reads at most one byte more than the cap; a body over it fails the read with an error
-  naming the limit. It is never truncated. The same cap applies to the response a tool reads: MyMail
-  and MyNotes search return one page of at most 200 results, but MyCal's `/api/v1/events` has no
-  `limit` parameter, so `search_events` is otherwise unbounded.
+  naming the limit. It is never truncated. The same cap applies to the response a tool reads. A
+  search pages, but MyCal's is unbounded whenever `limit` is omitted, so the cap
+  is what bounds it.
 - **Unknown query parameters are rejected** without an HTTP request. A resource URI reaches only
   the parameters in its template, so search cannot be reached through `mycal://events?q=…`. On a
   template that takes a query, the handler refuses an unknown or repeated parameter with JSON-RPC
@@ -287,7 +297,8 @@ token store**. Not a mock: the point is that authorization is the server's.
 10. A configured token that the server rejects gives the token-configured 401 message.
 11. With the server down, startup succeeds and each read and tool call reports the failure.
 12. The token secret appears in no stdout, stderr, result or error, on any of the paths above,
-    including a successful response and an error response that echo it.
+    including a successful response and an error response that echo it, literally or JSON-escaped,
+    and in a repeated JSON member.
 13. The `initialize` result advertises no resource subscription and no `listChanged`.
 14. A draft's raw resource gives the draft error, not a blob.
 15. An empty body arrives as an empty blob, with the response's MIME type.
@@ -373,21 +384,23 @@ contract*).
 
 | App     | AWB issue | Implementing commit |
 |---------|-----------|---------------------|
-| MyNotes | `mys-ld3qsf` | `5ab2327`, then `7c80584` (refusing a body that contains the token); not pushed |
-| MyMail  | `mys-07x53a` | `ca9527f`, not pushed |
-| MyCal   | `mys-5rbsw8` | none; blocked on `mys-dxqj7x`, paging for `GET /api/v1/events` |
+| MyNotes | `mys-ld3qsf` | `5ab2327`, then `8ef435d` (refusing a body that contains the token); not pushed |
+| MyMail  | `mys-07x53a` | `7ce7a95`, not pushed |
+| MyCal   | `mys-5rbsw8` | `5bf3c4e`, not pushed; it needed paging for `GET /api/v1/events` first, `mys-dxqj7x`, MyCal `cb4d43d` |
 
-Each app's first commit (`5ab2327`, `ca9527f`) adds its `AGENTS.md` references. `./build.sh`
-passed at every commit listed, on 2026-10-14, after a cross-harness review was folded in.
+Each app's first commit (`5ab2327`, `7ce7a95`, `5bf3c4e`) adds its `AGENTS.md` references.
+`./build.sh` passed at every commit listed, on 2026-10-14, after a cross-harness review was folded
+in.
 
-The order changed: MyMail went second because MyCal's issue is blocked.
+The order changed from the plan: MyMail went second while MyCal waited for paging.
 
 ## 8. Known gaps
 
-- **The drift test sees only documented routes.** Both implementations enumerate the operations a
-  token may use from `openapi.yaml`, probed through the bearer middleware (MyNotes: its GET
-  operations; MyMail: every operation, with IDs the token can reach), so a bearer-reachable route
-  missing from `openapi.yaml` is invisible to it.
+- **The drift test sees only documented routes.** All three implementations enumerate the
+  operations a token may use from `openapi.yaml`, probed through the bearer middleware (MyNotes:
+  its GET operations; MyMail and MyCal: every operation, with IDs the token can reach), so a
+  bearer-reachable route missing from `openapi.yaml` is invisible to it. MyCal's test fixture also
+  omits the public discovery routes, which `openapi.yaml` does not list.
 - **Tried against one client besides the SDK's own: Claude Code, on 2026-10-14, by hand, with
   MyNotes.** Static resources, a template read with query parameters, a note as JSON and
   Markdown, an artifact blob, `search_notes`, a not-found read and refusals were exercised, and

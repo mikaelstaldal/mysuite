@@ -144,7 +144,7 @@ documents rather than restating its values.
   device login, and the only contract here that binds MyLinks. Implemented in all four apps.
 - **[`spec/mcp-server.md`](spec/mcp-server.md)** — a stdio MCP server binary in MyCal, MyMail
   and MyNotes exposing what an API token can reach, as resources and tools. An app integration
-  protocol. Implemented in MyNotes and MyMail so far, not pushed.
+  protocol. Implemented in all three apps, not pushed.
 - **[`tools/check-contract.py`](tools/check-contract.py)** — checks the three apps against
   the **sidebar-footer** contract, and against the **app-name-label** contract's font size and
   font stack. It does **not** check the app-logo contract at all, and it cannot check

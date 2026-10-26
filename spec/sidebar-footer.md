@@ -1,4 +1,4 @@
-# Sidebar footer — theme toggle and Settings
+# Sidebar footer — Settings and theme preference
 
 **Status:** binding. Implemented in MyCal, MyMail and MyNotes.
 
@@ -26,10 +26,28 @@ probe, the §2.4 row widths, the §10.8 narrow-layout coordinates and the §10.1
 readings. Every figure in those four is stated with the conditions it was read under; where a
 number came from someone else's run, the text says so.
 
-The bottom of the left sidebar in all three apps holds two controls: a light/dark theme
-toggle, and — to its right — Settings. This document is the single definition of how they
-look, where they sit, and how they behave. The three repositories implement it; none of
-them defines it.
+The bottom of the left sidebar holds **Settings**. Theme selection lives in Settings,
+with **Auto**, **Light** and **Dark**, defaulting to Auto. This document defines the shared
+appearance of the footer control and the shared theme behavior.
+
+## Current scope and supersession (2026-10-26)
+
+**Source:** the owner's request in the `darkmode` session on 2026-10-26: automatically follow
+the browser setting, remove the sidebar theme button, and offer Auto/Light/Dark in Settings,
+with Auto as the default, in MyCal, MyMail and MyNotes.
+
+This revision withdraws the sidebar theme button, its moon/sun icon, stacked labels,
+`aria-pressed`, two-control ordering, and width-stability mechanism. Settings is the sole footer
+control, placed at the former first control's position: 8px from the window's left and bottom
+edges, subject to the existing MyCal narrow-layout exception in §8. The remaining Settings
+geometry, typography, palette, focus, backdrop, scrolling and accessibility rules stay binding.
+The row may retain its existing flex gap; a single child has no inter-control gap.
+
+**Older passages about two controls, their combined width, toggle-specific markup, or toggle
+measurements are historical evidence, not current requirements.** They remain below where
+other documents cite their section numbers. §7 defines the current theme behavior and replaces
+the former width-stable-label requirement. No sidebar theme button is offered in server or demo
+builds, and Settings remains available in both.
 
 **The goal is a user with all three apps open in browser tabs seeing nothing move when
 switching between them.** That is what every rule below serves, and it is the test to apply
@@ -39,16 +57,15 @@ when something here looks arbitrary.
 
 ## 1. What this covers, and where
 
-The contract covers exactly two controls per app. Each repo names them locally; the names
+The footer appearance contract covers the Settings control in each app. Each repo names them locally; the names
 are not shared and must not be unified (see §5.2).
 
 | | MyCal | MyMail | MyNotes |
 |---|---|---|---|
 | Stylesheet | `web/static/app.css` | `web/static/app.css` | `web/static/app.css` |
-| Both controls | `.sidebar-footer-btn` | `.sidebar-theme-toggle`, `.sidebar-settings-link` | `.sidebar-footer-actions .theme-toggle`, `.sidebar-footer-actions .settings-open` |
+| Settings control | `.sidebar-footer-btn` | `.sidebar-settings-link` | `.sidebar-footer-actions .settings-open` |
 | Footer element | `.sidebar-footer` | `.sidebar-footer` | `.sidebar-footer` |
 | Flex row | `.sidebar-footer-actions` | `.sidebar-footer` *(the footer is the row)* | `.sidebar-footer-actions` |
-| Stacked label | `.sidebar-theme-label` | `.sidebar-theme-label` | `.theme-toggle-label` |
 | Markup | `web/ts/app.tsx`, `web/ts/components/Settings.tsx` | `web/ts/layout/Sidebar.tsx` | `web/ts/app.tsx` |
 
 The Settings control is a different element type in different apps — `<button>` in MyCal
@@ -64,7 +81,7 @@ result, and it says so explicitly.
 
 ## 2. Button geometry
 
-Both controls, all apps:
+The Settings control, all apps:
 
 ```css
 display: inline-flex;
@@ -95,7 +112,7 @@ flex-wrap: nowrap;
 gap: 6px;                    /* between the two controls */
 ```
 
-Theme toggle first (left), Settings second (right). No `justify-content` — left-aligned.
+Settings is the only control in the row. No `justify-content` — left-aligned.
 
 Values above are the **resolved** ones. Reaching them through a token is a local choice, as
 everywhere else in this document: MyCal and MyNotes write `border-radius: 6px` literally,
@@ -891,47 +908,39 @@ of magnitude across the three.
 
 ---
 
-## 7. The width-stable theme label
+## 7. Theme preference in Settings
 
-The theme button must not change width when toggled, or the Settings button beside it jumps
-sideways. Both words stay mounted, stacked in one grid cell, so the button always takes the
-width of the longer of the two:
+All three apps offer a native select labelled **Theme**, with options in this order:
+**Auto**, **Light**, **Dark**. The setting is available in server and demo builds. MyCal places
+it in Settings → General, MyMail in Settings → Preferences, and MyNotes in its Settings dialog.
+Only behavior and labels are shared; surrounding Settings layout is local to each app.
 
-```jsx
-<button aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
-        title={/* same */}
-        aria-pressed={dark}>
-  <Icon name={dark ? 'sun' : 'moon'} size={16} />
-  <span class="<local-label-class>" aria-hidden="true">
-    <span class={dark ? 'is-shown' : ''}>Light</span>
-    <span class={dark ? '' : 'is-shown'}>Dark</span>
-  </span>
-</button>
-```
+- **Auto** is the default for an absent or invalid preference. It resolves to dark when
+  `matchMedia('(prefers-color-scheme: dark)').matches` is true, otherwise light. When the
+  browser preference changes while the page is open, Auto updates immediately.
+- **Light** and **Dark** override the browser and remain unchanged when its preference changes.
+- Selecting an option takes effect immediately and persists in this browser across reloads.
+  Returning to Auto immediately follows the browser's current preference and resumes live updates.
+- Existing valid explicit light/dark choices are retained. MyCal and MyMail read legacy
+  `darkMode` values `true`/`false` until a new preference is saved under `theme`; a present but
+  invalid new value falls back to Auto rather than reviving a legacy value. MyNotes extends
+  `mynotes-settings.theme` to accept `auto`, retaining existing `light` and `dark` values.
+- The resolved theme is always `light` or `dark`, applied to the document root's `data-theme`
+  and native-control `color-scheme`. `auto` is a preference, never a resolved palette.
+- App entry points, including device approval, resolve the preference on startup. Consumers
+  that bake theme colors into content (such as Mermaid and MyCal's note preview) receive live
+  resolved-theme changes just as they do for an explicit settings change.
 
-```css
-.<local-label-class>             { display: grid; }
-.<local-label-class> > span      { grid-area: 1 / 1; visibility: hidden; }
-.<local-label-class> > .is-shown { visibility: visible; }
-```
+Preferences are local to each app's browser storage; this contract does not synchronize them
+across app origins. The native select supplies keyboard and screen-reader interaction.
+Settings' footer accessible name remains **Settings**. Its icon remains the existing 16px
+Lucide settings icon, with no theme selection button beside it.
 
-**This mechanism is mandated, not just its effect** — it is the only part of the layout
-where the specific technique is the contract.
-
-Notes:
-
-- The icon shows the theme you would switch **to**: a moon in light mode, a sun in dark.
-- The label pair is `aria-hidden`; the accessible name comes from `aria-label`.
-- **Keep each visible word a substring of its matching accessible name** — "Light" inside
-  "Switch to light mode". Otherwise the button breaks WCAG 2.5.3 Label in Name, and because
-  the span is `aria-hidden` nothing would catch it.
-- Labels stay one word. "Dark mode" / "Light mode" takes the row 11px past the edge in
-  MyMail, where it was measured (§2.4). Icon-only Settings and shortened labels were both
-  considered and deliberately not taken.
-- Settings' accessible name is `Settings` in all three, but it is reached differently, and
-  only the name is specified: MyCal and MyNotes set `title` and `aria-label` on a `<button>`
-  whose visible label sits in a `<span>`; MyMail's `<a>` carries neither attribute and takes
-  its name from its own text content. See §10.11 for the one user-visible consequence.
+The per-app `e2e/tests/theme.spec.ts` checks default resolution for both browser schemes,
+live browser changes, explicit overrides, reload persistence, returning to Auto, legacy values,
+and invalid values. Footer tests retain rendered Settings geometry, declarations, focus and
+contrast checks in both palettes. The static cross-repo checker checks Settings CSS only;
+it does not execute theme selection or read localStorage.
 
 ---
 

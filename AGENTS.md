@@ -27,8 +27,8 @@ inline and was never wrong.)*
 
 Currently binding:
 
-- **[`spec/sidebar-footer.md`](spec/sidebar-footer.md)** — the light/dark theme toggle and
-  Settings button in the left sidebar's footer.
+- **[`spec/sidebar-footer.md`](spec/sidebar-footer.md)** — the Settings button in the left sidebar's footer
+  and the Auto/Light/Dark theme preference in Settings.
 - **[`spec/app-logo.md`](spec/app-logo.md)** — the app logo badge at the top left: its box, fill,
   glyph size and extent, placement and accessibility. Implemented in all three.
 - **[`spec/app-name-label.md`](spec/app-name-label.md)** — the app-name text beside the badge:

@@ -21,7 +21,7 @@ claim with a deadline; if you find one that has not moved, that is the defect.**
 
 | Contract                                 | Covers                                                                                                                                           | Status                            |
 |------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------|
-| [`sidebar-footer.md`](sidebar-footer.md) | The light/dark theme toggle and Settings button at the bottom of the left sidebar — geometry, colours, interaction, and their position on screen | Binding, implemented in all three |
+| [`sidebar-footer.md`](sidebar-footer.md) | Settings in the sidebar footer and Auto/Light/Dark theme preferences — appearance, position and behavior | Binding, implemented in all three |
 | [`app-logo.md`](app-logo.md)             | The app logo badge at the top left — its box, fill, glyph size and extent, placement, and accessibility. The app-name label beside it is covered separately, by [`app-name-label.md`](app-name-label.md) | Binding, implemented in all three |
 | [`app-name-label.md`](app-name-label.md) | The app-name text beside the logo badge — its font, font size and placement. Supersedes `app-logo.md` §2's exclusion (`app-name-label.md` §2.1) | Binding, implemented in all three |
 

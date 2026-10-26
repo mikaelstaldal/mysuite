@@ -84,7 +84,7 @@ elements that were *nearly* the same. Near-identical is worse than either altern
 looks like a single product until you compare two windows side by side, and there is nothing
 anywhere that can tell you the three have drifted apart.
 
-The first contract, the sidebar footer's theme toggle and Settings button, existed as prose
+The first contract, the sidebar footer's Settings and Auto/Light/Dark theme preference button, existed as prose
 duplicated in three separate documents. Keeping three copies of a specification in sync by
 hand is the problem this repository replaces, not a smaller version of it.
 
@@ -129,8 +129,8 @@ documents rather than restating its values.
 
 - **[`spec/`](spec/)** — the contracts, one file each, indexed in
   [`spec/README.md`](spec/README.md). Currently three:
-  - **[`spec/sidebar-footer.md`](spec/sidebar-footer.md)** — the theme toggle and Settings
-    button at the bottom of the left sidebar. Implemented in all three apps.
+  - **[`spec/sidebar-footer.md`](spec/sidebar-footer.md)** — Settings at the bottom of the left sidebar
+    and the Auto/Light/Dark theme preference in Settings. Implemented in all three apps.
   - **[`spec/app-logo.md`](spec/app-logo.md)** — the app logo badge at the top left.
     Implemented in all three apps.
   - **[`spec/app-name-label.md`](spec/app-name-label.md)** — the app-name text beside the

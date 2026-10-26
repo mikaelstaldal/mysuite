@@ -57,9 +57,9 @@ APPS = {
         "tokens": ["web/static/app.css"],
         "brandrow": ".sidebar-header",   # MyMail's brand row — NOT MyNotes' .sidebar-header
         "bodytext": "html, body",
-        "button": ".sidebar-theme-toggle, .sidebar-settings-link",
-        "hover": ".sidebar-theme-toggle:hover, .sidebar-settings-link:hover",
-        "focus": ".sidebar-theme-toggle:focus-visible, .sidebar-settings-link:focus-visible",
+        "button": ".sidebar-settings-link",
+        "hover": ".sidebar-settings-link:hover",
+        "focus": ".sidebar-settings-link:focus-visible",
         "row": ".sidebar-footer",  # in MyMail the footer *is* the flex row
         "footer": ".sidebar-footer",
         "panel": ".sidebar",
@@ -68,11 +68,9 @@ APPS = {
         "css": ["web/static/app.css"],
         # MyNotes' palette lives in the render kit, not app.css (§5.2).
         "tokens": ["web/static/render/note.css"],
-        "button": ".sidebar-footer-actions .theme-toggle, .sidebar-footer-actions .settings-open",
-        "hover": ".sidebar-footer-actions .theme-toggle:hover:not(:disabled), "
-                 ".sidebar-footer-actions .settings-open:hover:not(:disabled)",
-        "focus": ".sidebar-footer-actions .theme-toggle:focus-visible, "
-                 ".sidebar-footer-actions .settings-open:focus-visible",
+        "button": ".sidebar-footer-actions .settings-open",
+        "hover": ".sidebar-footer-actions .settings-open:hover:not(:disabled)",
+        "focus": ".sidebar-footer-actions .settings-open:focus-visible",
         "row": ".sidebar-footer-actions",
         "footer": ".sidebar-footer",
         "panel": ".sidebar",
@@ -702,7 +700,8 @@ failing one covers less ground than the count suggests.
     verification lives in each app's own tests.
 
   · IT CHECKS TWO CONTRACTS OF THREE. spec/ holds THREE binding UI contracts. This
-    script knows about spec/sidebar-footer.md (fully) and spec/app-name-label.md
+    script knows about spec/sidebar-footer.md (Settings CSS only, NOT theme
+    behavior) and spec/app-name-label.md
     (its font size and font stack, and NOTHING else it pins).
     NOTHING HERE LOOKS AT spec/app-logo.md — not the badge box, the fill, the
     glyph size, the mark's extent, the placement, nor the accessibility rules. A
@@ -747,7 +746,7 @@ failing one covers less ground than the count suggests.
     rule. A later rule overriding them, or a selector that matches nothing, looks
     identical to correct here.
   · Markup is unverified — icon size, aria-label wording, the element type, and
-    the width-stable label structure all live in TSX, not CSS (§7).
+    the Settings control all live in TSX, not CSS (§7).
   · Contrast ratios are not computed; only that the colours are the recorded
     ones. This matters more than it used to: since §5.3 let the three apps have
     DIFFERENT backdrops, agreeing with the record is no longer evidence that a
